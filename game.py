@@ -18,10 +18,11 @@ class PlayerRules:
         return Actions.getPossibleActions(state.getPlayerState().configuration)
 
     @staticmethod
-    def applyAction(state: "GameState", action):
+    def applyAction(state: "GameState", action: Action):
         """
         Edits the state to reflect the results of the action.
         """
+        assert isinstance(action, Action)
         legal = PlayerRules.getLegalActions(state)
         # print("The legal actions are",legal)
         # print("The input action is", action)
@@ -31,7 +32,7 @@ class PlayerRules:
         playerState = state.agentStates[0]
 
         # Update Configuration
-        vector = Actions.directionToVector(action, PlayerRules.PLAYER_SPEED)
+        vector = Actions.actionToVector(action, PlayerRules.PLAYER_SPEED)
         playerState.configuration = playerState.configuration.getNextState(vector)
 
 
@@ -55,8 +56,8 @@ class GhostRules:
         return possibleActions
 
     @staticmethod
-    def applyAction(state: "GameState", action, ghostIndex):
-
+    def applyAction(state: "GameState", action: Action, ghostIndex: int):
+        assert isinstance(action, Action)
         legal = GhostRules.getLegalActions(state, ghostIndex)
         # print("The legal actions are:",legal)
         if action not in legal:
@@ -64,7 +65,7 @@ class GhostRules:
 
         ghostState = state.agentStates[ghostIndex]
         speed = GhostRules.GHOST_SPEED
-        vector = Actions.directionToVector(action, speed)
+        vector = Actions.actionToVector(action, speed)
         ghostState.configuration = ghostState.configuration.getNextState(
             vector)
 
@@ -127,9 +128,8 @@ class ClassicGameRules:
             for y in range(MAP_SIZE.height):
                 pygame.draw.rect(
                     self.display.get_surface(),
-                    COLORS["tileBg0"] if isOdd(x + y) else COLORS["tileBg1"],
-                    (x * TILE_SIZE.width, y * TILE_SIZE.height,
-                     TILE_SIZE.width, TILE_SIZE.height)
+                    COLOR["tileBg0"] if isOdd(x + y) else COLOR["tileBg1"],
+                    (x * TILE_SIZE.width, y * TILE_SIZE.height, TILE_SIZE.width, TILE_SIZE.height)
                 )
 
     def process(self, state: "GameState", game):
@@ -224,18 +224,16 @@ class GameState:
         self.agentStates = []
         numGhosts = 0
 
-        pos = (MAP_SIZE.width // 2,
-               MAP_SIZE.height // 2)
+        pos = Vector2d(MAP_SIZE.width // 2, MAP_SIZE.height // 2)
         pos_used = [pos]
         self.agentStates.append(AgentState(
-            Configuration(pos, Directions.NORTH), True))
+            Configuration(pos, Direction.NORTH), True))
         for i in range(numGhostAgents):
             while pos in pos_used:
-                pos = (random.randint(1, MAP_SIZE.width),
-                       random.randint(1, MAP_SIZE.height))
+                pos = Vector2d(random.randint(1, MAP_SIZE.width), random.randint(1, MAP_SIZE.height))
             pos_used.append(pos)
             self.agentStates.append(AgentState(
-                Configuration(pos, Directions.NORTH), False))
+                Configuration(pos, Direction.NORTH), False))
 
     # static variable keeps track of which states have had getLegalActions called
     explored = set()
@@ -259,10 +257,11 @@ class GameState:
         else:
             return GhostRules.getLegalActions(self, agentIndex)
 
-    def getNextState(self, agentIndex, action):
+    def getNextState(self, agentIndex, action: Action):
         """
         Returns the successor state after the specified agent takes the action.
         """
+        assert isinstance(action, Action), "action must be an Action object"
         # Check that successors exist
         if self.isWin() or self.isLose():
             raise Exception("Can't generate a successor of a terminal state.")
@@ -338,7 +337,7 @@ class GameState:
         return self._win
 
 
-def gridToPixel(pos: tuple) -> tuple[int, int]:
+def gridToPixel(pos: tuple) -> Vector2d:
     return (pos[0] * TILE_SIZE.width - TILE_SIZE.width // 2, pos[1] * TILE_SIZE.height - TILE_SIZE.height // 2)
 
 
@@ -401,7 +400,8 @@ class Game:
             agent = self.agents[agentIndex]
 
             observation = self.state.deepCopy()
-            action = agent.getAction(observation)
+            action: Action = agent.getAction(observation)
+            assert isinstance(action, Action), "action must be an Action object"
             self.moveHistory.append((agentIndex, action))
             # try:
             #     self.state = self.state.getNextState(

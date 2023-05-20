@@ -1,5 +1,8 @@
+from collections.abc import Iterator
 import pygame
 from util import *
+from enum import Enum
+from vector import Vector2d
 
 class Size:
     def __init__(self, width: int, height: int):
@@ -8,16 +11,20 @@ class Size:
         self.length = min(width, height)
         self.sizeTuple = (self.width, self.height)
 
+
 TITLE = "Robots"
 MAP_SIZE = Size(20, 20)
 TILE_SIZE = Size(30, 30)
-WINDOW_SIZE = Size(MAP_SIZE.width * TILE_SIZE.width, MAP_SIZE.height * TILE_SIZE.height)
+WINDOW_SIZE = Size(MAP_SIZE.width * TILE_SIZE.width,
+                   MAP_SIZE.height * TILE_SIZE.height)
+
 
 def isPosValid(x: int, y: int) -> bool:
     """
     (`x`, `y`) = (1, 1) is considered to be the top-left grid
     """
     return 1 <= x <= MAP_SIZE.width and 1 <= y <= MAP_SIZE.height
+
 
 class Agent:
     """
@@ -27,16 +34,16 @@ class Agent:
     def registerInitialState(self, state): # inspects the starting state
     """
 
-    def __init__(self,index):
+    def __init__(self, index: int):
         self.index = index
 
-    def getAction(self, state):
+    def getAction(self, state: "GameState") -> "Action":
         """
         The Agent will receive a GameState (from either {player, capture, sonar}.py) and
         must return an action from Directions.{North, South, East, West, Stop}
         """
         raiseNotDefined()
-    
+
 
 class Configuration:
     """
@@ -47,7 +54,8 @@ class Configuration:
     horizontally and y increases vertically.  Therefore, north is the direction of increasing y, or (0,1).
     """
 
-    def __init__(self, pos:tuple, direction):
+    def __init__(self, pos: Vector2d, direction):
+        assert isinstance(pos, Vector2d)
         self.pos = pos
         self.direction = direction
         # self.direction = direction
@@ -69,9 +77,9 @@ class Configuration:
         return hash(x + 13 * y)
 
     def __str__(self):
-        return "(x,y)="+str(self.pos)+", "+str(self.direction)
+        return f"(x,y)={self.pos}, {self.direction}"
 
-    def getNextState(self, vector):
+    def getNextState(self, displacement: Vector2d):
         """
         Generates a new configuration reached by translating the current
         configuration by the action vector.  This is a low-level call and does
@@ -79,10 +87,10 @@ class Configuration:
 
         Actions are movement vectors.
         """
-        x, y = self.pos
-        dx, dy = vector
-        direction = Actions.vectorToDirection(vector)
-        return Configuration((x + dx, y+dy),direction)
+        if displacement == Vector2d(0, 0):
+            return self
+        return Configuration(self.pos + displacement, displacement)
+
 
 class AgentState:
     """
@@ -92,8 +100,9 @@ class AgentState:
     def __init__(self, startConfiguration, isPlayer):
         self.start = startConfiguration
         self.configuration = startConfiguration
-        self.color = COLORS["ghost"]
-        if(isPlayer): self.color = COLORS["player"]
+        self.color = COLOR['ghost']
+        if isPlayer:
+            self.color = COLOR['player']
         self.radius = 30 * 0.8 / 2
         self.isPlayer = isPlayer
         # state below potentially used for contest only
@@ -102,9 +111,9 @@ class AgentState:
 
     def __str__(self):
         if self.isPlayer:
-            return "Player: " + str(self.configuration)
+            return f"Player: {self.configuration}"
         else:
-            return "Ghost: " + str(self.configuration)
+            return f"Ghost: {self.configuration}"
 
     def __eq__(self, other):
         if other == None:
@@ -133,33 +142,44 @@ class AgentState:
         return self.color
 
     def getRadius(self):
-        return self.radius    
+        return self.radius
 
-class Directions:
-    ACTION_KEYS = {
-        "N": {pygame.K_UP, pygame.K_w, pygame.K_k},
-        "S": {pygame.K_DOWN, pygame.K_s, pygame.K_j},
-        "W": {pygame.K_LEFT, pygame.K_a, pygame.K_h},
-        "E": {pygame.K_RIGHT, pygame.K_d, pygame.K_l},
-        "NW": {pygame.K_q, pygame.K_y},
-        "NE": {pygame.K_e, pygame.K_u},
-        "SW": {pygame.K_z, pygame.K_b},
-        "SE": {pygame.K_x, pygame.K_n}
-    }
-    
+
+class Direction(Enum):
     NORTH = 'N'
     SOUTH = 'S'
     EAST = 'E'
     WEST = 'W'
-    NW = 'NW'
-    NE = 'NE'
-    SW = 'SW'
-    SE = 'SE'
-    # STOP = 'T'
-    
-    VALID_ACTIONS: set[str] = set(ACTION_KEYS.keys())
+    NORTHWEST = 'NW'
+    NORTHEAST = 'NE'
+    SOUTHWEST = 'SW'
+    SOUTHEAST = 'SE'
 
-COLORS = {
+    def __init__(self, symbol: str):
+        super().__init__()
+        self.symbol = symbol
+    
+    @property
+    def vector(self) -> Vector2d:
+        match self:
+            case Direction.NORTH:
+                return Vector2d(0, -1)
+            case Direction.SOUTH:
+                return Vector2d(0, 1)
+            case Direction.EAST:
+                return Vector2d(1, 0)
+            case Direction.WEST:
+                return Vector2d(-1, 0)
+            case Direction.NORTHWEST:
+                return Vector2d(-1, -1)
+            case Direction.NORTHEAST:
+                return Vector2d(1, -1)
+            case Direction.SOUTHWEST:
+                return Vector2d(-1, 1)
+            case Direction.SOUTHEAST:
+                return Vector2d(1, 1)
+    
+COLOR = {
     "default": pygame.colordict.THECOLORS["gray0"],
     "tileBg0": pygame.colordict.THECOLORS["gray80"],
     "tileBg1": pygame.colordict.THECOLORS["gray90"],
@@ -169,77 +189,51 @@ COLORS = {
 
 GHOST_NUMBER = 10
 
+class Action(Enum):
+    N = Direction.NORTH
+    S = Direction.SOUTH
+    E = Direction.EAST
+    W = Direction.WEST
+    NW = Direction.NORTHWEST
+    NE = Direction.NORTHEAST
+    SW = Direction.SOUTHWEST
+    SE = Direction.SOUTHEAST
+    TP = "TP"
+
 class Actions:
     """
     A collection of static methods for manipulating move actions.
     """
-    # Directions
-    _directions = { Directions.WEST:  (-1, 0),
-                    Directions.EAST:  (1, 0),
-                    Directions.NORTH: (0, -1),
-                    Directions.SOUTH: (0, 1),
-                    Directions.NW: (-1, -1),
-                    Directions.NE: (1, -1),
-                    Directions.SW: (-1, 1),
-                    Directions.SE: (1,  1) }
-
-    _directionsAsList = [('W', (-1, 0)), ('E', (1, 0)), ('N', (0, -1)), ('S', (0, 1)),
-                         ('NW',(-1,-1)),('NE',(1,-1)),('SW',(-1,1)),('SE',(1,1))]
-
     TOLERANCE = .001
 
     @staticmethod
-    def reverseDirection(action):
-        if action == Directions.NORTH:
-            return Directions.SOUTH
-        if action == Directions.SOUTH:
-            return Directions.NORTH
-        if action == Directions.EAST:
-            return Directions.WEST
-        if action == Directions.WEST:
-            return Directions.EAST
-        return action
+    def actionToVector(action: Action, speed=1.0) -> Vector2d:
+        if action == Action.TP:
+            # TODO:
+            pass
+        else:
+            direction = action.value
+            return direction.vector * speed
 
     @staticmethod
-    def vectorToDirection(vector):
-        dx, dy = vector
-        if dy > 0:
-            if dx > 0: return Directions.NE
-            return Directions.NORTH
-        if dy < 0:
-            if dx < 0: return Directions.SW  
-            return Directions.SOUTH
-        if dx < 0:
-            if dy > 0: return Directions.NW
-            return Directions.WEST
-        if dx > 0:
-            if dy < 0: return Directions.SE
-            return Directions.EAST
-        raiseNotDefined()
-
-    @staticmethod
-    def directionToVector(direction, speed=1.0):
-        dx, dy = Actions._directions[direction]
-        return (dx * speed, dy * speed)
-
-    @staticmethod
-    def getPossibleActions(config:Configuration):
+    def getPossibleActions(config: Configuration) -> list[Action]:
         possible = []
         x, y = config.pos
         x_int, y_int = int(x + 0.5), int(y + 0.5)
 
         # print("The pos are",config.pos)
-
         # In between grid points, all agents must continue straight
         if (abs(x - x_int) + abs(y - y_int) > Actions.TOLERANCE):
             return [config.getDirection()]
 
-        for dir, vec in Actions._directionsAsList:
-            dx, dy = vec
-            next_y = y_int + dy
-            next_x = x_int + dx
-            if isPosValid(next_x,next_y):
-                possible.append(dir)
+        for action in Action:
+            if action == Action.TP:
+                # TODO:
+                pass
+            else:
+                dir = action.value
+                if isPosValid(*(dir.vector + config.pos)):
+                    possible.append(action)
 
         return possible
 
@@ -249,8 +243,8 @@ class Actions:
         x, y = position
         x_int, y_int = int(x + 0.5), int(y + 0.5)
         neighbors = []
-        for dir, vec in Actions._directionsAsList:
-            dx, dy = vec
+        for dir in Direction:
+            dx, dy = dir.vector
             next_x = x_int + dx
             if next_x < 0 or next_x == walls.width:
                 continue
@@ -261,9 +255,8 @@ class Actions:
                 neighbors.append((next_x, next_y))
         return neighbors
 
-    @staticmethod
-    def getSuccessor(position, action):
-        dx, dy = Actions.directionToVector(action)
-        x, y = position
-        return (x + dx, y + dy)
-
+    # @staticmethod
+    # def getSuccessor(position, action):
+    #     dx, dy = Actions.directionToVector(action)
+    #     x, y = position
+    #     return (x + dx, y + dy)

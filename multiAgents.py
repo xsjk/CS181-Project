@@ -1,4 +1,4 @@
-from agentRules import Directions
+from agentRules import Direction
 from game import Agent, GameState
 from playerAgents import PlayerAgent
 import random
