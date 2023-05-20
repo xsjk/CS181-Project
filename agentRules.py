@@ -46,6 +46,7 @@ class Configuration:
         assert isinstance(pos, Vector2d)
         self.pos = pos
         self.direction = direction
+        self.dead = False
         # self.direction = direction
 
     def getPosition(self):
@@ -87,7 +88,7 @@ class AgentState:
 
     def __init__(self, startConfiguration, isPlayer):
         self.start = startConfiguration
-        self.configuration = startConfiguration
+        self.configuration: Configuration = startConfiguration
         self.color = COLOR['ghost']
         if isPlayer:
             self.color = COLOR['player']
@@ -172,7 +173,8 @@ COLOR = {
     "tileBg0": pygame.colordict.THECOLORS["gray80"],
     "tileBg1": pygame.colordict.THECOLORS["gray90"],
     "player": pygame.colordict.THECOLORS["cornflowerblue"],
-    "ghost": pygame.colordict.THECOLORS["firebrick"]
+    "ghost": pygame.colordict.THECOLORS["firebrick"],
+    "explosion": pygame.colordict.THECOLORS["orange"]
 }
 
 GHOST_NUMBER = 10

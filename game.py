@@ -64,6 +64,8 @@ class GhostRules:
             raise Exception("Illegal ghost action " + str(action))
 
         ghostState = state.agentStates[ghostIndex]
+        if ghostState.configuration.dead:
+            return
         speed = GhostRules.GHOST_SPEED
         vector = Actions.actionToVector(action, speed)
         ghostState.configuration = ghostState.configuration.getNextState(
@@ -81,6 +83,14 @@ class GhostRules:
         else:
             ghostState = state.agentStates[agentIndex]
             ghostPosition = ghostState.configuration.getPosition()
+            for i in range(1, len(state.agentStates)):
+                for j in range(i, len(state.agentStates)):
+                    if i != j and GhostRules.canKill(state.agentStates[i].configuration.getPosition(), state.agentStates[j].configuration.getPosition()):
+                        state.agentStates[i].color = COLOR["explosion"]
+                        state.agentStates[i].configuration.dead = True
+                        state.agentStates[j].color = COLOR["explosion"]
+                        state.agentStates[j].configuration.dead = True
+                        print("ghosts collides")
             if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
 
