@@ -32,7 +32,7 @@ class Agent:
 
     def getAction(self, state):
         """
-        The Agent will receive a GameState (from either {pacman, capture, sonar}.py) and
+        The Agent will receive a GameState (from either {player, capture, sonar}.py) and
         must return an action from Directions.{North, South, East, West, Stop}
         """
         raiseNotDefined()
@@ -92,7 +92,7 @@ class AgentState:
     def __init__(self, startConfiguration, isPlayer):
         self.start = startConfiguration
         self.configuration = startConfiguration
-        self.color = COLORS["enemy"]
+        self.color = COLORS["ghost"]
         if(isPlayer): self.color = COLORS["player"]
         self.radius = 30 * 0.8 / 2
         self.isPlayer = isPlayer
@@ -104,7 +104,7 @@ class AgentState:
         if self.isPlayer:
             return "Player: " + str(self.configuration)
         else:
-            return "Enemy: " + str(self.configuration)
+            return "Ghost: " + str(self.configuration)
 
     def __eq__(self, other):
         if other == None:
@@ -137,14 +137,14 @@ class AgentState:
 
 class Directions:
     ACTION_KEYS = {
-    "N": {pygame.K_UP, pygame.K_w, pygame.K_k},
-    "S": {pygame.K_DOWN, pygame.K_s, pygame.K_j},
-    "W": {pygame.K_LEFT, pygame.K_a, pygame.K_h},
-    "E": {pygame.K_RIGHT, pygame.K_d, pygame.K_l},
-    "NW": {pygame.K_q, pygame.K_y},
-    "NE": {pygame.K_e, pygame.K_u},
-    "SW": {pygame.K_z, pygame.K_b},
-    "SE": {pygame.K_x, pygame.K_n}
+        "N": {pygame.K_UP, pygame.K_w, pygame.K_k},
+        "S": {pygame.K_DOWN, pygame.K_s, pygame.K_j},
+        "W": {pygame.K_LEFT, pygame.K_a, pygame.K_h},
+        "E": {pygame.K_RIGHT, pygame.K_d, pygame.K_l},
+        "NW": {pygame.K_q, pygame.K_y},
+        "NE": {pygame.K_e, pygame.K_u},
+        "SW": {pygame.K_z, pygame.K_b},
+        "SE": {pygame.K_x, pygame.K_n}
     }
     
     NORTH = 'N'
@@ -164,10 +164,10 @@ COLORS = {
     "tileBg0": pygame.colordict.THECOLORS["gray80"],
     "tileBg1": pygame.colordict.THECOLORS["gray90"],
     "player": pygame.colordict.THECOLORS["cornflowerblue"],
-    "enemy": pygame.colordict.THECOLORS["firebrick"]
+    "ghost": pygame.colordict.THECOLORS["firebrick"]
 }
 
-ENEMY_NUMBER = 10
+GHOST_NUMBER = 10
 
 class Actions:
     """
@@ -188,6 +188,7 @@ class Actions:
 
     TOLERANCE = .001
 
+    @staticmethod
     def reverseDirection(action):
         if action == Directions.NORTH:
             return Directions.SOUTH
@@ -198,8 +199,8 @@ class Actions:
         if action == Directions.WEST:
             return Directions.EAST
         return action
-    reverseDirection = staticmethod(reverseDirection)
 
+    @staticmethod
     def vectorToDirection(vector):
         dx, dy = vector
         if dy > 0:
@@ -215,13 +216,13 @@ class Actions:
             if dy < 0: return Directions.SE
             return Directions.EAST
         raiseNotDefined()
-    vectorToDirection = staticmethod(vectorToDirection)
 
+    @staticmethod
     def directionToVector(direction, speed=1.0):
         dx, dy = Actions._directions[direction]
         return (dx * speed, dy * speed)
-    directionToVector = staticmethod(directionToVector)
 
+    @staticmethod
     def getPossibleActions(config:Configuration):
         possible = []
         x, y = config.pos
@@ -242,9 +243,8 @@ class Actions:
 
         return possible
 
-    getPossibleActions = staticmethod(getPossibleActions)
-
     # TODO: 之后这里要改写
+    @staticmethod
     def getLegalNeighbors(position, walls):
         x, y = position
         x_int, y_int = int(x + 0.5), int(y + 0.5)
@@ -260,11 +260,10 @@ class Actions:
             if not walls[next_x][next_y]:
                 neighbors.append((next_x, next_y))
         return neighbors
-    getLegalNeighbors = staticmethod(getLegalNeighbors)
 
+    @staticmethod
     def getSuccessor(position, action):
         dx, dy = Actions.directionToVector(action)
         x, y = position
         return (x + dx, y + dy)
-    getSuccessor = staticmethod(getSuccessor)
 

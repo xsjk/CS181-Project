@@ -1,12 +1,16 @@
 from game import *
+import time
 
-class mousePlayer(Agent):
-    def __init__(self, index:int = 0):
-        super(mousePlayer, self).__init__(index)
-        self.color = COLORS["player"]
-    
-    # 通过键盘获取移动
-    def getAction(self, state:GameState):
+
+class PlayerAgent(Agent):
+
+    def __init__(self):
+        super().__init__(0)
+
+
+class KeyboardAgent(PlayerAgent):
+
+    def getAction(self, state: GameState):
         action = None
         while action == None:
             for event in pygame.event.get():
@@ -20,8 +24,8 @@ class mousePlayer(Agent):
                             if event.key in Directions.ACTION_KEYS[act]:
                                 action = act
                                 break
-        if(action):
-            assert action in Directions.VALID_ACTIONS, f"move action \"{action}\" is invalid"
+        if action:
+            assert action in Directions.VALID_ACTIONS, f'move action "{action}" is invalid'
             for a in action:
                 match a:
                     case "N":
@@ -33,5 +37,8 @@ class mousePlayer(Agent):
                     case "E":
                         return Directions.EAST
         return Directions.WEST
-        
 
+
+class RandomAgent(PlayerAgent):
+    def getAction(self, state: GameState):
+        return random.choice(state.getLegalActions(self.index))

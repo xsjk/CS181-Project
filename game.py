@@ -2,37 +2,43 @@ from utils import *
 from agentRules import *
 import traceback
 
-class PacmanRules:
+
+class GameState:
+    pass
+
+
+class PlayerRules:
     """
-    These functions govern how pacman interacts with his environment under
+    These functions govern how player interacts with his environment under
     the classic game rules.
     """
-    PACMAN_SPEED = 1
+    PLAYER_SPEED = 1
 
+    @staticmethod
     def getLegalActions(state):
         """
         Returns a list of possible actions.d
         """
         return Actions.getPossibleActions(state.getPlayerState().configuration)
-    getLegalActions = staticmethod(getLegalActions)
 
+    @staticmethod
     def applyAction(state, action):
         """
         Edits the state to reflect the results of the action.
         """
-        legal = PacmanRules.getLegalActions(state)
+        legal = PlayerRules.getLegalActions(state)
         # print("The legal actions are",legal)
         # print("The input action is", action)
         if action not in legal:
             raise Exception("Illegal action " + str(action))
 
-        pacmanState = state.agentStates[0]
+        playerState = state.agentStates[0]
 
         # Update Configuration
-        vector = Actions.directionToVector(action, PacmanRules.PACMAN_SPEED)
-        pacmanState.configuration = pacmanState.configuration.generateSuccessor(
+        vector = Actions.directionToVector(action, PlayerRules.PLAYER_SPEED)
+        playerState.configuration = playerState.configuration.generateSuccessor(
             vector)
-    applyAction = staticmethod(applyAction)
+
 
 class GhostRules:
     """
@@ -40,19 +46,20 @@ class GhostRules:
     """
     GHOST_SPEED = 1.0
 
+    @staticmethod
     def getLegalActions(state, ghostIndex):
         """
         Ghosts cannot stop, and cannot turn around unless they
         reach a dead end, but can turn 90 degrees at intersections.
         """
-        conf = state.getEnemyState(ghostIndex).configuration
+        conf = state.getGhostState(ghostIndex).configuration
         possibleActions = Actions.getPossibleActions(conf)
         # reverse = Actions.reverseDirection(conf.direction)
         # if reverse in possibleActions and len(possibleActions) > 1:
         #     possibleActions.remove(reverse)
         return possibleActions
-    getLegalActions = staticmethod(getLegalActions)
 
+    @staticmethod
     def applyAction(state, action, ghostIndex):
 
         legal = GhostRules.getLegalActions(state, ghostIndex)
@@ -65,36 +72,36 @@ class GhostRules:
         vector = Actions.directionToVector(action, speed)
         ghostState.configuration = ghostState.configuration.generateSuccessor(
             vector)
-    applyAction = staticmethod(applyAction)
 
+    @staticmethod
     def checkDeath(state, agentIndex):
-        pacmanPosition = state.getPlayerPosition()
-        if agentIndex == 0:  # Pacman just moved; Anyone can kill him
+        playerPosition = state.getPlayerPosition()
+        if agentIndex == 0:  # Player just moved; Anyone can kill him
             for index in range(1, len(state.agentStates)):
                 ghostState = state.agentStates[index]
                 ghostPosition = ghostState.configuration.getPosition()
-                if GhostRules.canKill(pacmanPosition, ghostPosition):
+                if GhostRules.canKill(playerPosition, ghostPosition):
                     GhostRules.collide(state)
         else:
             ghostState = state.agentStates[agentIndex]
             ghostPosition = ghostState.configuration.getPosition()
-            if GhostRules.canKill(pacmanPosition, ghostPosition):
+            if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
-    checkDeath = staticmethod(checkDeath)
 
-    def canKill(pacmanPosition:tuple,ghostPosition:tuple)->bool:
-        return pacmanPosition == ghostPosition
-    canKill = staticmethod(canKill)
+    @staticmethod
+    def canKill(playerPosition: tuple, ghostPosition: tuple) -> bool:
+        return playerPosition == ghostPosition
 
+    @staticmethod
     def collide(state):
-            if not state._win:
-                state.scoreChange -= 500
-                state._lose = True
-    collide = staticmethod(collide)
+        if not state._win:
+            state.scoreChange -= 500
+            state._lose = True
 
+    @staticmethod
     def placeGhost(state, ghostState):
         ghostState.configuration = ghostState.start
-    placeGhost = staticmethod(placeGhost)
+
 
 class ClassicGameRules:
     """
@@ -105,9 +112,9 @@ class ClassicGameRules:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def newGame(self, pacmanAgent, ghostAgents, display:pygame.display, quiet=False, catchExceptions=False):
+    def newGame(self, playerAgent, ghostAgents, display: pygame.display, quiet=False, catchExceptions=False):
         # print(ghostAgents)
-        agents = [pacmanAgent] + ghostAgents
+        agents = [playerAgent] + ghostAgents
         initState = GameState()
         initState.initialize(len(ghostAgents))
         game = Game(agents, display, self, catchExceptions=catchExceptions)
@@ -126,7 +133,8 @@ class ClassicGameRules:
                 pygame.draw.rect(
                     self.display.get_surface(),
                     COLORS["tileBg0"] if isOdd(x + y) else COLORS["tileBg1"],
-                    (x * TILE_SIZE.width, y * TILE_SIZE.height, TILE_SIZE.width, TILE_SIZE.height)
+                    (x * TILE_SIZE.width, y * TILE_SIZE.height,
+                     TILE_SIZE.width, TILE_SIZE.height)
                 )
 
     def process(self, state, game):
@@ -140,19 +148,20 @@ class ClassicGameRules:
 
     def win(self, state, game):
         if not self.quiet:
-            print("Pacman emerges victorious! Score: %d" % state.data.score)
+            print("Player emerges victorious! Score: %d" % state.data.score)
         game.gameOver = True
 
     def lose(self, state, game):
         if not self.quiet:
-            print("Pacman died! Score: %d" % state.score)
+            print("Player died! Score: %d" % state.score)
         game.gameOver = True
 
     def agentCrash(self, game, agentIndex):
         if agentIndex == 0:
-            print("Pacman crashed")
+            print("Player crashed")
         else:
             print("A ghost crashed")
+
 
 class GameState:
 
@@ -161,22 +170,21 @@ class GameState:
         Generates a new data packet by copying information from its predecessor.
         """
         self.agentStates: list[AgentState]
-        
+
         self._agentMoved = None
         self._lose = False
         self._win = False
         self.scoreChange = 0
         self.score = 0
-        
+
         if prevState != None:
             self.agentStates = self.copyAgentStates(prevState.agentStates)
             self.score = prevState.score
-    
 
     def deepCopy(self):
         state = GameState(self)
-        #state.layout = self.layout.deepCopy()
-        #state._agentMoved = self._agentMoved
+        # state.layout = self.layout.deepCopy()
+        # state._agentMoved = self._agentMoved
         return state
 
     def copyAgentStates(self, agentStates):
@@ -214,7 +222,7 @@ class GameState:
         """
         Creates an initial game state from a layout array (see layout.py).
         """
-        #self.capsules = []
+        # self.capsules = []
         self.score = 0
         self.scoreChange = 0
 
@@ -222,26 +230,26 @@ class GameState:
         numGhosts = 0
 
         pos = (MAP_SIZE.width // 2,
-            MAP_SIZE.height // 2)
+               MAP_SIZE.height // 2)
         pos_used = [pos]
         self.agentStates.append(AgentState(
-                Configuration(pos, Directions.NORTH), True))
+            Configuration(pos, Directions.NORTH), True))
         for i in range(numGhostAgents):
             while pos in pos_used:
                 pos = (random.randint(1, MAP_SIZE.width),
-                random.randint(1, MAP_SIZE.height))
+                       random.randint(1, MAP_SIZE.height))
             pos_used.append(pos)
             self.agentStates.append(AgentState(
                 Configuration(pos, Directions.NORTH), False))
-    
+
     # static variable keeps track of which states have had getLegalActions called
     explored = set()
 
+    @staticmethod
     def getAndResetExplored():
         tmp = GameState.explored.copy()
         GameState.explored = set()
         return tmp
-    getAndResetExplored = staticmethod(getAndResetExplored)
 
     def getLegalActions(self, agentIndex=0):
         """
@@ -251,8 +259,8 @@ class GameState:
         if self.isWin() or self.isLose():
             return []
 
-        if agentIndex == 0:  # Pacman is moving
-            return PacmanRules.getLegalActions(self)
+        if agentIndex == 0:  # Player is moving
+            return PlayerRules.getLegalActions(self)
         else:
             return GhostRules.getLegalActions(self, agentIndex)
 
@@ -268,9 +276,9 @@ class GameState:
         state = GameState(self)
 
         # Let agent's logic deal with its action's effects on the board
-        if agentIndex == 0:  # Pacman is moving
+        if agentIndex == 0:  # Player is moving
             state._eaten = [False for i in range(state.getNumAgents())]
-            PacmanRules.applyAction(state, action)
+            PlayerRules.applyAction(state, action)
         else:                # A ghost is moving
             GhostRules.applyAction(state, action, agentIndex)
 
@@ -290,13 +298,13 @@ class GameState:
 
     def generatePlayerSuccessor(self, action):
         """
-        Generates the successor state after the specified pacman move
+        Generates the successor state after the specified player move
         """
         return self.generateSuccessor(0, action)
 
     def getPlayerState(self):
         """
-        Returns an AgentState object for pacman (in game.py)
+        Returns an AgentState object for player (in game.py)
 
         state.pos gives the current position
         state.direction gives the travel vector
@@ -306,28 +314,28 @@ class GameState:
     def getPlayerPosition(self):
         return self.agentStates[0].getPosition()
 
-    def getEnemyStates(self):
+    def getGhostStates(self):
         return self.agentStates[1:]
 
-    def getEnemyState(self, agentIndex):
+    def getGhostState(self, agentIndex):
         if agentIndex == 0 or agentIndex >= self.getNumAgents():
             raise Exception("Invalid index passed to getGhostState")
         return self.agentStates[agentIndex]
 
-    def getEnemyPosition(self, agentIndex):
+    def getGhostPosition(self, agentIndex):
         if agentIndex == 0:
-            raise Exception("Pacman's index passed to getGhostPosition")
+            raise Exception("Player's index passed to getGhostPosition")
         return self.agentStates[agentIndex].getPosition()
 
-    def getEnemyPositions(self):
-        return [s.getPosition() for s in self.getEnemytStates()]
+    def getGhostPositions(self):
+        return [s.getPosition() for s in self.getGhosttStates()]
 
     def getNumAgents(self):
         return len(self.agentStates)
 
     def getScore(self):
         return float(self.score)
-    
+
     def isLose(self):
         return self._lose
 
@@ -335,23 +343,23 @@ class GameState:
         return self._win
 
 
-
-    
-
 def gridToPixel(pos: tuple) -> tuple[int, int]:
     return (pos[0] * TILE_SIZE.width - TILE_SIZE.width // 2, pos[1] * TILE_SIZE.height - TILE_SIZE.height // 2)
+
 
 def isOdd(x: int) -> bool:
     return bool(x % 2)
 
 # The main controll flow
+
+
 class Game:
-    def __init__(self, agents:list[Agent], display, gameRule:ClassicGameRules, catchExceptions):
+    def __init__(self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions):
         # pygame.init()
         display.set_caption(TITLE)
         self.display = display
         self.surface = display.set_mode(WINDOW_SIZE.sizeTuple)
-        
+
         self.agents = agents
         self.rules = gameRule
 
@@ -385,15 +393,15 @@ class Game:
         agentIndex = self.startingIndex
         numAgents = len(self.agents)
 
-
         self.rules.drawBg()
         for state in self.state.agentStates:
             print(state)
-            pygame.draw.circle(self.surface, state.getColor(), gridToPixel(state.getPosition()), state.getRadius())
+            pygame.draw.circle(self.surface, state.getColor(), gridToPixel(
+                state.getPosition()), state.getRadius())
         self.display.update()
         while not self.gameOver:
             self.rules.drawBg()
-            #self.display.update()
+            # self.display.update()
             # Execute the action
             agent = self.agents[agentIndex]
 
@@ -407,11 +415,12 @@ class Game:
             #     print("Something wrong happens")
             #     break
             self.state = self.state.generateSuccessor(agentIndex, action)
-            
+
             # Update the gui
             for state in self.state.agentStates:
                 print(state)
-                pygame.draw.circle(self.surface, state.getColor(), gridToPixel(state.getPosition()), state.getRadius())
+                pygame.draw.circle(self.surface, state.getColor(), gridToPixel(
+                    state.getPosition()), state.getRadius())
 
             # Allow for game specific conditions (winning, losing, etc.)
             self.rules.process(self.state, self)
@@ -423,7 +432,8 @@ class Game:
             self.display.update()
         pygame.quit()
 
-def runGames(pacman, ghosts:list, display=pygame.display, numGames=1, numTraining=0, catchExceptions=False, timeout=30):
+
+def runGames(player, ghosts: list, display=pygame.display, numGames=1, numTraining=0, catchExceptions=False, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -434,7 +444,7 @@ def runGames(pacman, ghosts:list, display=pygame.display, numGames=1, numTrainin
     for i in range(numGames):
         gameDisplay = display
         rules.quiet = False
-        game = rules.newGame(pacman, ghosts,
+        game = rules.newGame(player, ghosts,
                              gameDisplay, False, catchExceptions)
         game.run()
         games.append(game)
