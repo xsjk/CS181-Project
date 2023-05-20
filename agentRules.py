@@ -1,5 +1,5 @@
 import pygame
-from utils import *
+from util import *
 
 class Size:
     def __init__(self, width: int, height: int):
@@ -27,7 +27,7 @@ class Agent:
     def registerInitialState(self, state): # inspects the starting state
     """
 
-    def __init__(self,index = 0):
+    def __init__(self,index):
         self.index = index
 
     def getAction(self, state):

@@ -3,13 +3,11 @@ import time
 
 
 class PlayerAgent(Agent):
-
     def __init__(self):
         super().__init__(0)
 
 
 class KeyboardAgent(PlayerAgent):
-
     def getAction(self, state: GameState):
         action = None
         while action == None:

@@ -2,6 +2,7 @@ from game import *
 
 class GhostAgent(Agent):
     def __init__(self, index: int):
+        assert index > 0
         super().__init__(index)
 
     def getAction(self, state: GameState):

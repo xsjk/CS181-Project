@@ -1,10 +1,6 @@
-from utils import *
+from util import *
 from agentRules import *
 import traceback
-
-
-class GameState:
-    pass
 
 
 class PlayerRules:
@@ -15,14 +11,14 @@ class PlayerRules:
     PLAYER_SPEED = 1
 
     @staticmethod
-    def getLegalActions(state):
+    def getLegalActions(state: "GameState"):
         """
         Returns a list of possible actions.d
         """
         return Actions.getPossibleActions(state.getPlayerState().configuration)
 
     @staticmethod
-    def applyAction(state, action):
+    def applyAction(state: "GameState", action):
         """
         Edits the state to reflect the results of the action.
         """
@@ -47,7 +43,7 @@ class GhostRules:
     GHOST_SPEED = 1.0
 
     @staticmethod
-    def getLegalActions(state, ghostIndex):
+    def getLegalActions(state: "GameState", ghostIndex):
         """
         Ghosts cannot stop, and cannot turn around unless they
         reach a dead end, but can turn 90 degrees at intersections.
@@ -60,7 +56,7 @@ class GhostRules:
         return possibleActions
 
     @staticmethod
-    def applyAction(state, action, ghostIndex):
+    def applyAction(state: "GameState", action, ghostIndex):
 
         legal = GhostRules.getLegalActions(state, ghostIndex)
         # print("The legal actions are:",legal)
@@ -74,7 +70,7 @@ class GhostRules:
             vector)
 
     @staticmethod
-    def checkDeath(state, agentIndex):
+    def checkDeath(state: "GameState", agentIndex):
         playerPosition = state.getPlayerPosition()
         if agentIndex == 0:  # Player just moved; Anyone can kill him
             for index in range(1, len(state.agentStates)):
@@ -99,7 +95,7 @@ class GhostRules:
             state._lose = True
 
     @staticmethod
-    def placeGhost(state, ghostState):
+    def placeGhost(state: "GameState", ghostState):
         ghostState.configuration = ghostState.start
 
 
@@ -137,7 +133,7 @@ class ClassicGameRules:
                      TILE_SIZE.width, TILE_SIZE.height)
                 )
 
-    def process(self, state, game):
+    def process(self, state: "GameState", game):
         """
         Checks to see whether it is time to end the game.
         """
@@ -146,12 +142,12 @@ class ClassicGameRules:
         if state.isLose():
             self.lose(state, game)
 
-    def win(self, state, game):
+    def win(self, state: "GameState", game):
         if not self.quiet:
             print("Player emerges victorious! Score: %d" % state.data.score)
         game.gameOver = True
 
-    def lose(self, state, game):
+    def lose(self, state: "GameState", game):
         if not self.quiet:
             print("Player died! Score: %d" % state.score)
         game.gameOver = True
