@@ -64,6 +64,8 @@ class GhostRules:
             raise Exception("Illegal ghost action " + str(action))
 
         ghostState = state.agentStates[ghostIndex]
+        if ghostState.configuration.dead:
+            return
         speed = GhostRules.GHOST_SPEED
         vector = Actions.actionToVector(action, speed)
         ghostState.configuration = ghostState.configuration.getNextState(
@@ -81,6 +83,14 @@ class GhostRules:
         else:
             ghostState = state.agentStates[agentIndex]
             ghostPosition = ghostState.configuration.getPosition()
+            for i in range(1, len(state.agentStates)):
+                for j in range(i, len(state.agentStates)):
+                    if i != j and GhostRules.canKill(state.agentStates[i].configuration.getPosition(), state.agentStates[j].configuration.getPosition()):
+                        state.agentStates[i].color = COLOR["explosion"]
+                        state.agentStates[i].configuration.dead = True
+                        state.agentStates[j].color = COLOR["explosion"]
+                        state.agentStates[j].configuration.dead = True
+                        print("ghosts collides")
             if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
 
@@ -229,11 +239,12 @@ class GameState:
         self.agentStates.append(AgentState(
             Configuration(pos, Direction.NORTH), True))
         for i in range(numGhostAgents):
-            while pos in pos_used:
-                pos = Vector2d(random.randint(1, MAP_SIZE.width), random.randint(1, MAP_SIZE.height))
-            pos_used.append(pos)
-            self.agentStates.append(AgentState(
-                Configuration(pos, Direction.NORTH), False))
+            self.agentStates.append(AgentState(Configuration(Vector2d(i+1, 1), Direction.NORTH), False))
+            # while pos in pos_used:
+            #     pos = Vector2d(random.randint(1, MAP_SIZE.width), random.randint(1, MAP_SIZE.height))
+            # pos_used.append(pos)
+            # self.agentStates.append(AgentState(
+            #     Configuration(pos, Direction.NORTH), False))
 
     # static variable keeps track of which states have had getLegalActions called
     explored = set()
