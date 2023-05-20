@@ -92,7 +92,6 @@ class AgentState:
         self.color = COLOR['ghost']
         if isPlayer:
             self.color = COLOR['player']
-        self.radius = 30 * 0.8 / 2
         self.isPlayer = isPlayer
         # state below potentially used for contest only
         self.numCarrying = 0
@@ -129,9 +128,6 @@ class AgentState:
 
     def getColor(self):
         return self.color
-
-    def getRadius(self):
-        return self.radius
 
 
 class Direction(Enum):
@@ -212,7 +208,7 @@ class Actions:
                 pass
             else:
                 dir = action.value
-                return Actions.isPosValid(*(dir.vector + config.pos),layout.width,layout.height)
+                return Actions.isPosValid(*(dir.vector + config.pos),layout.map_size.x,layout.map_size.y)
         return list(filter(isValid, Action))
 
     @staticmethod

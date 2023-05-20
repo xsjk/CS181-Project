@@ -4,17 +4,15 @@ from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import ReflexAgent, AlphaBetaAgent, ExpectimaxAgent
 from displayModes import PygameGraphics, NullGraphics
 from layout import Layout
-from vector import Vector2d
+from vector import Vector2d as V
 
 if __name__ == "__main__":
     layout = Layout(
-        width = 10,
-        height = 10,
-        tile_width = 30,
-        tile_height = 30,
+        map_size = V(30,40),
+        tile_size = V(20,10),
         ghostNum = 4,
-        player_pos = Vector2d(5,5),
-        ghosts_pos = [Vector2d(1,1),Vector2d(5,4)]
+        player_pos = V(5,5),
+        ghosts_pos = [V(1,1),V(5,4)]
     ) 
 
     runGames(
