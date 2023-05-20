@@ -4,6 +4,7 @@ from playerAgents import PlayerAgent
 import random
 import util
 from functools import partial
+from vector import Vector2d
 
 INF = float('inf')
 
@@ -62,12 +63,12 @@ class ReflexAgent(PlayerAgent):
         newPos = childGameState.getPlayerPosition()
         newGhostStates = childGameState.getGhostStates()
 
-        ghostPos = [g.getPosition() for g in newGhostStates]
+        ghostPos: list[Vector2d] = [g.getPosition() for g in newGhostStates]
         # if not new ScaredTimes new state is ghost: return lowest value
         if newPos in ghostPos:
             return -1
         else:
-            d = partial(util.manhattanDistance, newPos)
+            d = partial(Vector2d.manhattanDistance, newPos)
             return - 1 / d(min(ghostPos, key=d))
 
         return childGameState.getScore()

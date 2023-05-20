@@ -204,7 +204,6 @@ class Actions:
     """
     A collection of static methods for manipulating move actions.
     """
-    TOLERANCE = .001
 
     @staticmethod
     def actionToVector(action: Action, speed=1.0) -> Vector2d:
@@ -217,46 +216,25 @@ class Actions:
 
     @staticmethod
     def getPossibleActions(config: Configuration) -> list[Action]:
-        possible = []
-        x, y = config.pos
-        x_int, y_int = int(x + 0.5), int(y + 0.5)
-
-        # print("The pos are",config.pos)
-        # In between grid points, all agents must continue straight
-        if (abs(x - x_int) + abs(y - y_int) > Actions.TOLERANCE):
-            return [config.getDirection()]
-
-        for action in Action:
+        def isValid(action: Action) -> bool:
             if action == Action.TP:
                 # TODO:
                 pass
             else:
                 dir = action.value
-                if isPosValid(*(dir.vector + config.pos)):
-                    possible.append(action)
-
-        return possible
+                return isPosValid(*(dir.vector + config.pos))
+        return list(filter(isValid, Action))
 
     # TODO: 之后这里要改写
     @staticmethod
     def getLegalNeighbors(position, walls):
-        x, y = position
-        x_int, y_int = int(x + 0.5), int(y + 0.5)
         neighbors = []
         for dir in Direction:
-            dx, dy = dir.vector
-            next_x = x_int + dx
-            if next_x < 0 or next_x == walls.width:
+            x_, y_ = dir.vector + position
+            if x_ < 0 or x_ == walls.width:
                 continue
-            next_y = y_int + dy
-            if next_y < 0 or next_y == walls.height:
+            if y_ < 0 or y_ == walls.height:
                 continue
-            if not walls[next_x][next_y]:
-                neighbors.append((next_x, next_y))
+            if not walls[x_][y_]:
+                neighbors.append((x_, y_))
         return neighbors
-
-    # @staticmethod
-    # def getSuccessor(position, action):
-    #     dx, dy = Actions.directionToVector(action)
-    #     x, y = position
-    #     return (x + dx, y + dy)
