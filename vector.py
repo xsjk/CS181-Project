@@ -1,8 +1,6 @@
 import math
 
-class Vector2d(tuple):
-    def __new__(cls, x, y):
-        return tuple.__new__(cls, (x, y))
+class Vector2d:
 
     def __init__(self, x, y):
         self.x = x
@@ -56,6 +54,28 @@ class Vector2d(tuple):
     def __neg__(self) -> "Vector2d":
         return Vector2d(-self.x, -self.y)
     
+    def __iter__(self):
+        return iter((self.x, self.y))
+    
+    def __getitem__(self, index: int) -> float:
+        match index:
+            case 0:
+                return self.x
+            case 1:
+                return self.y
+            case _:
+                raise IndexError
+
+    def __setitem__(self, index: int, value: float):
+        match index:
+            case 0:
+                self.x = value
+            case 1:
+                self.y = value
+            case _:
+                raise IndexError
+
+    
     def map(self, func):
         return Vector2d(func(self.x), func(self.y))
     
@@ -98,18 +118,26 @@ if __name__ == "__main__":
         v1.x = 7
     except AttributeError as e:
         print(e)
+    else:
+        print(v1)
     try:
         v1[0] = 7
     except TypeError as e:
         print(e)
+    else:
+        print(v1)
     try:
         v1_clone.x = 7
     except AttributeError as e:
         print(e)
+    else:
+        print(v1_clone)
     try:
-        v1_clone[0] = 7
+        v1_clone[0] = 9
     except TypeError as e:
         print(e)
+    else:
+        print(v1_clone)
             
     v1 = Vector2d(3, 4)
     v2 = Vector2d(3.1, 4.2)
