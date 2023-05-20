@@ -3,6 +3,7 @@ import pygame
 from util import *
 from enum import Enum
 from vector import Vector2d
+from abc import ABC, abstractmethod
 
 class Size:
     def __init__(self, width: int, height: int):
@@ -26,23 +27,17 @@ def isPosValid(x: int, y: int) -> bool:
     return 1 <= x <= MAP_SIZE.width and 1 <= y <= MAP_SIZE.height
 
 
-class Agent:
-    """
-    An agent must define a getAction method, but may also define the
-    following methods which will be called if they exist:
-
-    def registerInitialState(self, state): # inspects the starting state
-    """
-
+class Agent(ABC):
     def __init__(self, index: int):
         self.index = index
 
+    @abstractmethod
     def getAction(self, state: "GameState") -> "Action":
         """
         The Agent will receive a GameState (from either {player, capture, sonar}.py) and
         must return an action from Directions.{North, South, East, West, Stop}
         """
-        raiseNotDefined()
+        raise NotImplementedError
 
 
 class Configuration:
