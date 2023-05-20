@@ -1,5 +1,5 @@
-from agentRules import Direction
-from game import Agent, GameState
+from agentRules import AgentState, Direction
+from game import Agent, GameState, Action
 from playerAgents import PlayerAgent
 import random
 import util
@@ -8,14 +8,11 @@ from vector import Vector2d
 
 INF = float('inf')
 
+
 class ReflexAgent(PlayerAgent):
     """
     A reflex agent chooses an action at each choice point by examining
     its alternatives via a state evaluation function.
-
-    The code below is provided as a guide.  You are welcome to change
-    it in any way you see fit, so long as you don't touch our method
-    headers.
     """
 
     def getAction(self, gameState: GameState):
@@ -28,13 +25,13 @@ class ReflexAgent(PlayerAgent):
         some Directions.X for some X in the set {NORTH, SOUTH, WEST, EAST, STOP}
         """
         # Collect legal moves and child states
-        legalMoves = gameState.getLegalActions()
+        legalMoves: list[Action] = gameState.getLegalActions()
 
         # Choose one of the best actions
-        scores = [self.evaluationFunction(
+        scores: list[float] = [self.evaluationFunction(
             gameState, action) for action in legalMoves]
-        bestScore = max(scores)
-        bestIndices = [index for index in range(
+        bestScore: float = max(scores)
+        bestIndices: list[int] = [index for index in range(
             len(scores)) if scores[index] == bestScore]
         # Pick randomly among the best
         chosenIndex = random.choice(bestIndices)
@@ -59,19 +56,16 @@ class ReflexAgent(PlayerAgent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
-        childGameState = currentGameState.getPlayerNextState(action)
-        newPos = childGameState.getPlayerPosition()
-        newGhostStates = childGameState.getGhostStates()
+        childGameState: GameState = currentGameState.getPlayerNextState(action)
+        newPos: Vector2d = childGameState.getPlayerPosition()
+        newGhostStates: list[AgentState] = childGameState.getGhostStates()
 
         ghostPos: list[Vector2d] = [g.getPosition() for g in newGhostStates]
         # if not new ScaredTimes new state is ghost: return lowest value
         if newPos in ghostPos:
             return -1
         else:
-            d = partial(Vector2d.manhattanDistance, newPos)
-            return - 1 / d(min(ghostPos, key=d))
-
-        return childGameState.getScore()
+            return -1 / min(map(partial(Vector2d.manhattanDistance, newPos), ghostPos))
 
 
 def scoreEvaluationFunction(currentGameState):
@@ -171,8 +165,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             α = max(α, v)
 
         return a_
-
-        util.raiseNotDefined()
 
     def n_value(self, s, d=0, i=0, α=-INF, β=INF):
         return \

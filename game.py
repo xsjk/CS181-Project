@@ -118,7 +118,7 @@ class ClassicGameRules:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def newGame(self, playerAgent, ghostAgents, display: pygame.display, quiet=False, catchExceptions=False):
+    def newGame(self, playerAgent, ghostAgents, display, quiet=False, catchExceptions=False):
         # print(ghostAgents)
         agents = [playerAgent] + ghostAgents
         initState = GameState()
@@ -129,18 +129,6 @@ class ClassicGameRules:
         self.display = display
         self.quiet = quiet
         return game
-
-    def drawBg(self) -> None:
-        """
-        Used to draw the background grid of the game
-        """
-        for x in range(MAP_SIZE.width):
-            for y in range(MAP_SIZE.height):
-                pygame.draw.rect(
-                    self.display.get_surface(),
-                    COLOR["tileBg0"] if isOdd(x + y) else COLOR["tileBg1"],
-                    (x * TILE_SIZE.width, y * TILE_SIZE.height, TILE_SIZE.width, TILE_SIZE.height)
-                )
 
     def process(self, state: "GameState", game):
         """
@@ -361,9 +349,7 @@ def isOdd(x: int) -> bool:
 class Game:
     def __init__(self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions):
         # pygame.init()
-        display.set_caption(TITLE)
         self.display = display
-        self.surface = display.set_mode(WINDOW_SIZE.sizeTuple)
 
         self.agents = agents
         self.rules = gameRule
@@ -398,14 +384,12 @@ class Game:
         agentIndex = self.startingIndex
         numAgents = len(self.agents)
 
-        self.rules.drawBg()
         for state in self.state.agentStates:
             print(state)
-            pygame.draw.circle(self.surface, state.getColor(), gridToPixel(
-                state.getPosition()), state.getRadius())
-        self.display.update()
+
+        self.display.initialize(self.state)
+
         while not self.gameOver:
-            self.rules.drawBg()
             # self.display.update()
             # Execute the action
             agent = self.agents[agentIndex]
@@ -422,12 +406,6 @@ class Game:
             #     break
             self.state = self.state.getNextState(agentIndex, action)
 
-            # Update the gui
-            for state in self.state.agentStates:
-                print(state)
-                pygame.draw.circle(self.surface, state.getColor(), gridToPixel(
-                    state.getPosition()), state.getRadius())
-
             # Allow for game specific conditions (winning, losing, etc.)
             self.rules.process(self.state, self)
             # Track progress
@@ -435,11 +413,11 @@ class Game:
                 self.numMoves += 1
             # Next agent
             agentIndex = (agentIndex + 1) % numAgents
-            self.display.update()
+            self.display.update(self.state)
         pygame.quit()
 
 
-def runGames(player, ghosts: list, display=pygame.display, numGames=1, numTraining=0, catchExceptions=False, timeout=30):
+def runGames(display, player, ghosts: list, numGames=1, numTraining=0, catchExceptions=False, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
