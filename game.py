@@ -32,8 +32,7 @@ class PlayerRules:
 
         # Update Configuration
         vector = Actions.directionToVector(action, PlayerRules.PLAYER_SPEED)
-        playerState.configuration = playerState.configuration.generateSuccessor(
-            vector)
+        playerState.configuration = playerState.configuration.getNextState(vector)
 
 
 class GhostRules:
@@ -66,7 +65,7 @@ class GhostRules:
         ghostState = state.agentStates[ghostIndex]
         speed = GhostRules.GHOST_SPEED
         vector = Actions.directionToVector(action, speed)
-        ghostState.configuration = ghostState.configuration.generateSuccessor(
+        ghostState.configuration = ghostState.configuration.getNextState(
             vector)
 
     @staticmethod
@@ -260,13 +259,13 @@ class GameState:
         else:
             return GhostRules.getLegalActions(self, agentIndex)
 
-    def generateSuccessor(self, agentIndex, action):
+    def getNextState(self, agentIndex, action):
         """
         Returns the successor state after the specified agent takes the action.
         """
         # Check that successors exist
         if self.isWin() or self.isLose():
-            raise Exception('Can\'t generate a successor of a terminal state.')
+            raise Exception("Can't generate a successor of a terminal state.")
 
         # Copy current state
         state = GameState(self)
@@ -292,11 +291,11 @@ class GameState:
     def getLegalPlayerActions(self):
         return self.getLegalActions(0)
 
-    def generatePlayerSuccessor(self, action):
+    def getPlayerNextState(self, action):
         """
         Generates the successor state after the specified player move
         """
-        return self.generateSuccessor(0, action)
+        return self.getNextState(0, action)
 
     def getPlayerState(self):
         """
@@ -405,12 +404,12 @@ class Game:
             action = agent.getAction(observation)
             self.moveHistory.append((agentIndex, action))
             # try:
-            #     self.state = self.state.generateSuccessor(
+            #     self.state = self.state.getNextState(
             #         agentIndex, action)
             # except Exception as data:
             #     print("Something wrong happens")
             #     break
-            self.state = self.state.generateSuccessor(agentIndex, action)
+            self.state = self.state.getNextState(agentIndex, action)
 
             # Update the gui
             for state in self.state.agentStates:

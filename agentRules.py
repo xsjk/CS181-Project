@@ -71,7 +71,7 @@ class Configuration:
     def __str__(self):
         return "(x,y)="+str(self.pos)+", "+str(self.direction)
 
-    def generateSuccessor(self, vector):
+    def getNextState(self, vector):
         """
         Generates a new configuration reached by translating the current
         configuration by the action vector.  This is a low-level call and does
