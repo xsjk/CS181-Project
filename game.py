@@ -1,7 +1,7 @@
 from util import *
 from agentRules import *
 import traceback
-
+from layout import Layout
 
 class PlayerRules:
     """
@@ -15,7 +15,7 @@ class PlayerRules:
         """
         Returns a list of possible actions.d
         """
-        return Actions.getPossibleActions(state.getPlayerState().configuration)
+        return Actions.getPossibleActions(state.getPlayerState().configuration,state.layout)
 
     @staticmethod
     def applyAction(state: "GameState", action: Action):
@@ -49,7 +49,7 @@ class GhostRules:
         reach a dead end, but can turn 90 degrees at intersections.
         """
         conf = state.getGhostState(ghostIndex).configuration
-        possibleActions = Actions.getPossibleActions(conf)
+        possibleActions = Actions.getPossibleActions(conf,state.layout)
         # reverse = Actions.reverseDirection(conf.direction)
         # if reverse in possibleActions and len(possibleActions) > 1:
         #     possibleActions.remove(reverse)
@@ -108,11 +108,11 @@ class ClassicGameRules:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def newGame(self, playerAgent, ghostAgents, display, quiet=False, catchExceptions=False):
+    def newGame(self, layout:Layout, playerAgent, ghostAgents, display, quiet=False, catchExceptions=False):
         # print(ghostAgents)
         agents = [playerAgent] + ghostAgents
         initState = GameState()
-        initState.initialize(len(ghostAgents))
+        initState.initialize(layout)
         game = Game(agents, display, self, catchExceptions=catchExceptions)
         game.state = initState
         self.initialState = initState.deepCopy()
@@ -159,14 +159,15 @@ class GameState:
         self._win = False
         self.scoreChange = 0
         self.score = 0
+        self.layout:Layout
 
         if prevState != None:
             self.agentStates = self.copyAgentStates(prevState.agentStates)
-            self.score = prevState.score
+            self.score = prevState.score 
+            self.layout = prevState.layout
 
     def deepCopy(self):
         state = GameState(self)
-        # state.layout = self.layout.deepCopy()
         # state._agentMoved = self._agentMoved
         return state
 
@@ -201,7 +202,7 @@ class GameState:
                 # hash(state)
         return int((hash(tuple(self.agentStates))))
 
-    def initialize(self, numGhostAgents):
+    def initialize(self, layout:Layout):
         """
         Creates an initial game state from a layout array (see layout.py).
         """
@@ -212,14 +213,13 @@ class GameState:
         self.agentStates = []
         numGhosts = 0
 
-        pos = Vector2d(MAP_SIZE.width // 2, MAP_SIZE.height // 2)
-        pos_used = [pos]
+        self.layout = layout
+
+        pos = layout.agentPositions[0]
         self.agentStates.append(AgentState(
             Configuration(pos, Direction.NORTH), True))
-        for i in range(numGhostAgents):
-            while pos in pos_used:
-                pos = Vector2d(random.randint(1, MAP_SIZE.width), random.randint(1, MAP_SIZE.height))
-            pos_used.append(pos)
+        for i in range(1,layout.ghostNum+1):
+            pos = layout.agentPositions[i]
             self.agentStates.append(AgentState(
                 Configuration(pos, Direction.NORTH), False))
 
@@ -325,8 +325,8 @@ class GameState:
         return self._win
 
 
-def gridToPixel(pos: tuple) -> Vector2d:
-    return (pos[0] * TILE_SIZE.width - TILE_SIZE.width // 2, pos[1] * TILE_SIZE.height - TILE_SIZE.height // 2)
+# def gridToPixel(pos: tuple) -> Vector2d:
+#     return (pos[0] * TILE_SIZE.width - TILE_SIZE.width // 2, pos[1] * TILE_SIZE.height - TILE_SIZE.height // 2)
 
 
 def isOdd(x: int) -> bool:
@@ -406,18 +406,16 @@ class Game:
         pygame.quit()
 
 
-def runGames(display, player, ghosts: list, numGames=1, numTraining=0, catchExceptions=False, timeout=30):
-    import __main__
-    __main__.__dict__['_display'] = display
+def runGames(display, layout:Layout,player, ghosts: list, numGames=1, numTraining=0, catchExceptions=False, timeout=30):
 
     rules = ClassicGameRules(timeout)
     games = []
 
     # 这里可以加一段，来使训练时没有图形界面
     for i in range(numGames):
-        gameDisplay = display
+        gameDisplay = display(layout.width,layout.tile_width)
         rules.quiet = False
-        game = rules.newGame(player, ghosts,
+        game = rules.newGame(layout, player, ghosts,
                              gameDisplay, False, catchExceptions)
         game.run()
         games.append(game)

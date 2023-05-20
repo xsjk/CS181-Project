@@ -1,31 +1,24 @@
 from collections.abc import Iterator
 import pygame
 from util import *
+from layout import Layout
 from enum import Enum
 from vector import Vector2d
 from abc import ABC, abstractmethod
 
-class Size:
-    def __init__(self, width: int, height: int):
-        self.width = width
-        self.height = height
-        self.length = min(width, height)
-        self.sizeTuple = (self.width, self.height)
+# class Size:
+#     def __init__(self, width: int, height: int):
+#         self.width = width
+#         self.height = height
+#         self.length = min(width, height)
+#         self.sizeTuple = (self.width, self.height)
 
 
-TITLE = "Robots"
-MAP_SIZE = Size(20, 20)
-TILE_SIZE = Size(30, 30)
-WINDOW_SIZE = Size(MAP_SIZE.width * TILE_SIZE.width,
-                   MAP_SIZE.height * TILE_SIZE.height)
-
-
-def isPosValid(x: int, y: int) -> bool:
-    """
-    (`x`, `y`) = (1, 1) is considered to be the top-left grid
-    """
-    return 1 <= x <= MAP_SIZE.width and 1 <= y <= MAP_SIZE.height
-
+# TITLE = "Robots"
+# MAP_SIZE = Size(20, 20)
+# TILE_SIZE = Size(30, 30)
+# WINDOW_SIZE = Size(MAP_SIZE.width * TILE_SIZE.width,
+#                    MAP_SIZE.height * TILE_SIZE.height)
 
 class Agent(ABC):
     def __init__(self, index: int):
@@ -210,15 +203,22 @@ class Actions:
             return direction.vector * speed
 
     @staticmethod
-    def getPossibleActions(config: Configuration) -> list[Action]:
+    def getPossibleActions(config: Configuration,layout:Layout) -> list[Action]:
         def isValid(action: Action) -> bool:
             if action == Action.TP:
                 # TODO:
                 pass
             else:
                 dir = action.value
-                return isPosValid(*(dir.vector + config.pos))
+                return Actions.isPosValid(*(dir.vector + config.pos),layout.width,layout.height)
         return list(filter(isValid, Action))
+
+    @staticmethod
+    def isPosValid(x: int, y: int, width:int, height:int) -> bool:
+        """
+        (`x`, `y`) = (1, 1) is considered to be the top-left grid
+        """
+        return 1 <= x <= width and 1 <= y <= height
 
     # TODO: 之后这里要改写
     @staticmethod
