@@ -14,7 +14,7 @@ if __name__ == "__main__":
         tile_height = 30,
         ghostNum = 4,
         player_pos = Vector2d(5,5),
-        ghosts_pos = [Vector2d(1,1),Vector2d(5,4)]
+        ghosts_pos = [Vector2d(1,1),Vector2d(1,2),Vector2d(1,3),Vector2d(1,4)]
     ) 
 
     runGames(

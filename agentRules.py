@@ -46,7 +46,6 @@ class Configuration:
         assert isinstance(pos, Vector2d)
         self.pos = pos
         self.direction = direction
-        self.dead = False
         # self.direction = direction
 
     def getPosition(self):
@@ -87,6 +86,7 @@ class AgentState:
     """
 
     def __init__(self, startConfiguration, isPlayer):
+        self.dead = False
         self.start = startConfiguration
         self.configuration: Configuration = startConfiguration
         self.color = COLOR['ghost']
@@ -114,6 +114,8 @@ class AgentState:
 
     def copy(self):
         state = AgentState(self.start, self.isPlayer)
+        state.color = self.color;
+        state.dead = self.dead;
         state.configuration = self.configuration
         state.numCarrying = self.numCarrying
         state.numReturned = self.numReturned

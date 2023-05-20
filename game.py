@@ -64,7 +64,7 @@ class GhostRules:
             raise Exception("Illegal ghost action " + str(action))
 
         ghostState = state.agentStates[ghostIndex]
-        if ghostState.configuration.dead:
+        if ghostState.dead:
             return
         speed = GhostRules.GHOST_SPEED
         vector = Actions.actionToVector(action, speed)
@@ -77,20 +77,19 @@ class GhostRules:
         if agentIndex == 0:  # Player just moved; Anyone can kill him
             for index in range(1, len(state.agentStates)):
                 ghostState = state.agentStates[index]
-                ghostPosition = ghostState.configuration.getPosition()
+                ghostPosition = ghostState.getPosition()
                 if GhostRules.canKill(playerPosition, ghostPosition):
                     GhostRules.collide(state)
         else:
             ghostState = state.agentStates[agentIndex]
-            ghostPosition = ghostState.configuration.getPosition()
+            ghostPosition = ghostState.getPosition()
             for i in range(1, len(state.agentStates)):
-                for j in range(i, len(state.agentStates)):
-                    if i != j and GhostRules.canKill(state.agentStates[i].configuration.getPosition(), state.agentStates[j].configuration.getPosition()):
-                        state.agentStates[i].color = COLOR["explosion"]
-                        state.agentStates[i].configuration.dead = True
-                        state.agentStates[j].color = COLOR["explosion"]
-                        state.agentStates[j].configuration.dead = True
-                        print("ghosts collides")
+                if i != agentIndex and GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[agentIndex].getPosition()):
+                    state.agentStates[i].color = COLOR["explosion"]
+                    state.agentStates[i].dead = True
+                    state.agentStates[agentIndex].color = COLOR["explosion"]
+                    state.agentStates[agentIndex].dead = True
+                    print("ghosts collides")
             if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
 
