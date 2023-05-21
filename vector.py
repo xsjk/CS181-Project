@@ -1,10 +1,30 @@
 import math
+from typing import overload, Union
+
 
 class Vector2d:
 
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    @overload
+    def __init__(self, x: float, y: float):
+        pass
+    
+    @overload
+    def __init__(self, vec: Union[tuple[float, float], "Vector2d"]):
+        pass
+
+    def __init__(self, *args):
+        match len(args):
+            case 1:
+                if isinstance(args[0], tuple):
+                    self.x, self.y = args[0]
+                elif isinstance(args[0], Vector2d):
+                    self.x, self.y = args[0].x, args[0].y
+                else:
+                    raise TypeError
+            case 2:
+                self.x, self.y = args
+            case _:
+                raise TypeError
 
     def __repr__(self):
         class_name = type(self).__name__

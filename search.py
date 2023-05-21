@@ -1,6 +1,6 @@
 from util import Stack, Queue, PriorityQueue
 from abc import ABC, abstractmethod
-from typing import Iterator
+from typing import Iterator, Container
 
 from game import GameState, Action
 
@@ -84,7 +84,7 @@ def nullHeuristic(state, problem=None):
     return 0
 
 
-def searchIterator(problem: SearchProblem, history: list[tuple[GameState, list[Action], float]], check: callable) -> Iterator[list[Action]]:
+def searchIterator(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: callable) -> Iterator[list[Action]]:
     """
     This is a general search function that takes a problem, a history data structure
     and a checker and return a list of actions
@@ -100,14 +100,14 @@ def searchIterator(problem: SearchProblem, history: list[tuple[GameState, list[A
                 history.push((S + [s], A + [a], C + c))
 
 
-def search(problem: SearchProblem, history: list[tuple[GameState, list[Action], float]], check: callable) -> list[Action]:
+def search(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: callable) -> list[Action]:
     iterator = searchIterator(problem, history, check)
     try:
         return next(iterator)
     except StopIteration:
         return []
     
-def searchAll(problem: SearchProblem, history: list[tuple[GameState, list[Action], float]], check: callable) -> list[list[Action]]:
+def searchAll(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: callable) -> list[list[Action]]:
     return list(searchIterator(problem, history, check))
 
 

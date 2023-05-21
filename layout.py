@@ -1,27 +1,22 @@
-from vector import *
+from vector import Vector2d
 import random
 from typing import Optional
+from util import auto_convert, type_check
 
 
 class Layout:
     """
     A Layout manages the static information about the game board.
     """
-
+    @auto_convert
     def __init__(self, map_size: Vector2d,
                  tile_size: Vector2d,
                  ghostNum: int,
                  player_pos: Vector2d = None, ghosts_pos: list[Vector2d] = []):
-        if isinstance(map_size, tuple):
-            map_size = Vector2d(*map_size)
-        if isinstance(tile_size, tuple):
-            tile_size = Vector2d(*tile_size)
         self.map_size = map_size
         self.tile_size = tile_size
         self.agentPositions = []
         self.ghostNum = ghostNum
-        if isinstance(player_pos, tuple):
-            player_pos = Vector2d(*player_pos)
         for i in range(len(ghosts_pos)):
             if isinstance(ghosts_pos[i], tuple):
                 ghosts_pos[i] = Vector2d(*ghosts_pos[i])

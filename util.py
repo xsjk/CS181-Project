@@ -5,10 +5,69 @@ import inspect
 import sys
 import heapq
 import math
-from typing import Any
+from typing import Any, TypeVar, Iterable
 from dataclasses import dataclass, field
-from typing import Iterable, Any
-from functools import partial
+from functools import partial, wraps
+import types
+
+T = TypeVar('T')
+
+def convert_arg(arg, target_type):
+    if type(target_type) == str:
+        return convert_arg(arg, eval(target_type))
+    elif type(target_type) == type:
+        if target_type == inspect.Parameter.empty or isinstance(arg, target_type):
+            return arg
+        try:
+            return target_type(arg)
+        except (ValueError, TypeError):
+            return arg
+    elif type(target_type) == types.GenericAlias:
+        outer_type = target_type.__origin__
+        inner_types = target_type.__args__
+        if outer_type in (list, tuple, set):
+            return outer_type(convert_arg(item, inner_types[0]) for item in arg)
+        elif outer_type in (dict,):
+            return outer_type((convert_arg(key, inner_types[0]), convert_arg(value, inner_types[1])) for key, value in arg.items())
+        else:
+            raise TypeError(f'Unknown type {target_type}')
+    elif type(target_type) == types.UnionType:
+        pass
+    else:
+        raise TypeError(f'Unknown type {target_type}')
+
+            
+
+def auto_convert(func: callable) -> callable:
+    @wraps(func)
+    def wrapper(*args, **kwargs) -> T:
+        signature = inspect.signature(func)
+        parameters = signature.parameters
+        converted_args = [
+            convert_arg(arg, param.annotation)
+            for arg, param in zip(args, parameters.values())
+        ]
+        converted_kwargs = {
+            key: convert_arg(value, parameters[key].annotation)
+            for key, value in kwargs.items()
+        }
+        return func(*converted_args, **converted_kwargs)
+    return wrapper
+
+def type_check(func: callable) -> callable:
+    @wraps(func)
+    def wrapper(*args, **kwargs) -> T:
+        signature = inspect.signature(func)
+        parameters = signature.parameters
+        for arg, param in zip(args, parameters.values()):
+            if param.annotation != inspect.Parameter.empty and not isinstance(arg, param.annotation):
+                raise TypeError(f'Argument {param.name} should be {param.annotation} but got {type(arg)}')
+        for key, value in kwargs.items():
+            if parameters[key].annotation != inspect.Parameter.empty and not isinstance(value, parameters[key].annotation):
+                raise TypeError(f'Argument {key} should be {parameters[key].annotation} but got {type(value)}')
+        return func(*args, **kwargs)
+    return wrapper
+
 
 class DisjointSet(list):
     @dataclass
