@@ -103,7 +103,7 @@ class GhostRules:
     @staticmethod
     def collide(state):
         if not state._win:
-            state.scoreChange -= 500
+            state.score -= 500
             state._lose = True
 
     @staticmethod
@@ -177,6 +177,7 @@ class GameState:
             self.agentStates = self.copyAgentStates(prevState.agentStates)
             self.score = prevState.score
             self.layout = prevState.layout
+            self.scoreChange = prevState.scoreChange
 
     def deepCopy(self):
         state = GameState(self)
@@ -220,7 +221,7 @@ class GameState:
         """
         # self.capsules = []
         self.score = 0
-        self.scoreChange = 0
+        self.scoreChange = 1
 
         self.agentStates = []
         numGhosts = 0
@@ -273,15 +274,16 @@ class GameState:
         if agentIndex == 0:  # Player is moving
             state._eaten = [False for i in range(state.getNumAgents())]
             PlayerRules.applyAction(state, action)
+            state.score += state.scoreChange
         else:                # A ghost is moving
             GhostRules.applyAction(state, action, agentIndex)
 
         # Resolve multi-agent effects
         GhostRules.checkDeath(state, agentIndex)
 
+        #print(state.scoreChange)
         # Book keeping
         state._agentMoved = agentIndex
-        state.score += state.scoreChange
         GameState.explored.add(self)
         GameState.explored.add(state)
 
@@ -426,7 +428,7 @@ def runGames(display: type, layout: Layout, player, ghosts: list, numGames: int 
 
     # 这里可以加一段，来使训练时没有图形界面
     for i in range(numGames):
-        gameDisplay = display(layout.width, layout.tile_width)
+        gameDisplay = display(layout.map_size, layout.tile_size)
         rules.quiet = False
         game = rules.newGame(layout, player, ghosts,
                              gameDisplay, False, catchExceptions)

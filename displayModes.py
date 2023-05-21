@@ -72,12 +72,13 @@ def isOdd(x: int) -> bool:
 
 
 class PygameGraphics(GraphicMode):
-    def __init__(self, map_size: int, tile_size: int):
+    def __init__(self, map_size: Vector2d, tile_size: Vector2d):
         self.display = pygame.display
-        self.MAP_SIZE = Size(map_size, map_size)
-        self.TILE_SIZE = Size(tile_size, tile_size)
+        self.MAP_SIZE = Size(map_size.x, map_size.y)
+        self.TILE_SIZE = Size(tile_size.x, tile_size.y)
         self.WINDOW_SIZE = Size(self.MAP_SIZE.width * self.TILE_SIZE.width,
                                 self.MAP_SIZE.height * self.TILE_SIZE.height)
+        self.radius = self.TILE_SIZE.length * 0.8 / 2
 
     def initialize(self, state):
         print("Game begins!")
@@ -97,11 +98,12 @@ class PygameGraphics(GraphicMode):
                 )
 
         # draw the agents
+
         for state in state.agentStates:
             print(state)
             pygame.draw.circle(self.surface, state.getColor(), self.gridToPixel(
-                state.getPosition()), state.getRadius())
-        
+                state.getPosition()), self.radius)
+
         self.display.update()
 
     def pause(self):
