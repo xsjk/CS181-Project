@@ -5,14 +5,16 @@ import inspect
 import sys
 import heapq
 import math
-from typing import Any, TypeVar, Iterable
+from typing import Any, TypeVar, Iterable, Callable
 from dataclasses import dataclass, field
 from functools import partial, wraps
 import types
 
 T = TypeVar('T')
 
-def convert_arg(arg, target_type):
+def convert_arg(arg, target_type, verbose: bool = False):
+    if verbose:
+        print(f'Converting {arg} to {target_type}')
     if type(target_type) == str:
         return convert_arg(arg, eval(target_type))
     elif type(target_type) == type:
@@ -36,25 +38,27 @@ def convert_arg(arg, target_type):
     else:
         raise TypeError(f'Unknown type {target_type}')
 
-            
-
-def auto_convert(func: callable) -> callable:
-    @wraps(func)
-    def wrapper(*args, **kwargs) -> T:
-        signature = inspect.signature(func)
-        parameters = signature.parameters
-        converted_args = [
-            convert_arg(arg, param.annotation)
-            for arg, param in zip(args, parameters.values())
-        ]
-        converted_kwargs = {
-            key: convert_arg(value, parameters[key].annotation)
-            for key, value in kwargs.items()
-        }
-        return func(*converted_args, **converted_kwargs)
-    return wrapper
-
-def type_check(func: callable) -> callable:
+def auto_convert(verbose: bool = False):
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> T:
+            signature = inspect.signature(func)
+            parameters = signature.parameters
+            converted_args = [
+                convert_arg(arg, param.annotation, verbose)
+                for arg, param in zip(args, parameters.values())
+            ]
+            converted_kwargs = {
+                key: convert_arg(value, parameters[key].annotation, verbose)
+                for key, value in kwargs.items()
+            }
+            return func(*converted_args, **converted_kwargs)
+        return wrapper
+    if callable(verbose):
+        return decorator(verbose)
+    return decorator
+    
+def type_check(func: Callable) -> Callable:
     @wraps(func)
     def wrapper(*args, **kwargs) -> T:
         signature = inspect.signature(func)
@@ -662,7 +666,7 @@ def mulEach(x, y):
         return x * y
 
 
-def deepmap(f: callable, x: Any):
+def deepmap(f: Callable, x: Any):
     if isinstance(x, Iterable):
         return type(x)(map(partial(deepmap, f), x))
     else:

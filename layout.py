@@ -1,6 +1,5 @@
 from vector import Vector2d
 import random
-from typing import Optional
 from util import auto_convert, type_check
 
 
@@ -8,7 +7,7 @@ class Layout:
     """
     A Layout manages the static information about the game board.
     """
-    @auto_convert
+    @auto_convert(verbose=True)
     def __init__(self, map_size: Vector2d,
                  tile_size: Vector2d,
                  ghostNum: int,
@@ -48,15 +47,15 @@ class Layout:
     @property
     def width(self):
         return self.map_size.x
-    
+
     @property
     def height(self):
         return self.map_size.y
-    
+
     @property
     def tile_width(self):
         return self.tile_size.x
-    
+
     @property
     def tile_height(self):
         return self.tile_size.y

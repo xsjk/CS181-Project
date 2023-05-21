@@ -1,9 +1,7 @@
 from util import Stack, Queue, PriorityQueue
 from abc import ABC, abstractmethod
-from typing import Iterator, Container
-
+from typing import Iterator, Container, Callable
 from game import GameState, Action
-
 
 class SearchProblem(ABC):
 
@@ -84,7 +82,7 @@ def nullHeuristic(state, problem=None):
     return 0
 
 
-def searchIterator(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: callable) -> Iterator[list[Action]]:
+def searchIterator(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: Callable) -> Iterator[list[Action]]:
     """
     This is a general search function that takes a problem, a history data structure
     and a checker and return a list of actions
@@ -100,14 +98,14 @@ def searchIterator(problem: SearchProblem, history: Container[tuple[GameState, l
                 history.push((S + [s], A + [a], C + c))
 
 
-def search(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: callable) -> list[Action]:
+def search(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: Callable) -> list[Action]:
     iterator = searchIterator(problem, history, check)
     try:
         return next(iterator)
     except StopIteration:
         return []
     
-def searchAll(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: callable) -> list[list[Action]]:
+def searchAll(problem: SearchProblem, history: Container[tuple[GameState, list[Action], float]], check: Callable) -> list[list[Action]]:
     return list(searchIterator(problem, history, check))
 
 
@@ -129,10 +127,10 @@ def uniformCostSearch(problem: SearchProblem):
 def uniformCostSearchIterator(problem: SearchProblem):
     return searchIterator(problem, PriorityQueueForUCS(), goalExcludedVisitChecker(problem))
 
-def aStarSearch(problem: SearchProblem, heuristic: callable = nullHeuristic):
+def aStarSearch(problem: SearchProblem, heuristic: Callable = nullHeuristic):
     return search(problem, PriorityQueueForAStar(problem, heuristic), goalExcludedVisitChecker(problem))
 
-def aStarSearchIterator(problem: SearchProblem, heuristic: callable = nullHeuristic):
+def aStarSearchIterator(problem: SearchProblem, heuristic: Callable = nullHeuristic):
     return searchIterator(problem, PriorityQueueForAStar(problem, heuristic), goalExcludedVisitChecker(problem))
 
 # Abbreviations
