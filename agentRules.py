@@ -202,10 +202,24 @@ class Action(Enum):
             case _:
                 return self.value.vector
             
-
     @staticmethod
     def random() -> "Action":
         return random.choice(list(Action))
+    
+    @staticmethod
+    def from_vector(vector: Vector2d) -> "Action":
+        code = ""
+        if vector.y > 0:
+            code += "S"
+        elif vector.y < 0:
+            code += "N"
+        if vector.x > 0:
+            code += "E"
+        elif vector.x < 0:
+            code += "W"
+        if code == "":
+            code = "STOP"
+        return Action[code]
 
 class Actions:
     """
@@ -218,8 +232,7 @@ class Actions:
             # TODO:
             pass
         else:
-            direction = action.value
-            return direction.vector * speed
+            return action.vector * speed
 
     @staticmethod
     def getPossibleActions(config: Configuration,layout:Layout) -> list[Action]:

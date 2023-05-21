@@ -15,9 +15,6 @@ class Layout:
         self.tile_size = tile_size
         self.agentPositions = []
         self.ghostNum = ghostNum
-        for i in range(len(ghosts_pos)):
-            if isinstance(ghosts_pos[i], tuple):
-                ghosts_pos[i] = Vector2d(*ghosts_pos[i])
         self.arrangeAgents(player_pos, ghosts_pos)
         # self.initializeVisibilityMatrix()
 

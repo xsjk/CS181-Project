@@ -47,7 +47,7 @@ class PositionSearchProblem(SearchProblem):
 
 class LongestLiveProblem(PositionSearchProblem):
     def __init__(self, gameState: GameState):
-        self.startState = gameState.getPlayerPosition()
+        self.startState = gameState
 
     def getStateState(self):
         return self.startState
@@ -57,9 +57,9 @@ class LongestLiveProblem(PositionSearchProblem):
 
     def getSuccessors(self, s: GameState):
         successors = []
-        for a in Action:
-            if s != Action.TP:
-                s_ = s.getNextState(0, a)
+        for a in s.getLegalPlayerActions():
+            if a != Action.TP:
+                s_ = s.getPlayerNextState(a)
                 successors.append((s_, a, 1))
         return successors
 
@@ -92,7 +92,9 @@ class LongestLiveAgent(SearchAgent):
     def prepareActions(self, state: GameState):
         self.actions: list[Action] = []
         self.actionIndex: int = 0
-        for actions in search.breadthFirstSearchIterator(LongestLiveProblem(state)):
+        for i, actions in enumerate(search.breadthFirstSearchIterator(LongestLiveProblem(state))):
             if len(actions) > len(self.actions):
                 self.actions = actions
+            print(f"searched {i} states", end='\r')
+        print(f"searched {i} states")
         self.actions.append(Action.TP)

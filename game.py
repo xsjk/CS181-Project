@@ -92,7 +92,7 @@ class GhostRules:
                     state.agentStates[i].dead = True
                     state.agentStates[agentIndex].color = COLOR["explosion"]
                     state.agentStates[agentIndex].dead = True
-                    print("ghosts collides")
+                    # print("ghosts collides")
             if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
 
@@ -258,11 +258,11 @@ class GameState:
         else:
             return GhostRules.getLegalActions(self, agentIndex)
 
+    @type_check
     def getNextState(self, agentIndex: int, action: Action) -> "GameState":
         """
         Returns the successor state after the specified agent takes the action.
         """
-        assert isinstance(action, Action), "action must be an Action object"
         # Check that successors exist
         if self.isWin() or self.isLose():
             raise Exception("Can't generate a successor of a terminal state.")
@@ -281,7 +281,7 @@ class GameState:
         # Resolve multi-agent effects
         GhostRules.checkDeath(state, agentIndex)
 
-        #print(state.scoreChange)
+        # print(state.scoreChange)
         # Book keeping
         state._agentMoved = agentIndex
         GameState.explored.add(self)
@@ -306,6 +306,9 @@ class GameState:
         state.direction gives the travel vector
         """
         return self.agentStates[0].copy()
+    
+    def getAgentState(self, agentIndex: int) -> AgentState:
+        return self.agentStates[agentIndex]
 
     def getPlayerPosition(self) -> Vector2d:
         return self.agentStates[0].getPosition()

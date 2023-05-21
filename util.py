@@ -1,3 +1,4 @@
+from enum import Enum
 import time
 import signal
 import random
@@ -37,6 +38,38 @@ def convert_arg(arg, target_type, verbose: bool = False):
         pass
     else:
         raise TypeError(f'Unknown type {target_type}')
+    
+def assert_arg(arg, target_type, verbose: bool = False):
+    if verbose:
+        print(f'Asserting {arg} to {target_type}')
+    if type(target_type) == str:
+        assert type(arg).__name__ == target_type, TypeError(f'Argument should be "{target_type}" but got "{type(arg).__name__}"')
+    elif type(target_type) == type:
+        if target_type == inspect.Parameter.empty or isinstance(arg, target_type):
+            return arg
+        raise TypeError(f'Argument should be "{target_type.__name__}" but got "{type(arg).__name__}"')
+    elif type(target_type) == types.GenericAlias:
+        outer_type = target_type.__origin__
+        inner_types = target_type.__args__
+        if outer_type in (list, tuple, set):
+            return outer_type(assert_arg(item, inner_types[0]) for item in arg)
+        elif outer_type in (dict,):
+            return outer_type((assert_arg(key, inner_types[0]), assert_arg(value, inner_types[1])) for key, value in arg.items())
+        else:
+            raise TypeError(f'Unknown type {target_type}')
+    elif type(target_type) == types.UnionType:
+        pass
+    # enum
+    elif issubclass(target_type, Enum):
+        if isinstance(arg, target_type):
+            return arg
+        elif isinstance(arg, str):
+            return target_type[arg]
+        else:
+            raise TypeError(f'Argument should be "{target_type.__name__}" or "{target_type.__name__}" but got "{type(arg).__name__}"')
+    else:
+        raise TypeError(f'Unknown type {target_type}')
+    
 
 def auto_convert(verbose: bool = False):
     def decorator(func: Callable) -> Callable:
@@ -52,7 +85,8 @@ def auto_convert(verbose: bool = False):
                 key: convert_arg(value, parameters[key].annotation, verbose)
                 for key, value in kwargs.items()
             }
-            return func(*converted_args, **converted_kwargs)
+            res = func(*converted_args, **converted_kwargs)
+            return convert_arg(res, signature.return_annotation, verbose)
         return wrapper
     if callable(verbose):
         return decorator(verbose)
@@ -64,12 +98,12 @@ def type_check(func: Callable) -> Callable:
         signature = inspect.signature(func)
         parameters = signature.parameters
         for arg, param in zip(args, parameters.values()):
-            if param.annotation != inspect.Parameter.empty and not isinstance(arg, param.annotation):
-                raise TypeError(f'Argument {param.name} should be {param.annotation} but got {type(arg)}')
+            assert_arg(arg, param.annotation)
         for key, value in kwargs.items():
-            if parameters[key].annotation != inspect.Parameter.empty and not isinstance(value, parameters[key].annotation):
-                raise TypeError(f'Argument {key} should be {parameters[key].annotation} but got {type(value)}')
-        return func(*args, **kwargs)
+            assert_arg(value, parameters[key].annotation)
+        res = func(*args, **kwargs)
+        assert_arg(res, signature.return_annotation)
+        return res
     return wrapper
 
 

@@ -3,33 +3,30 @@ from game import Agent, GameState, Action
 from playerAgents import PlayerAgent
 from functools import partial
 from util import Vector2d
+from typing import Optional
 
 INF = float('inf')
 
 
-def scoreEvaluationFunction(currentGameState, action):
-    """
-    This default evaluation function just returns the score of the state.
-    The score is the same one displayed in the Player GUI.
-
-    This evaluation function is meant for use with adversarial search agents
-    (not reflex agents).
-    """
+def scoreEvaluationFunction(currentGameState: GameState, action: Optional[Action] = None) -> float:
     return currentGameState.getScore()
 
 
-def inverseManhattanEvaluationFunction(currentGameState, action):
+def inverseManhattanEvaluationFunction(currentGameState: GameState, action: Optional[Action] = None) -> float:
     # Useful information you can extract from a GameState (player.py)
-    childGameState: GameState = currentGameState.getPlayerNextState(action)
+    if action is not None:
+        childGameState: GameState = currentGameState.getPlayerNextState(action)
+    else:
+        childGameState: GameState = currentGameState
     newPos: Vector2d = childGameState.getPlayerPosition()
     newGhostStates: list[AgentState] = childGameState.getGhostStates()
-
     ghostPos: list[Vector2d] = [g.getPosition() for g in newGhostStates]
+
     # if not new ScaredTimes new state is ghost: return lowest value
     if newPos in ghostPos:
         return -1
     else:
-        return -1 / min(map(partial(Vector2d.manhattanDistance, newPos), ghostPos))
+        return min(map(partial(Vector2d.manhattanDistance, newPos), ghostPos))
 
 
 class GreedyAgent(PlayerAgent):
@@ -43,7 +40,7 @@ class GreedyAgent(PlayerAgent):
 
 
 class MultiAgentSearchAgent(PlayerAgent):
-    def __init__(self, evalFn=scoreEvaluationFunction, depth=2):
+    def __init__(self, evalFn=scoreEvaluationFunction, depth: int = 2):
         super().__init__()
         self.evaluationFunction = evalFn
         self.depth = depth
@@ -114,8 +111,15 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
 
-    def getAction(self, s: GameState):
-        return max(((self.expectScore(s.getNextState(0, a)), a) for a in s.getLegalActions()))[1]
+    def getAction(self, s: GameState) -> Action:
+        # bestScore = -INF
+        # for a in s.getLegalActions():
+        #     nextState = s.getNextState(0, a)
+        #     score = self.expectScore(nextState)
+        #     if score > bestScore:
+        #         bestScore, bestAction = score, a
+        # return bestAction
+        return max(s.getLegalActions(), key=lambda a: self.expectScore(s.getNextState(0, a)))
 
     def expectScore(self, s: GameState, i: int = 1, d: int = 0):
         if d == self.depth or s.isWin() or s.isLose():
@@ -123,6 +127,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         A = s.getLegalActions(i)
         i_ = (i + 1) % s.getNumAgents()
         d_ = d if i_ > 0 else d + 1
+        # sc = []
+        # for a in A:
+        #     sc.append(self.expectScore(s.getNextState(i, a), i_, d_))
         sc = (self.expectScore(s.getNextState(i, a), i_, d_) for a in A)
         if i == 0:
             return max(sc)
