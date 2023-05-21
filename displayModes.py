@@ -1,6 +1,5 @@
 import time
 from util import *
-from vector import *
 from abc import ABC, abstractmethod
 import pygame
 

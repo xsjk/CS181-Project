@@ -5,7 +5,7 @@ import inspect
 import sys
 import heapq
 import math
-from typing import Any, TypeVar, Iterable, Callable
+from typing import Any, TypeVar, Iterable, Callable, Union, overload
 from dataclasses import dataclass, field
 from functools import partial, wraps
 import types
@@ -72,6 +72,113 @@ def type_check(func: Callable) -> Callable:
         return func(*args, **kwargs)
     return wrapper
 
+
+class Vector2d:
+
+    @overload
+    def __init__(self, x: float, y: float):
+        pass
+    
+    @overload
+    def __init__(self, vec: Union[tuple[float, float], "Vector2d"]):
+        pass
+
+    def __init__(self, *args):
+        match len(args):
+            case 1:
+                if isinstance(args[0], tuple):
+                    self.x, self.y = args[0]
+                elif isinstance(args[0], Vector2d):
+                    self.x, self.y = args[0].x, args[0].y
+                else:
+                    raise TypeError
+            case 2:
+                self.x, self.y = args
+            case _:
+                raise TypeError
+
+    def __repr__(self):
+        class_name = type(self).__name__
+        return '{}({!r}, {!r})'.format(class_name, *self)
+
+    def __str__(self):
+        return str(tuple(self))
+
+    def __eq__(self, other):
+        return tuple(self) == tuple(other)
+
+    def __abs__(self):
+        return math.hypot(self.x, self.y)
+
+    def angle(self):
+        return math.atan2(self.y, self.x)
+
+    def __bool__(self):
+        return bool(abs(self))
+
+    def __format__(self, format_spec = ''):
+        if format_spec.endswith('p'):
+            format_spec = format_spec[:-1]
+            coords = (abs(self), self.angle())
+            outer_format = '<{}, {}>'
+        else:
+            coords = self
+            outer_format = '({}, {})'
+        components = (format(c, format_spec) for c in coords)
+        return outer_format.format(*components)
+    
+    def __hash__(self):
+        return super().__hash__()
+    
+    def __add__(self, other: "Vector2d") -> "Vector2d":
+        return Vector2d(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other: "Vector2d") -> "Vector2d":
+        return Vector2d(self.x - other.x, self.y - other.y)
+    
+    def __mul__(self, scalar: float) -> "Vector2d":
+        return Vector2d(self.x * scalar, self.y * scalar)
+    
+    def __rmul__(self, scalar: float) -> "Vector2d":
+        return self * scalar
+    
+    def __neg__(self) -> "Vector2d":
+        return Vector2d(-self.x, -self.y)
+    
+    def __iter__(self):
+        return iter((self.x, self.y))
+    
+    def __getitem__(self, index: int) -> float:
+        match index:
+            case 0:
+                return self.x
+            case 1:
+                return self.y
+            case _:
+                raise IndexError
+
+    def __setitem__(self, index: int, value: float):
+        match index:
+            case 0:
+                self.x = value
+            case 1:
+                self.y = value
+            case _:
+                raise IndexError
+
+    
+    def map(self, func):
+        return Vector2d(func(self.x), func(self.y))
+    
+    @staticmethod
+    def manhattanDistance(v1: "Vector2d", v2: "Vector2d") -> float:
+        return abs(v1.x - v2.x) + abs(v1.y - v2.y)
+    
+    @staticmethod
+    def euclideanDistance(v1: "Vector2d", v2: "Vector2d") -> float:
+        return abs(v1 - v2)
+    
+V = Vector2d
 
 class DisjointSet(list):
     @dataclass

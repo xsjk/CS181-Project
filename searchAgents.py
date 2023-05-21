@@ -3,7 +3,7 @@ from game import GameState, Agent, Action, Actions, Direction
 import search
 from search import SearchProblem, nullHeuristic
 from functools import partial
-from vector import Vector2d
+from util import Vector2d
 
 
 class PositionSearchProblem(SearchProblem):

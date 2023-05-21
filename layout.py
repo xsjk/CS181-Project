@@ -1,6 +1,5 @@
-from vector import Vector2d
 import random
-from util import auto_convert, type_check
+from util import auto_convert, type_check, Vector2d
 
 
 class Layout:

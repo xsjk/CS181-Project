@@ -1,10 +1,8 @@
 from agentRules import AgentState, Direction
 from game import Agent, GameState, Action
 from playerAgents import PlayerAgent
-import random
-import util
 from functools import partial
-from vector import Vector2d
+from util import Vector2d
 
 INF = float('inf')
 

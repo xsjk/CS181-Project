@@ -3,7 +3,6 @@ import pygame
 from util import *
 from layout import Layout
 from enum import Enum
-from vector import Vector2d
 from abc import ABC, abstractmethod
 
 # class Size:
