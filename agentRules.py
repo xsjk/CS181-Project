@@ -48,8 +48,8 @@ class Configuration:
         self.direction = direction
         # self.direction = direction
 
-    def getPosition(self):
-        return (self.pos)
+    def getPosition(self) -> Vector2d:
+        return self.pos
 
     def getDirection(self):
         return self.direction
@@ -110,7 +110,7 @@ class AgentState:
         return self.configuration == other.configuration
 
     def __hash__(self):
-        return hash(hash(self.configuration))
+        return hash(self.configuration)
 
     def copy(self):
         state = AgentState(self.start, self.isPlayer)
@@ -121,7 +121,7 @@ class AgentState:
         state.numReturned = self.numReturned
         return state
 
-    def getPosition(self):
+    def getPosition(self) -> Vector2d:
         if self.configuration == None:
             return None
         return self.configuration.getPosition()
@@ -169,6 +169,10 @@ class Direction(Enum):
                 return Vector2d(-1, 1)
             case Direction.SOUTHEAST:
                 return Vector2d(1, 1)
+            
+    @staticmethod
+    def random() -> "Direction":
+        return random.choice(list(Direction))
     
 COLOR = {
     "default": pygame.colordict.THECOLORS["gray0"],
@@ -191,6 +195,22 @@ class Action(Enum):
     SW = Direction.SOUTHWEST
     SE = Direction.SOUTHEAST
     TP = "TP"
+    STOP = "STOP"
+
+    @property
+    def vector(self) -> Vector2d:
+        match self:
+            case Action.TP:
+                raise NotImplementedError
+            case Action.STOP:
+                return Vector2d(0, 0)
+            case _:
+                return self.value.vector
+            
+
+    @staticmethod
+    def random() -> "Action":
+        return random.choice(list(Action))
 
 class Actions:
     """
@@ -213,8 +233,7 @@ class Actions:
                 # TODO:
                 pass
             else:
-                dir = action.value
-                return Actions.isPosValid(*(dir.vector + config.pos),layout.width,layout.height)
+                return Actions.isPosValid(*(action.vector + config.pos),layout.width,layout.height)
         return list(filter(isValid, Action))
 
     @staticmethod

@@ -29,8 +29,6 @@ class GraphicMode(ABC):
     def finish(self):
         raise NotImplementedError
 
-# state:
-
 
 class NullGraphics(GraphicMode):
     # gamestate
