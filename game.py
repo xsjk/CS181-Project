@@ -1,3 +1,4 @@
+from time import sleep
 from util import *
 from agentRules import *
 import traceback
@@ -466,6 +467,7 @@ class Game:
         self.display.initialize(self.state)
 
         while not self.gameOver:
+            sleep(0.2)
             # self.display.update()
             # Execute the action
             agent = self.agents[agentIndex]

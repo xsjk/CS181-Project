@@ -65,6 +65,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return max(((min_value(s.getNextState(0, a)), a) for a in s.getLegalActions()))[1]
 
 
+# TODO: don't know what getNextState function to use
 class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def getAction(self, s: GameState):
@@ -73,7 +74,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         β = INF
         a_ = None
         for a in s.getLegalPlayerActions():
-            s_ = s.getNextState(a)
+            s_ = s.getPlayerNextState(s, a)
             v_ = self.n_value(s_, 0, 1, α, β)
             if v_ > v:
                 v, a_ = v_, a
@@ -90,7 +91,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     def α_value(self, s, d, i, α=-INF, β=INF):
         v = -INF
         for a in s.getLegalActions(i):
-            v = max(v, self.n_value(s.getNextState(i, a), d, i + 1, α, β))
+            v = max(v, self.n_value(s.getNextState(a), d, i + 1, α, β))
             if v > β:
                 return v
             α = max(α, v)

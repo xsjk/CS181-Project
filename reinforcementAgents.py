@@ -409,7 +409,7 @@ class MCTSAgent(Agent):
             while not node.is_terminal:
                 a = random.choice(node.state.getLegalActions(self.index))
                 node = MCTSNode(state=node.state.getNextState(
-                    self.index, a), agent=self, parent=node)
+                    a), agent=self, parent=node)
 
             reward = node.state.getScore()
 
