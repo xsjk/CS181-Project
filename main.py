@@ -1,5 +1,5 @@
 from game import runGames
-from ghostAgents import GhostAgent
+from ghostAgents import GhostAgent, GhostsAgent
 from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
 from reinforcementAgents import MCTSAgent, QLearningAgent
@@ -8,6 +8,7 @@ from displayModes import PygameGraphics
 from layout import Layout
 
 if __name__ == "__main__":
+    ghostsAgent = GhostsAgent(4)
     runGames(
         display=PygameGraphics,
         layout=Layout(
@@ -18,5 +19,5 @@ if __name__ == "__main__":
             ghosts_pos = [(1,1),(2,1),(3,1),(4,1)]
         ),
         player=GreedyAgent(),
-        ghosts=[GhostAgent(i+1) for i in range(4)],
+        ghosts=ghostsAgent.children
     )
