@@ -19,7 +19,7 @@ class KeyboardAgent(PlayerAgent):
         Action.NE: {pygame.K_e, pygame.K_u},
         Action.SW: {pygame.K_z, pygame.K_b},
         Action.SE: {pygame.K_x, pygame.K_n},
-        Action.TP: {pygame.K_SPACE}
+        Action.TP: {pygame.K_SPACE,pygame.K_0}
     }
 
     def getAction(self, state: GameState) -> Action:

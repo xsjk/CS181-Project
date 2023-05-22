@@ -24,7 +24,7 @@ class Agent(ABC):
         self.index = index
 
     @abstractmethod
-    def getAction(self, state: "GameState") -> "Action":
+    def getAction(self, state) -> "Action":
         """
         The Agent will receive a GameState (from either {player, capture, sonar}.py) and
         must return an action from Directions.{North, South, East, West, Stop}
@@ -112,8 +112,8 @@ class AgentState:
 
     def copy(self):
         state = AgentState(self.start, self.isPlayer)
-        state.color = self.color;
-        state.dead = self.dead;
+        state.color = self.color
+        state.dead = self.dead
         state.configuration = self.configuration
         state.numCarrying = self.numCarrying
         state.numReturned = self.numReturned
@@ -196,7 +196,7 @@ class Action(Enum):
     def vector(self) -> Vector2d:
         match self:
             case Action.TP:
-                raise NotImplementedError
+                raiseNotDefined()
             case Action.STOP:
                 return Vector2d(0, 0)
             case _:
@@ -228,11 +228,18 @@ class Actions:
 
     @staticmethod
     def actionToVector(action: Action, speed=1.0) -> Vector2d:
-        if action == Action.TP:
-            # TODO:
-            pass
-        else:
-            return action.vector * speed
+        return action.vector * speed
+        
+    @staticmethod
+    def translateVector(gameState) -> Vector2d:
+        mapsize = gameState.getMapSize()
+        vector = Vector2d(random.randint(-mapsize.x,mapsize.x),random.randint(-mapsize.y,mapsize.y))
+        goat_pos = gameState.getPlayerPosition() + vector
+        while not Actions.isPosValid(*goat_pos,*mapsize) or not Actions.isPosSafe(*goat_pos,gameState):
+            #print("The goat is:",goat_pos)
+            vector = Vector2d(random.randint(-mapsize.x,mapsize.x),random.randint(-mapsize.y,mapsize.y))
+            goat_pos = gameState.getPlayerPosition() + vector
+        return vector
 
     @staticmethod
     def getPossibleActions(config: Configuration,layout:Layout) -> list[Action]:
@@ -250,6 +257,15 @@ class Actions:
         (`x`, `y`) = (1, 1) is considered to be the top-left grid
         """
         return 1 <= x <= width and 1 <= y <= height
+
+    @staticmethod
+    def isPosSafe(x: int, y: int, gameState) -> bool:
+        pos = Vector2d(x,y)
+        ghost_positions = gameState.getGhostPositions()
+        for ghost_pos in ghost_positions:
+            if Vector2d.manhattanDistance(pos,ghost_pos) <= 2:
+                return False
+        return True
 
     # TODO: 之后这里要改写
     @staticmethod

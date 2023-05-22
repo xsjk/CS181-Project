@@ -17,6 +17,6 @@ if __name__ == "__main__":
             player_pos = (2,2),
             ghosts_pos = [(1,1),(1,4)]
         ),
-        player=MCTSAgent(),
+        player=KeyboardAgent(),
         ghosts=[GhostAgent(i+1) for i in range(2)],
     )

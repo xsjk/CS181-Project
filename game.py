@@ -25,16 +25,22 @@ class PlayerRules:
         Edits the state to reflect the results of the action.
         """
         assert isinstance(action, Action)
-        legal = PlayerRules.getLegalActions(state)
-        # print("The legal actions are",legal)
-        # print("The input action is", action)
-        if action not in legal:
-            raise Exception(f"Illegal action {action}")
-
+        
+        # When action is TP
+        if action == Action.TP:
+            vector = Actions.translateVector(state)
+            print("You use TP!")
+        else:
+            legal = PlayerRules.getLegalActions(state)
+            # print("The legal actions are",legal)
+            # print("The input action is", action)
+            if action not in legal:
+                raise Exception(f"Illegal action {action}")
+            # Update Configuration
+            vector = Actions.actionToVector(action, PlayerRules.PLAYER_SPEED)
+        
         playerState = state.agentStates[0]
 
-        # Update Configuration
-        vector = Actions.actionToVector(action, PlayerRules.PLAYER_SPEED)
         playerState.configuration = playerState.configuration.getNextState(
             vector)
 
@@ -327,10 +333,13 @@ class GameState:
         return self.agentStates[agentIndex].getPosition()
 
     def getGhostPositions(self) -> list[Vector2d]:
-        return [s.getPosition() for s in self.getGhosttStates()]
+        return [s.getPosition() for s in self.getGhostStates()]
 
     def getNumAgents(self) -> int:
         return len(self.agentStates)
+
+    def getMapSize(self) -> Vector2d:
+        return self.layout.map_size
 
     def getScore(self) -> float:
         return float(self.score)
