@@ -15,7 +15,8 @@ def scoreEvaluationFunction(currentGameState: GameState, action: Optional[Action
 def inverseManhattanEvaluationFunction(currentGameState: GameState, action: Optional[Action] = None) -> float:
     # Useful information you can extract from a GameState (player.py)
     if action is not None:
-        childGameState: GameState = currentGameState.getPlayerNextState(action)
+        childGameState: GameState = currentGameState.getPlayerNextState(currentGameState,action)
+        # print("Player pos now is :",currentGameState.getPlayerPosition())
     else:
         childGameState: GameState = currentGameState
     newPos: Vector2d = childGameState.getPlayerPosition()
@@ -36,7 +37,8 @@ class GreedyAgent(PlayerAgent):
         self.evaluationFunction = evalFn
 
     def getAction(self, gameState: GameState):
-        return max(gameState.getLegalActions(), key=partial(self.evaluationFunction, gameState))
+        legal = gameState.getLegalActions()
+        return max(legal, key=partial(self.evaluationFunction, gameState))
 
 
 class MultiAgentSearchAgent(PlayerAgent):

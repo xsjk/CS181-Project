@@ -277,12 +277,9 @@ class GameState:
         if self.isWin() or self.isLose():
             raise Exception("Can't generate a successor of a terminal state.")
 
-        # Copy current state
-        state = GameState(self)
-
         # Let agent's logic deal with its action's effects on the board
         # First we update the player state
-        state = self.getPlayerNextState(state,action)
+        state = self.getPlayerNextState(GameState(self),action)
         if(state.isLose()): return state
 
 
@@ -296,21 +293,31 @@ class GameState:
         #print("The ghost action here is", action)
         state = self.getGhostsNextState(state,actions)   
 
-        # print(state.scoreChange)
-        # Book keeping
-        # state._agentMoved = agentIndex
         # GameState.explored.add(self)
         # GameState.explored.add(state)
 
         return state
+    
+    def changeToNextState(self, action: Action):
+        self.changeToPlayerNextState(self,action)
+        if(self.isLose()): return 
+        # First check if the player is dead
+        # Then we update the remaind agents: ghosts
+        actions = []
+        for agentIndex in range(1,self.getGhostNum()+1):
+            actions.append(self.agents[agentIndex].getAction(self))
+            #print("The ghost action here is", action)
+        self.changeToGhostsNextState(self,actions) 
 
+    
     def getLegalPlayerActions(self) -> list[Action]:
         return self.getLegalActions(0)
 
-    def getPlayerNextState(self, state, action: Action) -> "GameState":
+    def getPlayerNextState(self, o_state, action: Action) -> "GameState":
         """
         Generates the successor state after the specified player move
         """
+        state = GameState(o_state)
         PlayerRules.applyAction(state, action)
         state.score += state.scoreChange
         
@@ -324,12 +331,35 @@ class GameState:
         
         return state
     
-    def getGhostsNextState(self, state, actions:list[Action]):
+    def changeToPlayerNextState(self, state, action: Action):
+        """
+        Generates the successor state after the specified player move
+        """
+        PlayerRules.applyAction(state, action)
+        state.score += state.scoreChange
+        
+        playerPosition = state.getPlayerPosition()
+
+        for index in range(1, len(state.agentStates)):
+            ghostState = state.agentStates[index]
+            ghostPosition = ghostState.getPosition()
+            if GhostRules.canKill(playerPosition, ghostPosition):
+                GhostRules.collide(state)
+    
+    def getGhostsNextState(self, o_state, actions:list[Action]):
+        state = GameState(o_state)
         if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
         for i in range(len(actions)):
             GhostRules.applyAction(state, actions[i], i+1)
         GhostRules.checkDeath(state)
         return state
+        #print("The ghost action here is", action)
+    
+    def changeToGhostsNextState(self, state, actions:list[Action]):
+        if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
+        for i in range(len(actions)):
+            GhostRules.applyAction(state, actions[i], i+1)
+        GhostRules.checkDeath(state)
         #print("The ghost action here is", action)
 
     def getPlayerState(self) -> AgentState:
@@ -444,14 +474,8 @@ class Game:
             action: Action = agent.getAction(observation)
             assert isinstance(
                 action, Action), "action must be an Action object"
-            self.moveHistory.append((agentIndex, action))
-            # try:
-            #     self.state = self.state.getNextState(
-            #         agentIndex, action)
-            # except Exception as data:
-            #     print("Something wrong happens")
-            #     break
-            self.state = self.state.getNextState(action)
+            # self.moveHistory.append((agentIndex, action))
+            self.state.changeToNextState(action)
 
             # Allow for game specific conditions (winning, losing, etc.)
             self.rules.process(self.state, self)

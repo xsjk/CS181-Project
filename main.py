@@ -11,12 +11,12 @@ if __name__ == "__main__":
     runGames(
         display=PygameGraphics,
         layout=Layout(
-            map_size = (10,10),
+            map_size = (40,40),
             tile_size = (30,30),
-            ghostNum = 2,
+            ghostNum = 4,
             player_pos = (2,2),
-            ghosts_pos = [(1,1),(2,4)]
+            ghosts_pos = [(1,1),(2,1),(3,1),(4,1)]
         ),
-        player=AlphaBetaAgent(),
-        ghosts=[GhostAgent(i+1) for i in range(2)],
+        player=GreedyAgent(),
+        ghosts=[GhostAgent(i+1) for i in range(4)],
     )
