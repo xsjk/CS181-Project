@@ -4,7 +4,7 @@ from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
 from reinforcementAgents import MCTSAgent
 from searchAgents import LongestLiveAgent
-from displayModes import PygameGraphics, NullGraphics
+from displayModes import PygameGraphics
 from layout import Layout
 
 if __name__ == "__main__":

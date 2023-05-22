@@ -440,12 +440,19 @@ def runGames(display: type, layout: Layout, player, ghosts: list, numGames: int 
 
     # 这里可以加一段，来使训练时没有图形界面
     for i in range(numGames):
-        gameDisplay = display(layout.map_size, layout.tile_size)
-        rules.quiet = False
+        beQuiet = i < numTraining
+        if beQuiet:
+            # Suppress output and graphics
+            from displayModes import NullGraphics
+            gameDisplay = NullGraphics()
+            rules.quiet = True
+        else:
+            gameDisplay = display(layout.map_size, layout.tile_size)
         game = rules.newGame(layout, player, ghosts,
-                             gameDisplay, False, catchExceptions)
+                    gameDisplay, False, catchExceptions)
         game.run()
-        games.append(game)
+        if not beQuiet:
+            games.append(game)
 
         # if record:
         #     import time
