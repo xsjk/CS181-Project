@@ -17,6 +17,6 @@ if __name__ == "__main__":
             player_pos = (2,2),
             ghosts_pos = [(1,1),(2,4)]
         ),
-        player=KeyboardAgent(),
+        player=AlphaBetaAgent(),
         ghosts=[GhostAgent(i+1) for i in range(2)],
     )

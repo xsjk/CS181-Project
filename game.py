@@ -282,37 +282,55 @@ class GameState:
 
         # Let agent's logic deal with its action's effects on the board
         # First we update the player state
-        PlayerRules.applyAction(state, action)
-        state.score += state.scoreChange
-        
-        for agentIndex in range(1,self.getNumAgents()):
-            # Then we update the remaind agents: ghosts
-            action = self.agents[agentIndex].getAction(state)
-            print("The ghost action here is", action)
-            GhostRules.applyAction(state, action, agentIndex)
+        state = self.getPlayerNextState(state,action)
+        if(state.isLose()): return state
 
-        # for agentIndex in range(1,self.getNumAgents()):
-        #     # Resolve multi-agent effects
-        GhostRules.checkDeath(state)
+
+        # First check if the player is dead
+
+        # Then we update the remaind agents: ghosts
+        actions = []
+        for agentIndex in range(1,self.getNumAgents()):
+            actions.append(self.agents[agentIndex].getAction(state))
+            
+        #print("The ghost action here is", action)
+        state = self.getGhostsNextState(state,actions)   
 
         # print(state.scoreChange)
         # Book keeping
         # state._agentMoved = agentIndex
-        GameState.explored.add(self)
-        GameState.explored.add(state)
+        # GameState.explored.add(self)
+        # GameState.explored.add(state)
 
         return state
 
     def getLegalPlayerActions(self) -> list[Action]:
         return self.getLegalActions(0)
 
-    # def getPlayerNextState(self, state, action: Action) -> "GameState":
-    #     """
-    #     Generates the successor state after the specified player move
-    #     """
-    #     PlayerRules.applyAction(state, action)
-    #     state.score += state.scoreChange
-    #     #return self.getNextState(0, action)
+    def getPlayerNextState(self, state, action: Action) -> "GameState":
+        """
+        Generates the successor state after the specified player move
+        """
+        PlayerRules.applyAction(state, action)
+        state.score += state.scoreChange
+        
+        playerPosition = state.getPlayerPosition()
+
+        for index in range(1, len(state.agentStates)):
+            ghostState = state.agentStates[index]
+            ghostPosition = ghostState.getPosition()
+            if GhostRules.canKill(playerPosition, ghostPosition):
+                GhostRules.collide(state)
+        
+        return state
+    
+    def getGhostsNextState(self, state, actions:list[Action]):
+        if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
+        for i in range(len(actions)):
+            GhostRules.applyAction(state, actions[i], i+1)
+        GhostRules.checkDeath(state)
+        return state
+        #print("The ghost action here is", action)
 
     def getPlayerState(self) -> AgentState:
         """
@@ -347,6 +365,9 @@ class GameState:
 
     def getNumAgents(self) -> int:
         return len(self.agentStates)
+
+    def getGhostNum(self) -> int:
+        return len(self.agentStates) - 1
 
     def getMapSize(self) -> Vector2d:
         return self.layout.map_size

@@ -71,7 +71,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         β = INF
         a_ = None
         for a in s.getLegalPlayerActions():
-            s_ = s.getPlayerNextState(a)
+            s_ = s.getNextState(a)
             v_ = self.n_value(s_, 0, 1, α, β)
             if v_ > v:
                 v, a_ = v_, a
@@ -98,11 +98,11 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         v = INF
         for a in s.getLegalActions(i):
             if i == s.getNumAgents() - 1:
-                v = min(v, self.n_value(s.getNextState(i, a), d + 1, 0, α, β))
+                v = min(v, self.n_value(s.getNextState(a), d + 1, 0, α, β))
                 if v < α:
                     return v
             else:
-                v = min(v, self.n_value(s.getNextState(i, a), d, i + 1, α, β))
+                v = min(v, self.n_value(s.getNextState(a), d, i + 1, α, β))
                 if v < α:
                     return v
             β = min(β, v)
