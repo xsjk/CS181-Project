@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Optional
 from game import GameState, AgentState, Agent, Action
 from abc import ABC, abstractmethod
-
 import random
 from playerAgents import PlayerAgent
 import util
@@ -20,6 +19,7 @@ class ValueEstimationAgent(Agent):
     alpha: float = 1.0
     epsilon: float = 0.05
     gamma: float = 0.8
+    lambd: float = 0.9
     numTraining: int = 10
 
     @abstractmethod
@@ -53,8 +53,9 @@ class FeatureExtractor(ABC):
 class IdentityExtractor(FeatureExtractor):
     def getFeatures(self, S, A: Action) -> dict:
         feats = util.Counter()
-        feats[(S,A)] = 1.0
+        feats[(S, A)] = 1.0
         return feats
+
 
 class CoordinateExtractor(FeatureExtractor):
     def getFeatures(self, S, A: Action) -> dict:
@@ -64,11 +65,13 @@ class CoordinateExtractor(FeatureExtractor):
         feats[f'y={S[0]}'] = 1.0
         feats[f'action={A}'] = 1.0
         return feats
-    
+
+
 class BetterExtractor(FeatureExtractor):
     def getFeatures(self, S, A: Action) -> dict:
         # TODO
         pass
+
 
 class ReinforcementAgent(ValueEstimationAgent):
 
@@ -126,7 +129,7 @@ class ReinforcementAgent(ValueEstimationAgent):
         self.accumTestRewards = 0.0
         super().__init__(**kwargs)
 
-    def doAction(self, state, action):
+    def takeAction(self, state, action):
         """
             Called by inherited class when
             an action is taken in a state
@@ -141,7 +144,8 @@ class ReinforcementAgent(ValueEstimationAgent):
         """
         if not self.lastState is None:
             reward = state.getScore() - self.lastState.getScore()
-            self.observeTransition(self.lastState, self.lastAction, state, reward)
+            self.observeTransition(
+                self.lastState, self.lastAction, state, reward)
         return state
 
     def registerInitialState(self, state):
@@ -154,7 +158,8 @@ class ReinforcementAgent(ValueEstimationAgent):
           Called by Player game at the terminal state
         """
         deltaReward = state.getScore() - self.lastState.getScore()
-        self.observeTransition(self.lastState, self.lastAction, state, deltaReward)
+        self.observeTransition(
+            self.lastState, self.lastAction, state, deltaReward)
         self.stopEpisode()
 
         # Make sure we have this var
@@ -170,14 +175,19 @@ class ReinforcementAgent(ValueEstimationAgent):
             windowAvg = self.lastWindowAccumRewards / float(NUM_EPS_UPDATE)
             if self.episodesSoFar <= self.numTraining:
                 trainAvg = self.accumTrainRewards / float(self.episodesSoFar)
-                print(f'\tCompleted {self.episodesSoFar} out of {self.numTraining} training episodes')
+                print(
+                    f'\tCompleted {self.episodesSoFar} out of {self.numTraining} training episodes')
                 print(f'\tAverage Rewards over all training: {trainAvg:2f}')
             else:
-                testAvg = float(self.accumTestRewards) / (self.episodesSoFar - self.numTraining)
-                print(f'\tCompleted {self.episodesSoFar - self.numTraining} test episodes')
+                testAvg = float(self.accumTestRewards) / \
+                    (self.episodesSoFar - self.numTraining)
+                print(
+                    f'\tCompleted {self.episodesSoFar - self.numTraining} test episodes')
                 print(f'\tAverage Rewards over testing: {testAvg:.2f}')
-            print(f'\tAverage Rewards for last {NUM_EPS_UPDATE} episodes: {windowAvg:.2f}')
-            print(f'\tEpisode took {time.time() - self.episodeStartTime:.2f} seconds')
+            print(
+                f'\tAverage Rewards for last {NUM_EPS_UPDATE} episodes: {windowAvg:.2f}')
+            print(
+                f'\tEpisode took {time.time() - self.episodeStartTime:.2f} seconds')
             self.lastWindowAccumRewards = 0.0
             self.episodeStartTime = time.time()
 
@@ -194,24 +204,81 @@ class QLearningAgent(ReinforcementAgent):
     def getQValue(self, S, A: Action):
         return self.values[(S, A)]
 
-    def computeValueFromQValues(self, S) -> float:
-        return max(map(partial(self.getQValue, S), self.getLegalActions(S)), default=0.0)
-
-    def computeActionFromQValues(self, S):
-        return max(self.getLegalActions(S), key=partial(self.getQValue, S), default=None)
-
     def getAction(self, S) -> Action:
         return random.choice(self.getLegalActions(S)) if util.flipCoin(self.epsilon) else self.getPolicy(S)
 
     def update(self, S, A, S_, R: float) -> None:
         self.values[(S, A)] = (1 - self.alpha) * self.values[(S, A)] + \
-            self.alpha * (R + self.gamma * self.computeValueFromQValues(S_))
+            self.alpha * (R + self.gamma * self.getValue(S_))
 
     def getPolicy(self, S) -> Action:
-        return self.computeActionFromQValues(S)
+        return max(self.getLegalActions(S), key=partial(self.getQValue, S), default=None)
 
     def getValue(self, S) -> float:
-        return self.computeValueFromQValues(S)
+        return max(map(partial(self.getQValue, S), self.getLegalActions(S)), default=0.0)
+
+
+class SarsaAgent(ReinforcementAgent):
+    def __init__(self, **args):
+        super().__init__(**args)
+        self.values = util.Counter()
+
+    def getQValue(self, S, A: Action):
+        return self.values[(S, A)]
+
+    def getAction(self, S) -> Action:
+        return random.choice(self.getLegalActions(S)) if util.flipCoin(self.epsilon) else self.getPolicy(S)
+
+    def update(self, S, A, S_, A_, R: float) -> None:
+        self.values[(S, A)] = (1 - self.alpha) * self.values[(S, A)] + \
+            self.alpha * (R + self.gamma * self.getQValue(S_, A_))
+
+    def getPolicy(self, S) -> Action:
+        return max(self.getLegalActions(S), key=partial(self.getQValue, S), default=None)
+
+    def getValue(self, S) -> float:
+        return max(map(partial(self.getQValue, S), self.getLegalActions(S)), default=0.0)
+
+    def observationFunction(self, state):
+        if not self.lastState is None:
+            reward = state.getScore() - self.lastState.getScore()
+            self.observeTransition(
+                self.lastState, self.lastAction, state, reward)
+        return state
+
+
+class SarsaLambdaAgent(ReinforcementAgent):
+
+    def __init__(self, **args):
+        super().__init__(**args)
+        self.values = util.Counter()
+        self.eligibility = util.Counter()
+
+    def update(self, S, A, S_, A_, R: float):
+        self.eligibility[(S, A)] += 1
+        delta = R + self.gamma * self.getQValue(S_, A_) - self.getQValue(S, A)
+        for (S, A), e in self.eligibility.items():
+            self.values[(S, A)] += self.alpha * delta * e
+            self.eligibility[(S, A)] *= self.gamma * self.lambd
+
+    def getQValue(self, S, A: Action) -> float:
+        return self.values[(S, A)]
+
+    def getAction(self, S) -> Action:
+        return random.choice(self.getLegalActions(S)) if util.flipCoin(self.epsilon) else self.getPolicy(S)
+
+    def getPolicy(self, S) -> Action:
+        return max(self.getLegalActions(S), key=partial(self.getQValue, S), default=None)
+
+    def getValue(self, S) -> float:
+        return max(map(partial(self.getQValue, S), self.getLegalActions(S)), default=0.0)
+
+    def observationFunction(self, state):
+        if not self.lastState is None:
+            reward = state.getScore() - self.lastState.getScore()
+            self.observeTransition(
+                self.lastState, self.lastAction, state, reward)
+        return state
 
 
 class PlayerQAgent(QLearningAgent, PlayerAgent):
@@ -227,7 +294,7 @@ class PlayerQAgent(QLearningAgent, PlayerAgent):
 
     def getAction(self, S):
         A = QLearningAgent.getAction(self, S)
-        self.doAction(S, A)
+        self.takeAction(S, A)
         return A
 
 
@@ -245,13 +312,10 @@ class ApproximateQAgent(PlayerQAgent):
         return self.getWeights() * self.featExtractor.getFeatures(S, A)
 
     def update(self, S, A: Action, S_, R: float):
-        difference = (R + self.gamma * self.computeValueFromQValues(S_)) - self.getQValue(S, A)
+        difference = (R + self.gamma *
+                      self.computeValueFromQValues(S_)) - self.getQValue(S, A)
         for k, v in self.featExtractor.getFeatures(S, A).items():
             self.weights[k] += self.alpha * difference * v
-
-
-import random
-import math
 
 
 class MCTSNode:
@@ -261,7 +325,7 @@ class MCTSNode:
     total_reward: float
     children: list["MCTSNode"]
     parent: Optional["MCTSNode"]
-    
+
     def __init__(self, state: GameState, agent: Agent, parent: Optional["MCTSNode"] = None):
         self.state = state
         self.agent = agent
@@ -282,7 +346,7 @@ class MCTSNode:
         Select the child with the highest UCB score.
         """
         return max(self.children, key=lambda child: child.ucb_score(exploration_constant))
-    
+
     def randomChild(self) -> "MCTSNode":
         """
         Select a random child of this node.
@@ -294,16 +358,17 @@ class MCTSNode:
         Expands the current node by creating all possible child nodes.
         """
         for a in self.state.getLegalActions(self.agent.index):
-            self.children.append(MCTSNode(state=self.state.getNextState(self.agent.index, a), agent=self.agent, parent=self))
-    
+            self.children.append(MCTSNode(state=self.state.getNextState(
+                self.agent.index, a), agent=self.agent, parent=self))
+
     @property
     def is_terminal(self) -> bool:
         return self.state.isWin() or self.state.isLose()
-    
+
     @property
     def has_children(self) -> bool:
         return len(self.children) > 0
-    
+
     def backpropagate(self, reward: float) -> None:
         """
         Propagate the reward backwards and update the visit count of all ancestors.
@@ -320,7 +385,7 @@ class MCTSAgent(Agent):
     exploration_constant: float
     num_simulations: int
 
-    def __init__(self, index: int = 0, exploration_constant: float = 1, num_simulations: int = 100):
+    def __init__(self, index: int = 0, exploration_constant: float = 1, num_simulations: int = 50):
         self.exploration_constant = exploration_constant
         self.num_simulations = num_simulations
         super().__init__(index)
@@ -335,7 +400,7 @@ class MCTSAgent(Agent):
                 node = node.bestChild(self.exploration_constant)
 
             # Expansion
-            if not node.is_terminal and node.visits > 0:    
+            if not node.is_terminal and node.visits > 0:
                 node.expand()
                 if node.has_children:
                     node = node.randomChild()
@@ -343,13 +408,15 @@ class MCTSAgent(Agent):
             # Simulation
             while not node.is_terminal:
                 a = random.choice(node.state.getLegalActions(self.index))
-                node = MCTSNode(state=node.state.getNextState(self.index, a), agent=self, parent=node)
-                
+                node = MCTSNode(state=node.state.getNextState(
+                    self.index, a), agent=self, parent=node)
+
             reward = node.state.getScore()
 
             # Backpropagation
             node.backpropagate(reward)
 
-        best_child: MCTSNode = max(root.children, key=lambda child: child.visits)
+        best_child: MCTSNode = max(
+            root.children, key=lambda child: child.visits)
         print(f"Best child visited {best_child.visits} times")
         return Action.from_vector(best_child.state.getAgentState(self.index).configuration.direction)

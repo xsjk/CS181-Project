@@ -123,9 +123,6 @@ class ClassicGameRules:
     and how the game starts and ends.
     """
 
-    def __init__(self, timeout=30):
-        self.timeout = timeout
-
     def newGame(self, layout: Layout, playerAgent: Agent, ghostAgents: list[Agent], display: GraphicMode, quiet: bool = False, catchExceptions: bool = False):
         # print(ghostAgents)
         agents = [playerAgent] + ghostAgents
@@ -236,11 +233,11 @@ class GameState:
 
         pos = layout.agentPositions[0]
         self.agentStates.append(AgentState(
-            Configuration(pos, Direction.NORTH), True))
+            Configuration(pos, Direction.NORTH.vector), True))
         for i in range(1, layout.ghostNum+1):
             pos = layout.agentPositions[i]
             self.agentStates.append(AgentState(
-                Configuration(pos, Direction.NORTH), False))
+                Configuration(pos, Direction.NORTH.vector), False))
 
     # static variable keeps track of which states have had getLegalActions called
     explored = set()
@@ -433,17 +430,16 @@ class Game:
         pygame.quit()
 
 
-def runGames(display: type, layout: Layout, player, ghosts: list, numGames: int = 1, numTraining: int = 0, catchExceptions: int = False, timeout: int = 30):
+def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], numGames: int = 1, numTraining: int = 0, catchExceptions: bool = False):
 
-    rules = ClassicGameRules(timeout)
+    rules = ClassicGameRules()
     games = []
 
     # 这里可以加一段，来使训练时没有图形界面
     for i in range(numGames):
         gameDisplay = display(layout.map_size, layout.tile_size)
         rules.quiet = False
-        game = rules.newGame(layout, player, ghosts,
-                             gameDisplay, False, catchExceptions)
+        game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
         game.run()
         games.append(game)
 
@@ -463,9 +459,7 @@ def runGames(display: type, layout: Layout, player, ghosts: list, numGames: int 
         winRate = wins.count(True) / float(len(wins))
         print('Average Score:', sum(scores) / float(len(scores)))
         print('Scores:       ', ', '.join([str(score) for score in scores]))
-        print('Win Rate:      %d/%d (%.2f)' %
-              (wins.count(True), len(wins), winRate))
-        print('Record:       ', ', '.join(
-            [['Loss', 'Win'][int(w)] for w in wins]))
+        print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
+        print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
 
     return games
