@@ -80,3 +80,16 @@ class GhostsAgent(GhostsAgentBase):
             actions.append(action)
         return actions
         #print("Ghost action is:", action)
+
+class GhostAgentSlightlyRandom(GhostAgent):
+    def __init__(self, index: int):
+        assert index > 0
+        super().__init__(index)
+
+    def getAction(self, state: GameState) -> Action:
+        if random.random() < 0.2:
+            action = random.choice(state.getLegalActions(self.index))
+            print("Ghost action is:", action)
+            return action
+        else:
+            return super().getAction(state)
