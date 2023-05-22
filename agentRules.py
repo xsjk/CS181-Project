@@ -5,19 +5,6 @@ from layout import Layout
 from enum import Enum
 from abc import ABC, abstractmethod
 
-# class Size:
-#     def __init__(self, width: int, height: int):
-#         self.width = width
-#         self.height = height
-#         self.length = min(width, height)
-#         self.sizeTuple = (self.width, self.height)
-
-
-# TITLE = "Robots"
-# MAP_SIZE = Size(20, 20)
-# TILE_SIZE = Size(30, 30)
-# WINDOW_SIZE = Size(MAP_SIZE.width * TILE_SIZE.width,
-#                    MAP_SIZE.height * TILE_SIZE.height)
 
 class Agent(ABC):
     def __init__(self, index: int):
@@ -41,8 +28,9 @@ class Configuration:
     horizontally and y increases vertically.  Therefore, north is the direction of increasing y, or (0,1).
     """
 
-    def __init__(self, pos: Vector2d, direction):
+    def __init__(self, pos: Vector2d, direction: Vector2d):
         assert isinstance(pos, Vector2d)
+        assert isinstance(direction, Vector2d)
         self.pos = pos
         self.direction = direction
         # self.direction = direction
