@@ -1,5 +1,5 @@
 from game import runGames, trainPlayer
-from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent
+from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent, GhostsAgentSample
 from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
 from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent, DQNAgent
@@ -11,7 +11,7 @@ import pickle
 
 if __name__ == "__main__":
     # ghostsAgent = GhostsAgent(4)
-    map_size = Vector2d(15, 15)
+    map_size = Vector2d(10, 10)
     # playerAgent = DQNAgent(map_size)
     # playerAgent = QLearningAgent()
     ghosts_pos = []
@@ -20,11 +20,11 @@ if __name__ == "__main__":
     playerAgent = pickle.load(open("DQNAgent.pkl", "rb"))
     # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
     # ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
-    ghostsAgent = [GhostAgent(i) for i in range(1,6)]
+    ghostsAgent = GhostsAgent(4)
     layout = Layout(
         map_size = map_size,
         tile_size = (30,30),
-        ghostNum = 5,
+        ghostNum = 4,
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )
