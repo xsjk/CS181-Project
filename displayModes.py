@@ -107,7 +107,6 @@ class PygameGraphics(GraphicMode):
         # draw the agents
 
         for state in state.agentStates:
-            print(state)
             pygame.draw.circle(self.surface, state.getColor(), self.gridToPixel(
                 state.getPosition()), self.radius)
 

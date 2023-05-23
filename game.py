@@ -105,18 +105,20 @@ class GhostRules:
 
     @staticmethod
     def collide(state):
-        if not state._win:
+        if not state._win and not state._lose:
             state.score -= 500
             state._lose = True
     
     @staticmethod
+    # Notice that the boom will be called twice if a boom happen.
     def boom(state,ghost_state1,ghost_state2):
         ghost_state1.color = COLOR["explosion"]
         ghost_state1.dead = True
         ghost_state2.color = COLOR["explosion"]
         ghost_state2.dead = True
         num = sum([state.agentStates[i].dead == False for i in range(1,state.getNumAgents())])
-        if not state._lose and num == 0:
+        state.score += 125
+        if not state._lose and num == 0 and not state._win:
             state.score += 750
             state._win = True
 
@@ -328,6 +330,9 @@ class GameState:
         return state
     
     def getGhostsNextState(self, actions:list[Action]):
+        """
+        Returns the successsor state after the specified ghost actions( The player may not moved now! ) 
+        """
         state = GameState(self)
         if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
         for i in range(len(actions)):
@@ -360,8 +365,10 @@ class GameState:
         """
         PlayerRules.applyAction(self, action)
         self.score += self.scoreChange
-        
+        self.actionsTaken.append(action)
+
         playerPosition = self.getPlayerPosition()
+        
 
         for index in range(1, len(self.agentStates)):
             ghostState = self.agentStates[index]
@@ -495,8 +502,7 @@ class Game:
         self.display.initialize(self.state)
 
         while not self.gameOver:
-            sleep(1)
-            # self.display.update()
+            #sleep(1)
             # Execute the action
             agent = self.agents[agentIndex]
 
@@ -504,13 +510,15 @@ class Game:
             action: Action = agent.getAction(self.state)
             assert isinstance(
                 action, Action), "action must be an Action object"
+            
             # self.moveHistory.append((agentIndex, action))
             self.state.changeToNextState(action)
 
             # Allow for game specific conditions (winning, losing, etc.)
-            self.rules.process(self.state, self)
             # Track progress
-            # Next agent
+            self.rules.process(self.state, self)
+            
+            # Update the gui
             self.display.update(self.state)
             
         self.display.finish()
@@ -531,6 +539,13 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
         game.run()
         games.append(game)
 
+        scores = [game.state.getScore() for game in games]
+        wins = [game.state.isWin() for game in games]
+        winRate = wins.count(True) / float(len(wins))
+        print('Average Score:', sum(scores) / float(len(scores)))
+        print('Scores:       ', ', '.join([str(score) for score in scores]))
+        print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
+        print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
     return games
 
 

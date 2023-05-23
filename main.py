@@ -3,7 +3,7 @@ from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent
 from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
 from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent, DQNAgent
-from searchAgents import LongestLiveAgent, MaxScoreAgent
+from searchAgents import MaxScoreAgent
 from displayModes import PygameGraphics, NullGraphics
 from layout import Layout
 from util import Vector2d
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # playerAgent = QLearningAgent()
     ghosts_pos = [(1,1),(1,4),(2,2),(4,1),(4,4)]
     player_pos = Vector2d(3, 6)
-    playerAgent = MaxScoreAgent()
+    playerAgent = MCTSAgent()
     # playerAgent = pickle.load(open("SarsaLambdaAgent.pkl", "rb"))
     ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
     layout = Layout(
