@@ -114,7 +114,7 @@ class GhostRules:
         ghost_state2.dead = True
         num = sum([state.agentStates[i].dead == False for i in range(1,state.getNumAgents())])
         if not state._lose and num == 0:
-            state.score += 1500
+            state.score += 750
             state._win = True
 
 
@@ -268,6 +268,9 @@ class GameState:
             return PlayerRules.getLegalActions(self)
         else:
             return GhostRules.getLegalActions(self, agentIndex)
+        
+    def getLegalPlayerActions(self) -> list[Action]:
+        return self.getLegalActions(0)
 
     @type_check
     def getNextState(self, action: Action) -> "GameState":
@@ -297,22 +300,7 @@ class GameState:
         # GameState.explored.add(self)
         # GameState.explored.add(state)
 
-        return state
-    
-    def changeToNextState(self, action: Action):
-        self.changeToPlayerNextState(self,action)
-        if(self.isLose()): return 
-        # First check if the player is dead
-        # Then we update the remaind agents: ghosts
-        actions = []
-        for agentIndex in range(1,self.getGhostNum()+1):
-            actions.append(self.agents[agentIndex].getAction(self))
-            #print("The ghost action here is", action)
-        self.changeToGhostsNextState(self,actions) 
-
-    
-    def getLegalPlayerActions(self) -> list[Action]:
-        return self.getLegalActions(0)
+        return state 
 
     def getPlayerNextState(self, o_state, action: Action) -> "GameState":
         """
@@ -332,6 +320,33 @@ class GameState:
         
         return state
     
+    def getGhostsNextState(self, o_state, actions:list[Action]):
+        state = GameState(o_state)
+        if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
+        for i in range(len(actions)):
+            GhostRules.applyAction(state, actions[i], i+1)
+        GhostRules.checkDeath(state)
+        return state
+        #print("The ghost action here is", action)
+        
+    def changeToNextState(self, action: Action):
+        self.changeToPlayerNextState(self,action)
+        if(self.isLose()): return 
+        # First check if the player is dead
+        # Then we update the remaind agents: ghosts
+        actions = []
+        for agentIndex in range(1,self.getGhostNum()+1):
+            actions.append(self.agents[agentIndex].getAction(self))
+            #print("The ghost action here is", action)
+        self.changeToGhostsNextState(self,actions)
+    
+    def changeToGhostsNextState(self, state, actions:list[Action]):
+        if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
+        for i in range(len(actions)):
+            GhostRules.applyAction(state, actions[i], i+1)
+        GhostRules.checkDeath(state)
+        #print("The ghost action here is", action)
+   
     def changeToPlayerNextState(self, state, action: Action):
         """
         Generates the successor state after the specified player move
@@ -346,22 +361,6 @@ class GameState:
             ghostPosition = ghostState.getPosition()
             if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
-    
-    def getGhostsNextState(self, o_state, actions:list[Action]):
-        state = GameState(o_state)
-        if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
-        for i in range(len(actions)):
-            GhostRules.applyAction(state, actions[i], i+1)
-        GhostRules.checkDeath(state)
-        return state
-        #print("The ghost action here is", action)
-    
-    def changeToGhostsNextState(self, state, actions:list[Action]):
-        if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
-        for i in range(len(actions)):
-            GhostRules.applyAction(state, actions[i], i+1)
-        GhostRules.checkDeath(state)
-        #print("The ghost action here is", action)
 
     def getPlayerState(self) -> AgentState:
         """
@@ -491,6 +490,9 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
 
     rules = ClassicGameRules()
     games = []
+
+    # 警告，判断一下ghost数量是不是等于ghost agent数量
+    assert len(ghosts) == layout.getNumGhosts()
 
     # 这里可以加一段，来使训练时没有图形界面
     for i in range(numGames):
