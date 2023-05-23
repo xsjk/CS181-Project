@@ -4,11 +4,12 @@ from playerAgents import PlayerAgent
 from functools import partial
 from util import Vector2d, type_check
 from typing import Optional
+import itertools
 
 INF = float('inf')
 
 
-def scoreEvaluationFunction(currentGameState: GameState, actions: list[Action]) -> float:
+def scoreEvaluationFunction(currentGameState: GameState, actions: list[Action] = []) -> float:
     for action in actions:
         currentGameState.changeToNextState(action)
     return currentGameState.getScore()
@@ -44,7 +45,7 @@ class GreedyAgent(PlayerAgent):
 
 
 class MultiAgentSearchAgent(PlayerAgent):
-    def __init__(self, evalFn=scoreEvaluationFunction, depth: int = 2):
+    def __init__(self, evalFn=scoreEvaluationFunction, depth: int = 3):
         super().__init__()
         self.evaluationFunction = evalFn
         self.depth = depth
@@ -75,6 +76,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         α = -INF
         β = INF
         a_ = None
+        # self.depth = 2
         for a in s.getLegalPlayerActions():
             s_ = s.getPlayerNextState(a)
             v_ = self.n_value(s_, 0, 1, α, β)
@@ -87,32 +89,29 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         return \
             self.evaluationFunction(s) if d == self.depth or s.isLose() or s.isWin() else \
             self.α_value(s, d, i, α, β) if i == 0 else \
-            self.β_value(s, d, i, α, β) if 0 < i < s.getNumAgents() else \
+            self.β_value(s, d, i, α, β) if i == 1 else \
             None
 
-    def α_value(self, s, d, i, α=-INF, β=INF):
+    def α_value(self, s:GameState, d, i, α=-INF, β=INF):
         v = -INF
         for a in s.getLegalActions(i):
-            v = max(v, self.n_value(s.getNextState(a), d, i + 1, α, β))
+            v = max(v, self.n_value(s.getPlayerNextState(a), d, 1, α, β))
             if v > β:
                 return v
             α = max(α, v)
         return v
 
-    def β_value(self, s, d, i, α=-INF, β=INF):
+    def β_value(self, s:GameState, d, i, α=-INF, β=INF):
         v = INF
-        for a in s.getLegalActions(i):
-            if i == s.getNumAgents() - 1:
-                v = min(v, self.n_value(s.getNextState(a), d + 1, 0, α, β))
-                if v < α:
-                    return v
-            else:
-                v = min(v, self.n_value(s.getNextState(a), d, i + 1, α, β))
-                if v < α:
-                    return v
-            β = min(β, v)
+        # actions_list = itertools.product(*[s.getLikelyActions(i) for i in range(1,s.getGhostNum()+1)])
+        actions_list = [s.getGreedyAction(i) for i in range(1,s.getGhostNum()+1)]
+        # for a in actions_list:
+            #print(a)
+        v = min(v, self.n_value(s.getGhostsNextState(actions_list), d + 1, 0, α, β))
+        if v < α:
+            return v
+        β = min(β, v)
         return v
-
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
 

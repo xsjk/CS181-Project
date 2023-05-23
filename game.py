@@ -87,17 +87,30 @@ class GhostRules:
     @staticmethod
     def checkDeath(state: "GameState"):
         playerPosition = state.getPlayerPosition()
+        score_change = 0
         # check if player is dead
         for index in range(1, len(state.agentStates)):
             ghostState = state.agentStates[index]
             ghostPosition = ghostState.getPosition()
             if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
+            if not state.agentStates[index].dead: 
             # check if a ghost will boom with another ghost 
-            for i in range(1, len(state.agentStates)):
-                if i != index and GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[index].getPosition()):
-                    GhostRules.boom(state,state.agentStates[i],state.agentStates[index])
+                for i in range(index+1, len(state.agentStates)):
+                    if GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[index].getPosition()):
+                        GhostRules.boom(state,state.agentStates[i],state.agentStates[index])
+                        score_change += 125
                     # print("ghosts collides")
+        
+        # if win
+        num = sum([state.agentStates[i].dead == False for i in range(1,state.getNumAgents())])
+        #state.score += 125
+        if not state._lose:
+            state.score += score_change
+        
+        if not state._lose and num == 0 and not state._win:
+            state.score += 750
+            state._win = True
 
     @staticmethod
     def canKill(playerPosition: Vector2d, ghostPosition: Vector2d) -> bool:
@@ -116,11 +129,6 @@ class GhostRules:
         ghost_state1.dead = True
         ghost_state2.color = COLOR["explosion"]
         ghost_state2.dead = True
-        num = sum([state.agentStates[i].dead == False for i in range(1,state.getNumAgents())])
-        state.score += 125
-        if not state._lose and num == 0 and not state._win:
-            state.score += 750
-            state._win = True
 
 
     @staticmethod
@@ -275,7 +283,34 @@ class GameState:
             return PlayerRules.getLegalActions(self)
         else:
             return GhostRules.getLegalActions(self, agentIndex)
-        
+    
+    def getLikelyActions(self, agentIndex: int = 1):
+        """
+        Returns the more possible actions for the ghost specified.
+        """
+        legal = GhostRules.getLegalActions(self, agentIndex)
+        player_pos = self.getPlayerPosition()
+        ghost_pos = self.getGhostPosition(agentIndex)
+        dir_x = sign(player_pos.x - ghost_pos.x)
+        #dir_y = sign(player_pos.y - ghost_pos.y)
+        poss_actions = []
+        for i in range(0,len(legal)):
+            if(dir_x == Actions.actionToVector(legal[i]).x):
+                poss_actions.append(legal[i])
+        return poss_actions
+    
+    def getGreedyAction(self, agentIndex: int = 1):
+        """
+        Returns the more possible actions for the ghost specified.
+        """
+        # legal = GhostRules.getLegalActions(self, agentIndex)
+        player_pos = self.getPlayerPosition()
+        ghost_pos = self.getGhostPosition(agentIndex)
+        dir_x = sign(player_pos.x - ghost_pos.x)
+        dir_y = sign(player_pos.y - ghost_pos.y)
+        act = Actions.vectorToAction(Vector2d(dir_x,dir_y))
+        return act
+
     def getLegalPlayerActions(self) -> list[Action]:
         return self.getLegalActions(0)
 
@@ -502,7 +537,7 @@ class Game:
         self.display.initialize(self.state)
 
         while not self.gameOver:
-            #sleep(1)
+            sleep(1)
             # Execute the action
             agent = self.agents[agentIndex]
 

@@ -16,13 +16,13 @@ if __name__ == "__main__":
     # playerAgent = QLearningAgent()
     ghosts_pos = [(1,1),(1,4),(2,2),(4,1),(4,4)]
     player_pos = Vector2d(3, 6)
-    playerAgent = MCTSAgent()
+    playerAgent = AlphaBetaAgent()
     # playerAgent = pickle.load(open("SarsaLambdaAgent.pkl", "rb"))
-    ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GhostAgent(i) for i in range(1, 4)]
     layout = Layout(
         map_size = map_size,
         tile_size = (30,30),
-        ghostNum = 5,
+        ghostNum = 3,
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )
