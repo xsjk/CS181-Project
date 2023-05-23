@@ -14,21 +14,22 @@ if __name__ == "__main__":
     map_size = Vector2d(10, 10)
     # playerAgent = DQNAgent(map_size)
     # playerAgent = QLearningAgent()
-    ghosts_pos = []
-    player_pos = Vector2d(5, 5)
-    playerAgent = MaxScoreAgent()
-    # playerAgent = pickle.load(open("SarsaLambdaAgent.pkl", "rb"))
-    ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
+    ghosts_pos = [(1,1),(1,4),(2,2),(4,1),(4,4)]
+    player_pos = Vector2d(3, 6)
+    playerAgent = GreedyAgent()
+    # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
+    # ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = GhostsAgent(5)
     layout = Layout(
         map_size = map_size,
-        tile_size = (10,10),
+        tile_size = (30,30),
         ghostNum = 5,
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )
 
     # trainPlayer(
-    #     display=PygameGraphics,
+    #     display=NullGraphics,
     #     layout=layout,
     #     player=playerAgent,
     #     ghosts=ghostsAgent,
