@@ -25,7 +25,7 @@ class GhostAgent(Agent):
             dir_code += "W"
         direction = Direction(dir_code)
         action = Action(direction)
-        print("Ghost action is:", action)
+        # print("Ghost action is:", action)
         return action
 
 
@@ -64,9 +64,7 @@ class GhostsAgentBase(list):
     def getAction(self, state: GameState, childIndex: int):
         if self.nextActions == {}:
             self.nextActions = dict(enumerate(self.getActions(state), 1))
-        action = self.nextActions[childIndex]
-        del self.nextActions[childIndex]
-        return action
+        return self.nextActions.pop(childIndex)
 
     @abstractmethod
     def getActions(self, state: GameState) -> list[Action]:

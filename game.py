@@ -1,9 +1,12 @@
 from time import sleep
+from environment import Environment, PlayerGameEnvironment
 from util import *
 from agentRules import *
 import traceback
 from layout import Layout
+import numpy as np
 from displayModes import GraphicMode
+from rich.progress import track
 
 
 class PlayerRules:
@@ -133,7 +136,7 @@ class ClassicGameRules:
         # print(ghostAgents)
         agents = [playerAgent] + ghostAgents
         initState = GameState()
-        initState.initialize(layout,ghostAgents)
+        initState.initialize(layout, agents)
         game = Game(agents, display, self, catchExceptions=catchExceptions)
         game.state = initState
         self.initialState = initState.deepCopy()
@@ -291,8 +294,8 @@ class GameState:
 
         # Then we update the remaind agents: ghosts
         actions = []
-        for agentIndex in range(1,self.getNumAgents()):
-            actions.append(self.agents[agentIndex].getAction(state))
+        for ghost in self.agents[1:]:
+            actions.append(ghost.getAction(state))
             
         #print("The ghost action here is", action)
         state = self.getGhostsNextState(actions)   
@@ -410,6 +413,22 @@ class GameState:
 
     def isWin(self) -> bool:
         return self._win
+    
+    def toMatrix(self) -> np.ndarray[np.ndarray[int]]:
+        mat = np.zeros((self.layout.height, self.layout.width), dtype=int)
+        # 0: empty
+        # 1: player
+        # 2: ghost
+        # 3: dead ghost
+        player_pos = self.getPlayerPosition()
+        mat[player_pos.y][player_pos.x] = 1
+        for ghost in self.getGhostStates():
+            pos = ghost.getPosition()
+            if ghost.dead:
+                mat[pos.y][pos.x] = 3
+            else:
+                mat[pos.y][pos.x] = 2
+        return mat
 
 
 # def gridToPixel(pos: tuple) -> Vector2d:
@@ -423,7 +442,7 @@ def isOdd(x: int) -> bool:
 
 
 class Game:
-    def __init__(self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions):
+    def __init__(self, agents: list[Agent], display: GraphicMode, gameRule: ClassicGameRules, catchExceptions):
         # pygame.init()
         self.display = display
 
@@ -433,7 +452,7 @@ class Game:
         self.startingIndex = 0
         self.gameOver = False
         self.catchExceptions = catchExceptions
-        self.moveHistory = []
+        self.moveHistory: list[tuple[int, Action]] = []
         self.score = 0
         self.state: GameState
 
@@ -453,7 +472,7 @@ class Game:
         for i in range(len(self.agents)):
             agent = self.agents[i]
             if not agent:
-                print("Agent %d failed to load" % i, file=sys.stderr)
+                print(f"Agent {i} failed to load", file=sys.stderr)
                 self._agentCrash(i, quiet=True)
                 return
 
@@ -483,10 +502,11 @@ class Game:
             # Track progress
             # Next agent
             self.display.update(self.state)
-        pygame.quit()
+            
+        self.display.finish()
 
 
-def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], numGames: int = 1, numTraining: int = 0, catchExceptions: bool = False):
+def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], numGames: int = 1, catchExceptions: bool = False):
 
     rules = ClassicGameRules()
     games = []
@@ -494,40 +514,35 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
     # 警告，判断一下ghost数量是不是等于ghost agent数量
     assert len(ghosts) == layout.getNumGhosts()
 
-    # 这里可以加一段，来使训练时没有图形界面
     for i in range(numGames):
-        beQuiet = i < numTraining
-        if beQuiet:
-            # Suppress output and graphics
-            from displayModes import NullGraphics
-            gameDisplay = NullGraphics()
-            rules.quiet = True
-        else:
-            gameDisplay = display(layout.map_size, layout.tile_size)
-
+        gameDisplay = display(layout.map_size, layout.tile_size)
         rules.quiet = False
-        game = rules.newGame(layout, player, [player]+ghosts, gameDisplay, False, catchExceptions)
+        game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
         game.run()
-        if not beQuiet:
-            games.append(game)
-
-        # if record:
-        #     import time
-        #     import pickle
-        #     fname = ('recorded-game-%d' % (i + 1)) + \
-        #         '-'.join([str(t) for t in time.localtime()[1:6]])
-        #     f = file(fname, 'w')
-        #     components = {'layout': layout, 'actions': game.moveHistory}
-        #     pickle.dump(components, f)
-        #     f.close()
-
-    if (numGames-numTraining) > 0:
-        scores = [game.state.getScore() for game in games]
-        wins = [game.state.isWin() for game in games]
-        winRate = wins.count(True) / float(len(wins))
-        print('Average Score:', sum(scores) / float(len(scores)))
-        print('Scores:       ', ', '.join([str(score) for score in scores]))
-        print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
-        print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
+        games.append(game)
 
     return games
+
+
+def trainPlayer(display: type, layout: Layout, player: Agent, ghosts: list[Agent], numTrain: int = 100, catchExceptions: bool = False):
+
+    rules = ClassicGameRules()
+
+    gameDisplay = display(layout.map_size, layout.tile_size)
+
+    game: Game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
+
+    env: Environment = PlayerGameEnvironment(player, startState=game.state)
+
+    for _ in track(range(numTrain), description='Training...'):
+        player.train(env)
+        
+    # scores = [game.state.getScore() for game in games]
+    # wins = [game.state.isWin() for game in games]
+    # winRate = wins.count(True) / float(len(wins))
+    # print('Average Score:', sum(scores) / float(len(scores)))
+    # print('Scores:       ', ', '.join([str(score) for score in scores]))
+    # print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
+    # print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
+
+
