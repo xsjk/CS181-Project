@@ -128,32 +128,23 @@ class QNet(nn.Module):
         self.map_size = map_size
         self.device = torch.device(
             'cuda' if torch.cuda.is_available() else 'cpu')
-        # input dim: [map_size.x, map_size.y]
+        # input dim: [3, map_size.x, map_size.y]
         # output dim: [10]
-        # self.model = nn.Sequential(
-        #     nn.Linear(map_size.x * map_size.y, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 10)
-        # ).to(self.device)
         self.model = nn.Sequential(
-            nn.Conv2d(1, 32, 3, 1),
+            nn.Conv2d(3, 16, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, 1),
+            nn.Conv2d(16, 32, 3),
             nn.ReLU(),
-            nn.MaxPool2d(2),
             nn.Flatten(),
-            nn.Linear(32 * 2 * 2, 128),
+            nn.Linear(32 * (map_size.x - 2) * (map_size.y - 2), 64),
             nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 10)
+            nn.Linear(64, 10)
         ).to(self.device)
 
     def forward(self, x):
-        return self.model(x)
+        x = x.unsqueeze(0)
+        y = self.model(x)
+        return y
 
 
 class DQNAgent(QLearningAgent):
@@ -169,10 +160,6 @@ class DQNAgent(QLearningAgent):
         # N, S, E, W, NW, NE, SW, SE, TP, STOP
 
         # state encoding: [map_size.x, map_size.y]
-        # 0: empty
-        # 1: wall
-        # 2: enemy
-        # 3: dead_enemy
         self.model = QNet(map_size)
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-3)
@@ -192,15 +179,7 @@ class DQNAgent(QLearningAgent):
         index = self.actionList.index(A)
         with torch.no_grad():
             return self.model(torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device))[index].item()
-
-    def getTrainAction(self, S) -> Action:
-        if util.flipCoin(self.epsilon):
-            return random.choice(S.getLegalActions())
-        else:
-            with torch.no_grad():
-                index = self.model(torch.tensor(
-                    S.toMatrix(), dtype=torch.float32, device=self.device)).argmax().item()
-                return self.actionList[index]
+    
 
     def getAction(self, S) -> Action:
         with torch.no_grad():
@@ -404,6 +383,12 @@ class MCTSAgent(Agent):
 
     def getAction(self, state) -> Action:
         if not hasattr(self, "root"):
+            self.root = MCTSNode(state, agent=self)
+        childStates = [child.state for child in self.root.children]
+        if state in childStates:
+            self.root = self.root.children[childStates.index(state)]
+            self.root.parent = None
+        else:
             self.root = MCTSNode(state, agent=self)
 
         for _ in track(range(self.num_simulations), description="MCTS simulations", total=self.num_simulations):
