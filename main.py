@@ -14,10 +14,10 @@ if __name__ == "__main__":
         layout=Layout(
             map_size = (20,20),
             tile_size = (30,30),
-            ghostNum = 7,
+            ghostNum = 5,
             player_pos = (20,20),
             ghosts_pos = [(1,1),(2,1)]
         ),
         player=GreedyAgent(),
-        ghosts=GhostsAgent(7)
+        ghosts=GhostsAgent(5)
     )

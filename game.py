@@ -283,7 +283,7 @@ class GameState:
 
         # Let agent's logic deal with its action's effects on the board
         # First we update the player state
-        state = self.getPlayerNextState(GameState(self),action)
+        state = self.getPlayerNextState(action)
         if(state.isLose()): return state
 
 
@@ -295,18 +295,18 @@ class GameState:
             actions.append(self.agents[agentIndex].getAction(state))
             
         #print("The ghost action here is", action)
-        state = self.getGhostsNextState(state,actions)   
+        state = self.getGhostsNextState(actions)   
 
         # GameState.explored.add(self)
         # GameState.explored.add(state)
 
         return state 
 
-    def getPlayerNextState(self, o_state, action: Action) -> "GameState":
+    def getPlayerNextState(self, action: Action) -> "GameState":
         """
         Generates the successor state after the specified player move
         """
-        state = GameState(o_state)
+        state = GameState(self)
         PlayerRules.applyAction(state, action)
         state.score += state.scoreChange
         
@@ -320,8 +320,8 @@ class GameState:
         
         return state
     
-    def getGhostsNextState(self, o_state, actions:list[Action]):
-        state = GameState(o_state)
+    def getGhostsNextState(self, actions:list[Action]):
+        state = GameState(self)
         if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
         for i in range(len(actions)):
             GhostRules.applyAction(state, actions[i], i+1)
@@ -330,7 +330,7 @@ class GameState:
         #print("The ghost action here is", action)
         
     def changeToNextState(self, action: Action):
-        self.changeToPlayerNextState(self,action)
+        self.changeToPlayerNextState(action)
         if(self.isLose()): return 
         # First check if the player is dead
         # Then we update the remaind agents: ghosts
@@ -338,29 +338,29 @@ class GameState:
         for agentIndex in range(1,self.getGhostNum()+1):
             actions.append(self.agents[agentIndex].getAction(self))
             #print("The ghost action here is", action)
-        self.changeToGhostsNextState(self,actions)
+        self.changeToGhostsNextState(actions)
     
-    def changeToGhostsNextState(self, state, actions:list[Action]):
+    def changeToGhostsNextState(self, actions:list[Action]):
         if(len(actions) != self.getGhostNum()): raise Exception("actions not right")
         for i in range(len(actions)):
-            GhostRules.applyAction(state, actions[i], i+1)
-        GhostRules.checkDeath(state)
+            GhostRules.applyAction(self, actions[i], i+1)
+        GhostRules.checkDeath(self)
         #print("The ghost action here is", action)
    
-    def changeToPlayerNextState(self, state, action: Action):
+    def changeToPlayerNextState(self, action: Action):
         """
         Generates the successor state after the specified player move
         """
-        PlayerRules.applyAction(state, action)
-        state.score += state.scoreChange
+        PlayerRules.applyAction(self, action)
+        self.score += self.scoreChange
         
-        playerPosition = state.getPlayerPosition()
+        playerPosition = self.getPlayerPosition()
 
-        for index in range(1, len(state.agentStates)):
-            ghostState = state.agentStates[index]
+        for index in range(1, len(self.agentStates)):
+            ghostState = self.agentStates[index]
             ghostPosition = ghostState.getPosition()
             if GhostRules.canKill(playerPosition, ghostPosition):
-                GhostRules.collide(state)
+                GhostRules.collide(self)
 
     def getPlayerState(self) -> AgentState:
         """
@@ -460,19 +460,19 @@ class Game:
         agentIndex = self.startingIndex
         numAgents = len(self.agents)
 
-        for state in self.state.agentStates:
-            print(state)
+        # for state in self.state.agentStates:
+        #     print(state)
 
         self.display.initialize(self.state)
 
         while not self.gameOver:
-            sleep(0.2)
+            #sleep(0.2)
             # self.display.update()
             # Execute the action
             agent = self.agents[agentIndex]
 
-            observation = self.state.deepCopy()
-            action: Action = agent.getAction(observation)
+            #observation = self.state.deepCopy()
+            action: Action = agent.getAction(self.state)
             assert isinstance(
                 action, Action), "action must be an Action object"
             # self.moveHistory.append((agentIndex, action))

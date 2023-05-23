@@ -84,7 +84,7 @@ class GhostsAgent(GhostsAgentBase):
         actionsList = product(*LEGALACTIONSLIST)
 
         def getAliveGhostNum(actions):
-            nextState = state.getGhostsNextState(state, actions)
+            nextState = state.getGhostsNextState(actions)
             return sum(
                 ghostState.dead == False for ghostState in nextState.agentStates[1:]
             )

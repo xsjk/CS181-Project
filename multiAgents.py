@@ -15,7 +15,7 @@ def scoreEvaluationFunction(currentGameState: GameState, action: Optional[Action
 def inverseManhattanEvaluationFunction(currentGameState: GameState, action: Optional[Action] = None) -> float:
     # Useful information you can extract from a GameState (player.py)
     if action is not None:
-        childGameState: GameState = currentGameState.getPlayerNextState(currentGameState,action)
+        childGameState: GameState = currentGameState.getPlayerNextState(action)
         # print("Player pos now is :",currentGameState.getPlayerPosition())
     else:
         childGameState: GameState = currentGameState
@@ -74,7 +74,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         β = INF
         a_ = None
         for a in s.getLegalPlayerActions():
-            s_ = s.getPlayerNextState(s, a)
+            s_ = s.getPlayerNextState(a)
             v_ = self.n_value(s_, 0, 1, α, β)
             if v_ > v:
                 v, a_ = v_, a
