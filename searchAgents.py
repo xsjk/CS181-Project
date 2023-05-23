@@ -82,6 +82,8 @@ class SearchAgent(Agent):
     def getAction(self, state: GameState) -> Action:
         if self.actions == []:
             self.prepareActions(state)
+        if self.actions == []:
+            return Action.STOP
         action = self.actions.pop(0)
         return action
 
