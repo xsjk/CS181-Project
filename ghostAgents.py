@@ -82,7 +82,7 @@ class GhostsAgent(GhostsAgentBase):
         actionsList = random.sample(list(product(*LEGALACTIONSLIST)), 100)
 
         def evaluate(actions):
-            nextState = state.getGhostsNextState(state, actions)
+            nextState = state.getGhostsNextState(actions)
             return sum(
                 ghostState.dead == False for ghostState in nextState.agentStates[1:]
             ) - (

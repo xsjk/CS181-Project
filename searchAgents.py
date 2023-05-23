@@ -101,9 +101,11 @@ class LongestLiveAgent(SearchAgent):
 
 class MaxScoreAgent(SearchAgent):
 
+    depth: int = 2
+
     def prepareActions(self, state: GameState):
         max_score = -float('inf')
-        for i, actions in enumerate(search.breadthFirstSearchIterator(LongestLiveProblem(state, expected_life=3), depth=3)):
+        for i, actions in enumerate(search.breadthFirstSearchIterator(LongestLiveProblem(state, expected_life=self.depth), self.depth)):
             score = scoreEvaluationFunction(GameState(state), actions)
             if score > max_score:
                 max_score = score
