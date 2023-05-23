@@ -8,16 +8,16 @@ from displayModes import PygameGraphics
 from layout import Layout
 
 if __name__ == "__main__":
-    ghostsAgent = GhostsAgent(4)
+    # ghostsAgent = GhostsAgent(4)
     runGames(
         display=PygameGraphics,
         layout=Layout(
-            map_size = (40,40),
+            map_size = (20,20),
             tile_size = (30,30),
-            ghostNum = 10,
+            ghostNum = 7,
             player_pos = (20,20),
             ghosts_pos = [(1,1),(2,1),(3,1),(4,1)]
         ),
-        player=GreedyAgent(),
-        ghosts=[GhostAgentSlightlyRandom(i+1) for i in range(7)]+ [GhostAgent(8), GhostAgent(9), GhostAgent(10)]
+        player=KeyboardAgent(),
+        ghosts=[GhostAgentSlightlyRandom(i+1) for i in range(7)]
     )

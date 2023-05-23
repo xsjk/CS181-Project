@@ -10,6 +10,7 @@ from typing import Any, TypeVar, Iterable, Callable, Union, overload
 from dataclasses import dataclass, field
 from functools import partial, wraps
 import types
+import threading
 
 T = TypeVar('T')
 
