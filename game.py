@@ -96,10 +96,12 @@ class GhostRules:
                 GhostRules.collide(state)
             if not state.agentStates[index].dead: 
             # check if a ghost will boom with another ghost 
-                for i in range(index+1, len(state.agentStates)):
-                    if GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[index].getPosition()):
-                        GhostRules.boom(state,state.agentStates[i],state.agentStates[index])
-                        score_change += 125
+                for i in range(1, len(state.agentStates)):
+                    if(i != index):
+                        if GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[index].getPosition()):
+                            GhostRules.boom(state,state.agentStates[i],state.agentStates[index])
+                            score_change += 125
+                            break
                     # print("ghosts collides")
         
         # if win

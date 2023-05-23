@@ -35,8 +35,8 @@ if __name__ == "__main__":
     #     ghosts=ghostsAgent,
     #     numTrain=1000
     # )
-    # pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
-    # # pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
+    pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
+    # pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
     # pickle.dump(playerAgent, open("SarsaLambdaAgent.pkl", "wb"))
 
     runGames(
