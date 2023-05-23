@@ -31,10 +31,14 @@ class GraphicMode(ABC):
 
 class NullGraphics(GraphicMode):
     # gamestate
+    def __init__(self, *args, **kargs):
+        pass
     def initialize(self, state, isBlue=False):
         pass
 
     def update(self, state):
+        for state in state.agentStates:
+            print(state)
         pass
 
     def checkNullDisplay(self):

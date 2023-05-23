@@ -81,13 +81,21 @@ class GhostsAgent(GhostsAgentBase):
         LEGALACTIONSLIST: list[list[Action]] = [
             state.getLegalActions(i + 1) for i in range(state.getGhostNum())
         ]
-        actionsList = product(*LEGALACTIONSLIST)
+        actionsList = random.sample(list(product(*LEGALACTIONSLIST)), 100)
 
-        def getAliveGhostNum(actions):
+        def evaluate(actions):
             nextState = state.getGhostsNextState(state, actions)
             return sum(
                 ghostState.dead == False for ghostState in nextState.agentStates[1:]
+            ) - (
+                sum(
+                    Vector2d.manhattanDistance(
+                        ghostState.getPosition(), nextState.agentStates[0].getPosition()
+                    )
+                    for ghostState in nextState.agentStates[1:]
+                )
+                + 1
+                + random.random() / 2
             )
 
-        return max(actionsList, key=getAliveGhostNum)
-        # return [Action.S, Action.S, Action.S, Action.S, Action.S, Action.S, Action.S, Action.S, Action.S, Action.S]
+        return max(actionsList, key=evaluate)
