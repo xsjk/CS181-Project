@@ -39,6 +39,7 @@ class PlayerRules:
             # print("The legal actions are",legal)
             # print("The input action is", action)
             if action not in legal:
+                assert "1234"
                 raise Exception(f"Illegal action {action}")
             # Update Configuration
             vector = Actions.actionToVector(action, PlayerRules.PLAYER_SPEED)
@@ -377,6 +378,16 @@ class GameState:
         GhostRules.checkDeath(state)
         return state
         #print("The ghost action here is", action)
+
+    def getGhostNextState(self, action:Action, index:int):
+        """
+        Returns the successsor state after the specified ghost actions( The player may not moved now! ) 
+        """
+        state = GameState(self)
+        GhostRules.applyAction(state, action, index)
+        GhostRules.checkDeath(state)
+        return state
+
         
     def changeToNextState(self, action: Action):
         self.changeToPlayerNextState(action)

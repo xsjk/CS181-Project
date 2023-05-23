@@ -12,15 +12,14 @@ import pickle
 if __name__ == "__main__":
     # ghostsAgent = GhostsAgent(4)
     map_size = Vector2d(15, 15)
-    playerAgent = DQNAgent(map_size)
+    # playerAgent = DQNAgent(map_size)
     # playerAgent = QLearningAgent()
-    ghosts_pos = [(1,1),(1,4),(2,2),(4,1),(4,4)]
     ghosts_pos = []
-    player_pos = Vector2d(7, 7)
+    player_pos = Vector2d(1, 6)
     playerAgent = MCTSAgent()
     # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
-    ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
-    # ghostsAgent = GhostsAgent(2)
+    # ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GhostAgent(i) for i in range(1,6)]
     layout = Layout(
         map_size = map_size,
         tile_size = (30,30),
