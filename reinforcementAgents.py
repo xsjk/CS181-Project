@@ -430,8 +430,8 @@ class MCTSAgent(Agent):
             # Backpropagation
             node.backpropagate(reward)
 
-        best_child: MCTSNode = max(
-            self.root.children, key=lambda child: child.visits)
+        random.shuffle(self.root.children)
+        best_child: MCTSNode = max(self.root.children, key=lambda child: child.visits)
         self.root = best_child
         print(f"Best child visited {best_child.visits} times")
         return Action.from_vector(best_child.state.getAgentState(self.index).configuration.direction)
