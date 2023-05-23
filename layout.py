@@ -32,7 +32,7 @@ class Layout:
 
         for i in range(len(ghosts_pos), self.ghostNum):
             pos = player_pos
-            while pos in self.agentPositions or pos == player_pos:
+            while pos in ghosts_pos or pos == player_pos:
                 pos = Vector2d(random.randint(1, self.map_size.x),
                                random.randint(1, self.map_size.y))
             ghosts_pos.append(pos)
