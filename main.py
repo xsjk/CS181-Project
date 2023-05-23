@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # playerAgent = QLearningAgent()
     ghosts_pos = []
     player_pos = Vector2d(1, 6)
-    playerAgent = MCTSAgent()
+    playerAgent = GreedyAgent()
     # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
     # ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
     ghostsAgent = [GhostAgent(i) for i in range(1,6)]
@@ -43,5 +43,6 @@ if __name__ == "__main__":
         display=PygameGraphics,
         layout=layout,
         player=playerAgent,
-        ghosts=ghostsAgent
+        ghosts=ghostsAgent,
+        numGames=3
     )

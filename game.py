@@ -64,6 +64,7 @@ class GhostRules:
         """
         conf = state.getGhostState(ghostIndex).configuration
         possibleActions = Actions.getPossibleActions(conf, state.layout)
+        if(Action.STOP in possibleActions): possibleActions.remove(Action.STOP)
         # reverse = Actions.reverseDirection(conf.direction)
         # if reverse in possibleActions and len(possibleActions) > 1:
         #     possibleActions.remove(reverse)
@@ -88,32 +89,29 @@ class GhostRules:
     @staticmethod
     def checkDeath(state: "GameState"):
         playerPosition = state.getPlayerPosition()
-        score_change = 0
         # check if player is dead
         for index in range(1, len(state.agentStates)):
-            ghostState = state.agentStates[index]
-            ghostPosition = ghostState.getPosition()
-            if GhostRules.canKill(playerPosition, ghostPosition):
-                GhostRules.collide(state)
-            if not state.agentStates[index].dead: 
-            # check if a ghost will boom with another ghost 
-                for i in range(1, len(state.agentStates)):
-                    if(i != index):
-                        if GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[index].getPosition()):
-                            GhostRules.boom(state,state.agentStates[i],state.agentStates[index])
-                            score_change += 125
-                            break
-                    # print("ghosts collides")
+            GhostRules.checkOneDeath(state,index)
+            # print("ghosts collides")
         
-        # if win
-        num = sum([state.agentStates[i].dead == False for i in range(1,state.getNumAgents())])
-        #state.score += 125
-        if not state._lose:
-            state.score += score_change
-        
-        if not state._lose and num == 0 and not state._win:
-            state.score += 750
-            state._win = True
+        GhostRules.checkWin(state)
+            
+
+    @staticmethod
+    def checkOneDeath(state: "GameState",index:int):
+        playerPosition = state.getPlayerPosition()
+        ghostState = state.agentStates[index]
+        ghostPosition = ghostState.getPosition()
+        if GhostRules.canKill(playerPosition, ghostPosition):
+            GhostRules.collide(state)
+        if not state.agentStates[index].dead: 
+        # check if a ghost will boom with another ghost 
+            for i in range(1, len(state.agentStates)):
+                if(i != index):
+                    if GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[index].getPosition()):
+                        GhostRules.boom(state,state.agentStates[i],state.agentStates[index])
+                        state.score += 125
+                        return
 
     @staticmethod
     def canKill(playerPosition: Vector2d, ghostPosition: Vector2d) -> bool:
@@ -133,6 +131,13 @@ class GhostRules:
         ghost_state2.color = COLOR["explosion"]
         ghost_state2.dead = True
 
+    @staticmethod
+    def checkWin(state):
+        # if win
+        num = sum([state.agentStates[i].dead == False for i in range(1,state.getNumAgents())])
+        if not state._lose and num == 0 and not state._win:
+            state.score += 750
+            state._win = True
 
     @staticmethod
     def placeGhost(state: "GameState", ghostState: "AgentState"):
@@ -385,7 +390,8 @@ class GameState:
         """
         state = GameState(self)
         GhostRules.applyAction(state, action, index)
-        GhostRules.checkDeath(state)
+        GhostRules.checkOneDeath(state,index)
+        GhostRules.checkWin(state)
         return state
 
         
@@ -581,8 +587,11 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
     assert len(ghosts) == layout.getNumGhosts()
 
     for i in range(numGames):
+        layout.arrangeAgents(layout.player_pos,layout.ghost_pos)
+
         gameDisplay = display(layout.map_size, layout.tile_size)
         rules.quiet = False
+
         game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
         game.run()
         games.append(game)
