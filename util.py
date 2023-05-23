@@ -16,7 +16,7 @@ T = TypeVar('T')
 
 def convert_arg(arg, target_type, verbose: bool = False):
     if verbose:
-        print(f'Converting {arg} to {target_type}')
+        print(f'Converting {arg} to {target_type.__name__ if type(target_type) == type else target_type}')
     if type(target_type) == str:
         return convert_arg(arg, eval(target_type))
     elif type(target_type) == type:

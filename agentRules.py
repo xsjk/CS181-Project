@@ -71,6 +71,7 @@ class AgentState:
     """
     AgentStates hold the state of an agent (configuration, speed, color, radius, etc).
     """
+    dead: bool
 
     def __init__(self, startConfiguration, isPlayer):
         self.dead = False
