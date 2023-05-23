@@ -226,12 +226,12 @@ class Actions:
     """
 
     @staticmethod
-    def actionToVector(action: Action, speed=1.0) -> Vector2d:
-        return action.vector * speed
+    def actionToVector(action: Action) -> Vector2d:
+        return action.vector
     
     @staticmethod
-    def vectorToAction(vector:Vector2d, speed=1.0) -> Action:
-        return Action.from_vector(vector * speed)
+    def vectorToAction(vector:Vector2d) -> Action:
+        return Action.from_vector(vector)
         
     @staticmethod
     def translateVector(gameState) -> Vector2d:
