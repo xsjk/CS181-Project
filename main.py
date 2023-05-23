@@ -1,5 +1,5 @@
 from game import runGames
-from ghostAgents import GhostAgent, GhostAgentSlightlyRandom
+from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent
 from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
 from reinforcementAgents import MCTSAgent, QLearningAgent
@@ -16,8 +16,8 @@ if __name__ == "__main__":
             tile_size = (30,30),
             ghostNum = 7,
             player_pos = (20,20),
-            ghosts_pos = [(1,1),(2,1),(3,1),(4,1)]
+            ghosts_pos = [(1,1),(2,1)]
         ),
-        player=KeyboardAgent(),
-        ghosts=[GhostAgentSlightlyRandom(i+1) for i in range(7)]
+        player=GreedyAgent(),
+        ghosts=GhostsAgent(7)
     )
