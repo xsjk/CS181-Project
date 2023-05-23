@@ -131,18 +131,17 @@ class QNet(nn.Module):
         # input dim: [3, map_size.x, map_size.y]
         # output dim: [10]
         self.model = nn.Sequential(
-            nn.Conv2d(3, 16, 3),
+            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(16, 32, 3),
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(32 * (map_size.x - 2) * (map_size.y - 2), 64),
+            nn.Linear(32 * map_size.x * map_size.y, 128),
             nn.ReLU(),
-            nn.Linear(64, 10)
+            nn.Linear(128, 10)
         ).to(self.device)
 
     def forward(self, x):
-        x = x.unsqueeze(0)
         y = self.model(x)
         return y
 
@@ -178,14 +177,22 @@ class DQNAgent(QLearningAgent):
     def getQValue(self, S: GameState, A: Action):
         index = self.actionList.index(A)
         with torch.no_grad():
-            return self.model(torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device))[index].item()
-    
+            X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
+            X = X.unsqueeze(0)
+            ys = self.model(X)
+            ys = ys.squeeze(0)
+            return ys[index].item()
 
     def getAction(self, S) -> Action:
         with torch.no_grad():
-            index = self.model(torch.tensor(
-                S.toMatrix(), dtype=torch.float32, device=self.device)).argmax().item()
-            return self.actionList[index]
+            X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
+            X = X.unsqueeze(0)
+            ys = self.model(X)
+            ys = ys.squeeze(0)
+            legal = S.getLegalActions()
+            random.shuffle(legal)
+            return max(legal, key=lambda a: ys[self.actionList.index(a)], default=None)
+        
 
     def update(self, S, A, S_, R: float) -> None:
 

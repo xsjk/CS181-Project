@@ -43,7 +43,7 @@ class Layout:
             ghosts_pos.append(pos)
 
         self.agentPositions += ghosts_pos[0:self.ghostNum]
-        print(self.agentPositions)
+        # print(self.agentPositions)
 
     @property
     def width(self):

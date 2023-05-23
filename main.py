@@ -16,7 +16,8 @@ if __name__ == "__main__":
     # playerAgent = QLearningAgent()
     ghosts_pos = []
     player_pos = Vector2d(1, 6)
-    playerAgent = GreedyAgent()
+    # playerAgent = MCTSAgent()
+    playerAgent = pickle.load(open("DQNAgent.pkl", "rb"))
     # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
     # ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
     ghostsAgent = [GhostAgent(i) for i in range(1,6)]
@@ -28,15 +29,15 @@ if __name__ == "__main__":
         ghosts_pos = ghosts_pos,
     )
 
-    # trainPlayer(
-    #     display=NullGraphics,
-    #     layout=layout,
-    #     player=playerAgent,
-    #     ghosts=ghostsAgent,
-    #     numTrain=1000
-    # )
+    trainPlayer(
+        display=NullGraphics,
+        layout=layout,
+        player=playerAgent,
+        ghosts=ghostsAgent,
+        numTrain=1000
+    )
     # pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
-    # pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
+    pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
     # pickle.dump(playerAgent, open("SarsaLambdaAgent.pkl", "wb"))
 
     runGames(

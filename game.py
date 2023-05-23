@@ -14,8 +14,6 @@ class PlayerRules:
     These functions govern how player interacts with his environment under
     the classic game rules.
     """
-    PLAYER_SPEED = 1
-
     @staticmethod
     def getLegalActions(state: "GameState"):
         """
@@ -39,10 +37,9 @@ class PlayerRules:
             # print("The legal actions are",legal)
             # print("The input action is", action)
             if action not in legal:
-                assert "1234"
                 raise Exception(f"Illegal action {action}")
             # Update Configuration
-            vector = Actions.actionToVector(action, PlayerRules.PLAYER_SPEED)
+            vector = Actions.actionToVector(action)
         
         playerState = state.agentStates[0]
 
@@ -82,7 +79,7 @@ class GhostRules:
         if ghostState.dead:
             return
         speed = GhostRules.GHOST_SPEED
-        vector = Actions.actionToVector(action, speed)
+        vector = Actions.actionToVector(action)
         ghostState.configuration = ghostState.configuration.getNextState(
             vector)
 
@@ -486,19 +483,18 @@ class GameState:
         return self._win
     
     def toMatrix(self):
-        mat = np.zeros((self.layout.height, self.layout.width), dtype=int)
-        # 0: empty
-        # 1: player
-        # 2: ghost
-        # 3: dead ghost
+        mat = np.zeros((3, self.layout.height, self.layout.width), dtype=int)
+        # 0: player
+        # 1: ghost
+        # 2: dead ghost
         player_pos = self.getPlayerPosition()
-        mat[player_pos.y][player_pos.x] = 1
+        mat[0][player_pos.y-1][player_pos.x-1] = 1
         for ghost in self.getGhostStates():
             pos = ghost.getPosition()
             if ghost.dead:
-                mat[pos.y][pos.x] = 3
+                mat[2][pos.y-1][pos.x-1] = 1
             else:
-                mat[pos.y][pos.x] = 2
+                mat[1][pos.y-1][pos.x-1] = 1
         return mat
 
 
@@ -586,10 +582,11 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
     # 警告，判断一下ghost数量是不是等于ghost agent数量
     assert len(ghosts) == layout.getNumGhosts()
 
+    gameDisplay = display(layout.map_size, layout.tile_size)
+
     for i in range(numGames):
         layout.arrangeAgents(layout.player_pos,layout.ghost_pos)
 
-        gameDisplay = display(layout.map_size, layout.tile_size)
         rules.quiet = False
 
         game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
@@ -612,11 +609,10 @@ def trainPlayer(display: type, layout: Layout, player: Agent, ghosts: list[Agent
 
     gameDisplay = display(layout.map_size, layout.tile_size)
 
-    game: Game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
-
-    env: Environment = PlayerGameEnvironment(player, startState=game.state)
-
     for _ in track(range(numTrain), description='Training...'):
+        layout.arrangeAgents(layout.player_pos,layout.ghost_pos)
+        game: Game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
+        env: Environment = PlayerGameEnvironment(player, startState=game.state)
         player.train(env)
         
     # scores = [game.state.getScore() for game in games]
