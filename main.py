@@ -11,7 +11,7 @@ import pickle
 
 if __name__ == "__main__":
     # ghostsAgent = GhostsAgent(4)
-    map_size = Vector2d(10, 10)
+    map_size = Vector2d(15, 15)
     # playerAgent = DQNAgent(map_size)
     # playerAgent = QLearningAgent()
     ghosts_pos = []
