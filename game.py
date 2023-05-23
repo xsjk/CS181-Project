@@ -498,10 +498,6 @@ class GameState:
         return mat
 
 
-# def gridToPixel(pos: tuple) -> Vector2d:
-#     return (pos[0] * TILE_SIZE.width - TILE_SIZE.width // 2, pos[1] * TILE_SIZE.height - TILE_SIZE.height // 2)
-
-
 def isOdd(x: int) -> bool:
     return bool(x % 2)
 
@@ -545,10 +541,7 @@ class Game:
 
         agentIndex = self.startingIndex
         numAgents = len(self.agents)
-
-        # for state in self.state.agentStates:
-        #     print(state)
-
+        
         self.display.initialize(self.state)
 
         while not self.gameOver:
@@ -608,19 +601,17 @@ def trainPlayer(display: type, layout: Layout, player: Agent, ghosts: list[Agent
     rules = ClassicGameRules()
 
     gameDisplay = display(layout.map_size, layout.tile_size)
-
+    player.epsilon = 1.0
     for _ in track(range(numTrain), description='Training...'):
         layout.arrangeAgents(layout.player_pos,layout.ghost_pos)
         game: Game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
         env: Environment = PlayerGameEnvironment(player, startState=game.state)
         player.train(env)
         
-    # scores = [game.state.getScore() for game in games]
-    # wins = [game.state.isWin() for game in games]
-    # winRate = wins.count(True) / float(len(wins))
-    # print('Average Score:', sum(scores) / float(len(scores)))
-    # print('Scores:       ', ', '.join([str(score) for score in scores]))
-    # print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
-    # print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
+        scores = env.state.getScore()
+        wins = game.state.isWin()
+        print(f'Score: {scores}, Win: {wins}')
+    player.epsilon = 0.0
+    return player
 
 

@@ -4,7 +4,7 @@ from util import *
 from layout import Layout
 from enum import Enum
 from abc import ABC, abstractmethod
-
+import numpy as np
 
 class Agent(ABC):
     def __init__(self, index: int):
@@ -178,8 +178,8 @@ class Action(Enum):
     NE = Direction.NORTHEAST
     SW = Direction.SOUTHWEST
     SE = Direction.SOUTHEAST
-    TP = "TP"
     STOP = "STOP"
+    TP = "TP"
 
     @property
     def vector(self) -> Vector2d:
@@ -190,6 +190,16 @@ class Action(Enum):
                 return Vector2d(0, 0)
             case _:
                 return self.value.vector
+    
+    @property
+    def index(self) -> int:
+        return list(Action).index(self)
+    
+    @property
+    def onehot(self) -> np.ndarray:
+        onehot = np.zeros(len(Action))
+        onehot[self.index] = 1
+        return onehot
             
     @staticmethod
     def random() -> "Action":

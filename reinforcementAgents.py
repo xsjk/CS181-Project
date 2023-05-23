@@ -146,12 +146,34 @@ class QNet(nn.Module):
         return y
 
 
-class DQNAgent(QLearningAgent):
+
+class QNet(nn.Module):
     def __init__(self, map_size: Vector2d):
         super().__init__()
         self.map_size = map_size
         self.device = torch.device(
             'cuda' if torch.cuda.is_available() else 'cpu')
+        # input dim: [3, map_size.x, map_size.y]
+        # output dim: [10]
+        self.model = nn.Sequential(
+            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(32 * map_size.x * map_size.y, 128),
+            nn.ReLU(),
+            nn.Linear(128, 10)
+        ).to(self.device)
+
+    def forward(self, x):
+        y = self.model(x)
+        return y
+
+class DQNAgent(QLearningAgent):
+    def __init__(self, net: nn.Module):
+        super().__init__()
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.actionList = list(Action)
 
@@ -159,7 +181,7 @@ class DQNAgent(QLearningAgent):
         # N, S, E, W, NW, NE, SW, SE, TP, STOP
 
         # state encoding: [map_size.x, map_size.y]
-        self.model = QNet(map_size)
+        self.model = net
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-3)
         self.loss_fn = nn.MSELoss()
@@ -168,13 +190,13 @@ class DQNAgent(QLearningAgent):
         self.epsilon_decay = 0.999
         self.epsilon_min = 0.01
         self.gamma = 0.99
-        self.batch_size = 64
+        self.batch_size = 128
         self.memory = []
         self.memory_size = 10000
         self.update_freq = 1000
         self.update_counter = 0
 
-    def getQValue(self, S: GameState, A: Action):
+    def getQValue(self, S, A: Action):
         index = self.actionList.index(A)
         with torch.no_grad():
             X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
@@ -183,7 +205,7 @@ class DQNAgent(QLearningAgent):
             ys = ys.squeeze(0)
             return ys[index].item()
 
-    def getAction(self, S) -> Action:
+    def getAction(self, S: GameState) -> Action:
         with torch.no_grad():
             X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
             X = X.unsqueeze(0)
@@ -218,6 +240,37 @@ class DQNAgent(QLearningAgent):
         self.optimizer.step()
 
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
+
+class ImitationAgent(DQNAgent):
+    def __init__(self, net: nn.Module, expert: Agent):
+        super().__init__(net)
+        self.expert = expert
+        self.loss_fn = nn.CrossEntropyLoss()
+
+    def train(self, env: Environment):
+        env.resetState()
+        S = env.getCurrentState()
+        A = self.getTrainAction(S)
+        while True:
+            X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
+            X = X.unsqueeze(0)
+            Q = self.model(X)
+            Q = Q.squeeze(0)
+            A_expert = self.expert.getAction(S)
+            Q_expert = torch.tensor(A_expert.onehot, dtype=torch.float32, device=self.device)
+            loss = self.loss_fn(Q, Q_expert)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+            A = self.getTrainAction(S)
+            S_, R, done = env.takeAction(A)
+            if done:
+                break
+            self.update(S, A, S_, R)
+            S = S_
+            A = self.getTrainAction(S)
 
 
 

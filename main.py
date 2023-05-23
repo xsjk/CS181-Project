@@ -12,10 +12,10 @@ import pickle
 if __name__ == "__main__":
     # ghostsAgent = GhostsAgent(4)
     map_size = Vector2d(15, 15)
-    # playerAgent = DQNAgent(map_size)
-    # playerAgent = QLearningAgent()
+    playerAgent = DQNAgent(map_size)
+    playerAgent = QLearningAgent()
     ghosts_pos = []
-    player_pos = Vector2d(1, 6)
+    player_pos = Vector2d(7, 7)
     # playerAgent = MCTSAgent()
     playerAgent = pickle.load(open("DQNAgent.pkl", "rb"))
     # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         layout=layout,
         player=playerAgent,
         ghosts=ghostsAgent,
-        numTrain=1000
+        numTrain=10000
     )
     # pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
     pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))

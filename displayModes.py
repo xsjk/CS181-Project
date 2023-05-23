@@ -125,3 +125,7 @@ class PygameGraphics(GraphicMode):
         return (pos[0] * self.TILE_SIZE.width - self.TILE_SIZE.width // 2,
                 pos[1] * self.TILE_SIZE.height - self.TILE_SIZE.height // 2)
     
+
+class RichGraphics(GraphicMode):
+    def __init__(self, map_size: Vector2d, tile_size: Vector2d):
+        pass
