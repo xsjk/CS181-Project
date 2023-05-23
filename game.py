@@ -184,6 +184,7 @@ class GameState:
         self.scoreChange = 0
         self.score = 0
         self.layout: Layout
+        self.actionsTaken = []
 
         if prevState != None:
             self.agentStates = self.copyAgentStates(prevState.agentStates)
@@ -191,6 +192,7 @@ class GameState:
             self.layout = prevState.layout
             self.scoreChange = prevState.scoreChange
             self.agents = prevState.agents
+            self.actionsTaken = prevState.actionsTaken
 
     def deepCopy(self):
         state = GameState(self)
@@ -298,7 +300,7 @@ class GameState:
             actions.append(ghost.getAction(state))
             
         #print("The ghost action here is", action)
-        state = self.getGhostsNextState(actions)   
+        state = state.getGhostsNextState(actions)   
 
         # GameState.explored.add(self)
         # GameState.explored.add(state)
@@ -321,6 +323,8 @@ class GameState:
             if GhostRules.canKill(playerPosition, ghostPosition):
                 GhostRules.collide(state)
         
+        self.actionsTaken.append(action)
+
         return state
     
     def getGhostsNextState(self, actions:list[Action]):
@@ -407,6 +411,12 @@ class GameState:
 
     def getScore(self) -> float:
         return float(self.score)
+    
+    def getActionsTaken(self) -> list[Action]:
+        return self.actionsTaken
+
+    def getActionsNum(self) -> int:
+        return len(self.actionsTaken)
 
     def isLose(self) -> bool:
         return self._lose
@@ -414,7 +424,7 @@ class GameState:
     def isWin(self) -> bool:
         return self._win
     
-    def toMatrix(self) -> np.ndarray[np.ndarray[int]]:
+    def toMatrix(self):
         mat = np.zeros((self.layout.height, self.layout.width), dtype=int)
         # 0: empty
         # 1: player
@@ -485,7 +495,7 @@ class Game:
         self.display.initialize(self.state)
 
         while not self.gameOver:
-            #sleep(0.2)
+            sleep(1)
             # self.display.update()
             # Execute the action
             agent = self.agents[agentIndex]

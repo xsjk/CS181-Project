@@ -209,6 +209,16 @@ class Action(Enum):
         if code == "":
             code = "STOP"
         return Action[code]
+    
+    def __repr__(self) -> str:
+        return str(self)
+    
+    def __str__(self) -> str:
+        if isinstance(self.value, Direction):
+            return self.value.value
+        else:
+            return self.value
+
 
 class Actions:
     """

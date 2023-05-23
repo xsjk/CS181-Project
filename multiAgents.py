@@ -2,13 +2,15 @@ from agentRules import AgentState, Direction
 from game import Agent, GameState, Action
 from playerAgents import PlayerAgent
 from functools import partial
-from util import Vector2d
+from util import Vector2d, type_check
 from typing import Optional
 
 INF = float('inf')
 
 
-def scoreEvaluationFunction(currentGameState: GameState, action: Optional[Action] = None) -> float:
+def scoreEvaluationFunction(currentGameState: GameState, actions: list[Action]) -> float:
+    for action in actions:
+        currentGameState.changeToNextState(action)
     return currentGameState.getScore()
 
 

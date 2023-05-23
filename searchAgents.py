@@ -49,11 +49,15 @@ class PositionSearchProblem(SearchProblem):
 
 class LongestLiveProblem(SearchProblem):
 
+    def __init__(self, gameState: GameState, expected_life=float('inf')):
+        super().__init__(gameState)
+        self.expected_life = expected_life
+
     def getStartState(self):
         return self.startState
 
     def isGoalState(self, s: GameState) -> bool:
-        return s.isWin() or s.isLose()
+        return s.getActionsNum() > self.expected_life
 
     def getSuccessors(self, s: GameState) -> list[tuple[GameState, Action, int]]:
         successors = []
@@ -70,22 +74,16 @@ class SearchAgent(Agent):
         if 'heuristic' in func.__code__.co_varnames:
             func = partial(func, heuristic=heuristic)
         self.searchFunction: Callable = func
+        self.actions: list[Action] = []
 
     def prepareActions(self, state: GameState):
-        self.actions: list[Action] = self.searchFunction(
-            self.searchType(state))
-        self.actionIndex: int = 0
+        self.actions = self.searchFunction(self.searchType(state))
 
     def getAction(self, state: GameState) -> Action:
-        if 'actionIndex' not in dir(self):
+        if self.actions == []:
             self.prepareActions(state)
-        if self.actionIndex < len(self.actions):
-            action = self.actions[self.actionIndex]
-            self.actionIndex += 1
-            return action
-        else:
-            del self.actionIndex
-            return self.getAction(state)
+        action = self.actions.pop(0)
+        return action
 
 
 class LongestLiveAgent(SearchAgent):
@@ -104,12 +102,13 @@ class LongestLiveAgent(SearchAgent):
 class MaxScoreAgent(SearchAgent):
 
     def prepareActions(self, state: GameState):
-        self.actions: list[Action] = []
-        self.actionIndex: int = 0
         max_score = -float('inf')
-        for i, actions in enumerate(search.uniformCostSearchIterator(LongestLiveProblem(state), depth=3)):
-            score = scoreEvaluationFunction(state, actions)
+        for i, actions in enumerate(search.breadthFirstSearchIterator(LongestLiveProblem(state, expected_life=3), depth=3)):
+            score = scoreEvaluationFunction(GameState(state), actions)
             if score > max_score:
                 max_score = score
                 self.actions = actions
-            print(f"searched {i} states", end='\r')
+            print(f"searched {i} states,", 
+                  f"best score: {max_score},",
+                  f"best actions: {self.actions}",
+                  end='\r')

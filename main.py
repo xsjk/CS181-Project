@@ -16,7 +16,7 @@ if __name__ == "__main__":
     # playerAgent = QLearningAgent()
     ghosts_pos = [(1,1),(1,4),(2,2),(4,1),(4,4)]
     player_pos = Vector2d(3, 6)
-    playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
+    playerAgent = MaxScoreAgent()
     # playerAgent = pickle.load(open("SarsaLambdaAgent.pkl", "rb"))
     ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
     layout = Layout(
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     #     numTrain=1000
     # )
     # pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
-    # pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
+    # # pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
     # pickle.dump(playerAgent, open("SarsaLambdaAgent.pkl", "wb"))
 
     runGames(
