@@ -1,28 +1,19 @@
 from abc import ABC, abstractmethod
 import random
-from game import Action, GameState
+from agentRules import Action
 
 class Environment(ABC):
 
     @abstractmethod
-    def getCurrentState(self):
-        """
-        Returns the current state of enviornment
-        """
+    def getCurrentState(self) -> "GameState":
         raise NotImplementedError
 
     @abstractmethod
-    def getPossibleActions(self, state: GameState):
-        """
-          Returns possible actions the agent
-          can take in the given state. Can
-          return the empty list if we are in
-          a terminal state.
-        """
+    def getLegalActions() -> list[Action]:
         raise NotImplementedError
 
     @abstractmethod
-    def takeAction(self, action: Action):
+    def takeAction(self, action: Action) -> tuple["GameState", float]:
         """
           Performs the given action in the current
           environment state and updates the enviornment.
@@ -32,7 +23,7 @@ class Environment(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def reset(self):
+    def resetState(self):
         """
           Resets the current state to the start state
         """
@@ -49,42 +40,23 @@ class Environment(ABC):
     
 
 
-class GridworldEnvironment(Environment):
+class PlayerGameEnvironment(Environment):
+    def __init__(self, player: "Agent", startState: "GameState"):
+        self.player = player
+        self.startState = startState.deepCopy()
+        self.state = startState
 
-    def __init__(self, gridWorld):
-        self.gridWorld = gridWorld
-        self.reset()
-
-    def getCurrentState(self):
+    def getCurrentState(self) -> "GameState":
         return self.state
-
-    def getPossibleActions(self, state: GameState):
-        return self.gridWorld.getPossibleActions(state)
-
-    def takeAction(self, action):
-        state = self.getCurrentState()
-        (nextState, reward) = self.getRandomNextState(state, action)
-        self.state = nextState
-        return (nextState, reward)
-
-    def getRandomNextState(self, state: GameState, action: Action, randObj=None):
-        rand = -1.0
-        if randObj is None:
-            rand = random.random()
-        else:
-            rand = randObj.random()
-        sum = 0.0
-        successors = self.gridWorld.getTransitionStatesAndProbs(state, action)
-        for nextState, prob in successors:
-            sum += prob
-            if sum > 1.0:
-                raise Exception('Total transition probability more than one; sample failure.')
-            if rand < sum:
-                reward = self.gridWorld.getReward(state, action, nextState)
-                return (nextState, reward)
-        raise Exception('Total transition probability less than one; sample failure.')
-
-    def reset(self):
-        self.state = self.gridWorld.getStartState()
-
-
+    
+    def getLegalActions(self) -> list[Action]:
+        return self.state.getLegalActions(self.player.index)
+    
+    def takeAction(self, action: Action) -> tuple["GameState", float]:
+        lastScore: float = self.state.getScore()
+        self.state.changeToNextState(action)
+        reward: float = self.state.getScore() - lastScore
+        return (self.state, reward, self.state.isWin() or self.state.isLose())
+    
+    def resetState(self):
+        self.state = self.startState.deepCopy()

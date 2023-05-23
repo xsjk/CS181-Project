@@ -1,23 +1,46 @@
-from game import runGames
+from game import runGames, trainPlayer
 from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent
 from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
-from reinforcementAgents import MCTSAgent, QLearningAgent
-from searchAgents import LongestLiveAgent
-from displayModes import PygameGraphics
+from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent, DQNAgent
+from searchAgents import LongestLiveAgent, MaxScoreAgent
+from displayModes import PygameGraphics, NullGraphics
 from layout import Layout
+from util import Vector2d
+import pickle
 
 if __name__ == "__main__":
     # ghostsAgent = GhostsAgent(4)
+    map_size = Vector2d(10, 10)
+    # playerAgent = DQNAgent(map_size)
+    # playerAgent = QLearningAgent()
+    ghosts_pos = [(1,1),(1,4),(2,2),(4,1),(4,4)]
+    player_pos = Vector2d(3, 6)
+    playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
+    # playerAgent = pickle.load(open("SarsaLambdaAgent.pkl", "rb"))
+    ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
+    layout = Layout(
+        map_size = map_size,
+        tile_size = (30,30),
+        ghostNum = 5,
+        player_pos = player_pos,
+        ghosts_pos = ghosts_pos,
+    )
+
+    # trainPlayer(
+    #     display=PygameGraphics,
+    #     layout=layout,
+    #     player=playerAgent,
+    #     ghosts=ghostsAgent,
+    #     numTrain=1000
+    # )
+    # pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
+    # pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
+    # pickle.dump(playerAgent, open("SarsaLambdaAgent.pkl", "wb"))
+
     runGames(
         display=PygameGraphics,
-        layout=Layout(
-            map_size = (20,20),
-            tile_size = (30,30),
-            ghostNum = 7,
-            player_pos = (20,20),
-            ghosts_pos = [(1,1),(2,1)]
-        ),
-        player=GreedyAgent(),
-        ghosts=GhostsAgent(7)
+        layout=layout,
+        player=playerAgent,
+        ghosts=ghostsAgent
     )

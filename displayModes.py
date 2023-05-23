@@ -30,6 +30,10 @@ class GraphicMode(ABC):
 
 
 class NullGraphics(GraphicMode):
+
+    def __init__(self, *args, **kwargs):
+        pass
+
     # gamestate
     def __init__(self, *args, **kargs):
         pass
@@ -121,3 +125,4 @@ class PygameGraphics(GraphicMode):
     def gridToPixel(self, pos: tuple) -> Vector2d:
         return (pos[0] * self.TILE_SIZE.width - self.TILE_SIZE.width // 2,
                 pos[1] * self.TILE_SIZE.height - self.TILE_SIZE.height // 2)
+    

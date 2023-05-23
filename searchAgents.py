@@ -1,14 +1,16 @@
 
 from game import GameState, Agent, Action, Actions, Direction
+from multiAgents import scoreEvaluationFunction
 import search
 from search import SearchProblem, nullHeuristic
 from functools import partial
-from util import Vector2d
+from util import Vector2d, type_check
+from typing import Callable
 
 
 class PositionSearchProblem(SearchProblem):
 
-    def __init__(self, gameState: GameState, costFn: callable = lambda _: 1, goal: Vector2d = Vector2d(1, 1), start=None):
+    def __init__(self, gameState: GameState, costFn: Callable = lambda _: 1, goal: Vector2d = Vector2d(1, 1), start=None):
         super().__init__(gameState)
         self.ghosts = gameState.getWalls()
         self.startState = gameState.getPlayerPosition()
@@ -45,30 +47,29 @@ class PositionSearchProblem(SearchProblem):
         return cost
 
 
-class LongestLiveProblem(PositionSearchProblem):
-    def __init__(self, gameState: GameState):
-        self.startState = gameState
+class LongestLiveProblem(SearchProblem):
 
-    def getStateState(self):
+    def getStartState(self):
         return self.startState
 
     def isGoalState(self, s: GameState) -> bool:
         return s.isWin() or s.isLose()
 
-    def getSuccessors(self, s: GameState):
+    def getSuccessors(self, s: GameState) -> list[tuple[GameState, Action, int]]:
         successors = []
         for a in s.getLegalPlayerActions():
             if a != Action.TP:
-                s_ = s.getPlayerNextState(a)
+                s_ = s.getNextState(a)
                 successors.append((s_, a, 1))
         return successors
 
 
 class SearchAgent(Agent):
-    def __init__(self, func: callable = search.bfs, prob: type = PositionSearchProblem, heuristic: callable = nullHeuristic):
+    @type_check
+    def __init__(self, func: Callable = search.bfs, prob: type = PositionSearchProblem, heuristic: Callable = nullHeuristic):
         if 'heuristic' in func.__code__.co_varnames:
             func = partial(func, heuristic=heuristic)
-        self.searchFunction: callable = func
+        self.searchFunction: Callable = func
 
     def prepareActions(self, state: GameState):
         self.actions: list[Action] = self.searchFunction(
@@ -98,3 +99,17 @@ class LongestLiveAgent(SearchAgent):
             print(f"searched {i} states", end='\r')
         print(f"searched {i} states")
         self.actions.append(Action.TP)
+
+
+class MaxScoreAgent(SearchAgent):
+
+    def prepareActions(self, state: GameState):
+        self.actions: list[Action] = []
+        self.actionIndex: int = 0
+        max_score = -float('inf')
+        for i, actions in enumerate(search.uniformCostSearchIterator(LongestLiveProblem(state), depth=3)):
+            score = scoreEvaluationFunction(state, actions)
+            if score > max_score:
+                max_score = score
+                self.actions = actions
+            print(f"searched {i} states", end='\r')
