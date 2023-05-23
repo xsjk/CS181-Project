@@ -1,5 +1,6 @@
 import random
 from util import auto_convert, type_check, Vector2d
+from copy import deepcopy
 
 
 class Layout:
@@ -15,13 +16,17 @@ class Layout:
         self.tile_size = tile_size
         self.agentPositions = []
         self.ghostNum = ghostNum
-        self.arrangeAgents(player_pos, ghosts_pos)
+        self.player_pos = player_pos
+        self.ghost_pos = ghosts_pos
+        # self.arrangeAgents(player_pos, ghosts_pos)
         # self.initializeVisibilityMatrix()
 
     def getNumGhosts(self):
         return self.ghostNum
 
-    def arrangeAgents(self, player_pos: Vector2d, ghosts_pos: list[Vector2d]):
+    def arrangeAgents(self, player_pos: Vector2d, o_ghosts_pos: list[Vector2d]):
+        self.agentPositions = []
+        ghosts_pos = deepcopy(o_ghosts_pos)
         if (player_pos):
             self.agentPositions.append(player_pos)
         else:

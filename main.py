@@ -14,9 +14,9 @@ if __name__ == "__main__":
     map_size = Vector2d(10, 10)
     # playerAgent = DQNAgent(map_size)
     # playerAgent = QLearningAgent()
-    ghosts_pos = [(1,3), (3, 1), (3,3), (3,5), (5,3)]
-    player_pos = Vector2d(7, 7)
-    playerAgent = KeyboardAgent()
+    ghosts_pos = []
+    player_pos = Vector2d(1, 6)
+    playerAgent = GreedyAgent()
     # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
     # ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
     ghostsAgent = GhostsAgent(4)
@@ -43,5 +43,6 @@ if __name__ == "__main__":
         display=PygameGraphics,
         layout=layout,
         player=playerAgent,
-        ghosts=ghostsAgent
+        ghosts=ghostsAgent,
+        numGames=3
     )
