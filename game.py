@@ -14,12 +14,15 @@ class PlayerRules:
     These functions govern how player interacts with his environment under
     the classic game rules.
     """
+
     @staticmethod
     def getLegalActions(state: "GameState"):
         """
         Returns a list of possible actions.d
         """
-        return Actions.getPossibleActions(state.getPlayerState().configuration, state.layout)
+        return Actions.getPossibleActions(
+            state.getPlayerState().configuration, state.layout
+        )
 
     @staticmethod
     def applyAction(state: "GameState", action: Action):
@@ -43,14 +46,14 @@ class PlayerRules:
 
         playerState = state.agentStates[0]
 
-        playerState.configuration = playerState.configuration.getNextState(
-            vector)
+        playerState.configuration = playerState.configuration.getNextState(vector)
 
 
 class GhostRules:
     """
     These functions dictate how ghosts interact with their environment.
     """
+
     GHOST_SPEED = 1.0
 
     @staticmethod
@@ -81,8 +84,7 @@ class GhostRules:
             return
         speed = GhostRules.GHOST_SPEED
         vector = Actions.actionToVector(action)
-        ghostState.configuration = ghostState.configuration.getNextState(
-            vector)
+        ghostState.configuration = ghostState.configuration.getNextState(vector)
 
     @staticmethod
     def checkDeath(state: "GameState"):
@@ -105,8 +107,13 @@ class GhostRules:
             # check if a ghost will boom with another ghost
             for i in range(1, len(state.agentStates)):
                 if i != index:
-                    if GhostRules.canKill(state.agentStates[i].getPosition(), state.agentStates[index].getPosition()):
-                        GhostRules.boom(state, state.agentStates[i], state.agentStates[index])
+                    if GhostRules.canKill(
+                        state.agentStates[i].getPosition(),
+                        state.agentStates[index].getPosition(),
+                    ):
+                        GhostRules.boom(
+                            state, state.agentStates[i], state.agentStates[index]
+                        )
                         state.score += 125
                         return
 
@@ -122,15 +129,18 @@ class GhostRules:
 
     @staticmethod
     # Notice that the boom will be called twice if a boom happen.
-    def boom(state: "GameState", ghost_state1: "AgentState", ghost_state2: "AgentState"):
+    def boom(
+        state: "GameState", ghost_state1: "AgentState", ghost_state2: "AgentState"
+    ):
         ghost_state1.dead = True
         ghost_state2.dead = True
 
     @staticmethod
     def checkWin(state):
         # if win
-        num = sum([state.agentStates[i].dead ==
-                  False for i in range(1, state.getNumAgents())])
+        num = sum(
+            [state.agentStates[i].dead == False for i in range(1, state.getNumAgents())]
+        )
         if not state._lose and num == 0 and not state._win:
             state.score += 750
             state._win = True
@@ -146,7 +156,15 @@ class ClassicGameRules:
     and how the game starts and ends.
     """
 
-    def newGame(self, layout: Layout, playerAgent: Agent, ghostAgents: list[Agent], display, quiet: bool = False, catchExceptions: bool = False):
+    def newGame(
+        self,
+        layout: Layout,
+        playerAgent: Agent,
+        ghostAgents: list[Agent],
+        display,
+        quiet: bool = False,
+        catchExceptions: bool = False,
+    ):
         # print(ghostAgents)
         agents = [playerAgent] + ghostAgents
         initState = GameState()
@@ -183,7 +201,6 @@ class ClassicGameRules:
 
 
 class GameState:
-
     def __init__(self, prevState=None):
         """
         Generates a new data packet by copying information from its predecessor.
@@ -257,12 +274,14 @@ class GameState:
         self.agents = agents
 
         pos = layout.agentPositions[0]
-        self.agentStates.append(AgentState(
-            Configuration(pos, Direction.NORTH.vector), True))
-        for i in range(1, layout.ghost_num+1):
+        self.agentStates.append(
+            AgentState(Configuration(pos, Direction.NORTH.vector), True)
+        )
+        for i in range(1, layout.ghost_num + 1):
             pos = layout.agentPositions[i]
-            self.agentStates.append(AgentState(
-                Configuration(pos, Direction.NORTH.vector), False))
+            self.agentStates.append(
+                AgentState(Configuration(pos, Direction.NORTH.vector), False)
+            )
 
     # static variable keeps track of which states have had getLegalActions called
     explored = set()
@@ -277,7 +296,7 @@ class GameState:
         """
         Returns the legal actions for the agent specified.
         """
-#        GameState.explored.add(self)
+        #        GameState.explored.add(self)
         if self.isWin() or self.isLose():
             return []
 
@@ -297,7 +316,7 @@ class GameState:
         # dir_y = sign(player_pos.y - ghost_pos.y)
         poss_actions = []
         for i in range(0, len(legal)):
-            if (dir_x == Actions.actionToVector(legal[i]).x):
+            if dir_x == Actions.actionToVector(legal[i]).x:
                 poss_actions.append(legal[i])
         return poss_actions
 
@@ -328,7 +347,7 @@ class GameState:
         # Let agent's logic deal with its action's effects on the board
         # First we update the player state
         state = self.getPlayerNextState(action)
-        if (state.isLose()):
+        if state.isLose():
             return state
 
         # First check if the player is dead
@@ -368,20 +387,20 @@ class GameState:
 
     def getGhostsNextState(self, actions: list[Action]):
         """
-        Returns the successsor state after the specified ghost actions( The player may not moved now! ) 
+        Returns the successsor state after the specified ghost actions( The player may not moved now! )
         """
         state = GameState(self)
-        if (len(actions) != self.getGhostNum()):
+        if len(actions) != self.getGhostNum():
             raise Exception("actions not right")
         for i in range(len(actions)):
-            GhostRules.applyAction(state, actions[i], i+1)
+            GhostRules.applyAction(state, actions[i], i + 1)
         GhostRules.checkDeath(state)
         return state
         # print("The ghost action here is", action)
 
     def getGhostNextState(self, action: Action, index: int):
         """
-        Returns the successsor state after the specified ghost actions( The player may not moved now! ) 
+        Returns the successsor state after the specified ghost actions( The player may not moved now! )
         """
         state = GameState(self)
         GhostRules.applyAction(state, action, index)
@@ -396,14 +415,14 @@ class GameState:
         # First check if the player is dead
         # Then we update the remaind agents: ghosts
         actions = [ghost.getAction(self) for ghost in self.agents[1:]]
-            # print("The ghost action here is", action)
+        # print("The ghost action here is", action)
         self.changeToGhostsNextState(actions)
 
     def changeToGhostsNextState(self, actions: list[Action]):
-        if (len(actions) != self.getGhostNum()):
+        if len(actions) != self.getGhostNum():
             raise Exception("actions not right")
         for i in range(len(actions)):
-            GhostRules.applyAction(self, actions[i], i+1)
+            GhostRules.applyAction(self, actions[i], i + 1)
         GhostRules.checkDeath(self)
         # print("The ghost action here is", action)
 
@@ -489,13 +508,13 @@ class GameState:
         # 1: ghost
         # 2: dead ghost
         player_pos = self.getPlayerPosition()
-        mat[0][player_pos.y-1][player_pos.x-1] = 1
+        mat[0][player_pos.y - 1][player_pos.x - 1] = 1
         for ghost in self.getGhostStates():
             pos = ghost.getPosition()
             if ghost.dead:
-                mat[2][pos.y-1][pos.x-1] = 1
+                mat[2][pos.y - 1][pos.x - 1] = 1
             else:
-                mat[1][pos.y-1][pos.x-1] = 1
+                mat[1][pos.y - 1][pos.x - 1] = 1
         return mat
 
     def toMatrix(self):
@@ -510,37 +529,39 @@ class GameState:
         # 3: dead ghost
         mat = np.zeros((self.layout.height, self.layout.width), dtype=int)
         player_pos = self.getPlayerPosition()
-        mat[player_pos.y-1][player_pos.x-1] = 1
+        mat[player_pos.y - 1][player_pos.x - 1] = 1
         for ghost in self.getGhostStates():
             pos = ghost.getPosition()
             if ghost.dead:
-                mat[pos.y-1][pos.x-1] = 3
+                mat[pos.y - 1][pos.x - 1] = 3
             else:
-                mat[pos.y-1][pos.x-1] = 2
+                mat[pos.y - 1][pos.x - 1] = 2
         return mat
 
 
 def isOdd(x: int) -> bool:
     return bool(x % 2)
 
+
 # The main controll flow
 
 
 class Game:
-
     agents: list[Agent]
     display: Display
     rules: ClassicGameRules
     state: GameState
     gameOver: bool = False
-    
-    def __init__(self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions):
+
+    def __init__(
+        self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions
+    ):
         # pygame.init()
         self.display = display
 
         self.agents = agents
         self.rules = gameRule
-        
+
         self.catchExceptions = catchExceptions
         self.moveHistory: list[tuple[int, Action]] = []
         self.score = 0
@@ -565,7 +586,6 @@ class Game:
                 self._agentCrash(i, quiet=True)
                 return
 
-
         self.display.initialize(self.state)
         player = self.agents[0]
         assert player is self.state.agents[0]
@@ -586,8 +606,14 @@ class Game:
         self.display.finish()
 
 
-def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], numGames: int = 1, catchExceptions: bool = False):
-
+def runGames(
+    display: type,
+    layout: Layout,
+    player: Agent,
+    ghosts: list[Agent],
+    numGames: int = 1,
+    catchExceptions: bool = False,
+):
     rules = ClassicGameRules()
     games = []
 
@@ -601,36 +627,44 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
 
         rules.quiet = False
 
-        game = rules.newGame(layout, player, ghosts,
-                             gameDisplay, False, catchExceptions)
+        game = rules.newGame(
+            layout, player, ghosts, gameDisplay, False, catchExceptions
+        )
         game.run()
         games.append(game)
 
     scores = [game.state.getScore() for game in games]
     wins = [game.state.isWin() for game in games]
     winRate = wins.count(True) / float(len(wins))
-    print('Average Score:', sum(scores) / float(len(scores)))
-    print('Scores:       ', ', '.join([str(score) for score in scores]))
-    print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
-    print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
+    print("Average Score:", sum(scores) / float(len(scores)))
+    print("Scores:       ", ", ".join([str(score) for score in scores]))
+    print(f"Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})")
+    print("Record:       ", ", ".join(["Loss", "Win"][int(w)] for w in wins))
     return games
 
 
-def trainPlayer(display: type, layout: Layout, player: Agent, ghosts: list[Agent], numTrain: int = 100, catchExceptions: bool = False):
-
+def trainPlayer(
+    display: type,
+    layout: Layout,
+    player: Agent,
+    ghosts: list[Agent],
+    numTrain: int = 100,
+    catchExceptions: bool = False,
+):
     rules = ClassicGameRules()
 
     gameDisplay = display(layout.map_size, layout.tile_size)
     player.epsilon = 1.0
-    for _ in track(range(numTrain), description='Training...'):
-        layout.arrangeAgents(layout.player_pos, layout.ghost_pos)
+    for _ in track(range(numTrain), description="Training..."):
+        layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
         game: Game = rules.newGame(
-            layout, player, ghosts, gameDisplay, False, catchExceptions)
+            layout, player, ghosts, gameDisplay, False, catchExceptions
+        )
         env: Environment = PlayerGameEnvironment(player, startState=game.state)
         player.train(env)
 
         scores = env.state.getScore()
         wins = game.state.isWin()
-        print(f'Score: {scores}, Win: {wins}')
+        print(f"Score: {scores}, Win: {wins}")
     player.epsilon = 0.0
     return player

@@ -1,4 +1,3 @@
-
 import torch
 from torch import nn
 from reinforcementAgents import QLearningAgent
@@ -7,8 +6,9 @@ from game import Action, GameState, Agent
 from abc import ABC, abstractmethod
 from environment import Environment
 import random
+import numpy as np
 
-torch.set_default_device(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+torch.set_default_device(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
 
 class QNet(nn.Module):
@@ -25,15 +25,15 @@ class QNet(nn.Module):
             nn.Flatten(),
             nn.Linear(32 * map_size.x * map_size.y, 128),
             nn.ReLU(),
-            nn.Linear(128, 9)
+            nn.Linear(128, 9),
         )
+
     def forward(self, x):
         y = self.model(x)
         return y
 
 
 class DQNAgent(QLearningAgent):
-
     def __init__(self, net: nn.Module):
         super().__init__()
 
@@ -58,39 +58,46 @@ class DQNAgent(QLearningAgent):
         self.update_freq = 1000
         self.update_counter = 0
 
-    def getQValue(self, S, A: Action):
+    def getQValue(self, S, A: Action) -> float:
         index = self.actionList.index(A)
+        return self.getQValues(S)[index]
+    
+    def getQValues(self, S: GameState):
         with torch.no_grad():
-            X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
+            X = torch.tensor(self.state2matrix(S), dtype=torch.float32)
             X = X.unsqueeze(0)
             ys = self.model(X)
             ys = ys.squeeze(0)
-            return ys[index].item()
+            return ys
+        
+    def getPolicy(self, S: GameState) -> Action:
+        Qs = self.getQValues(S)
+        legal = S.getLegalActions()
+        random.shuffle(legal)
+        return max(legal, key=lambda a: Qs[self.actionList.index(a)], default=None)
 
     def getAction(self, S: GameState) -> Action:
         with torch.no_grad():
-            X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
+            X = torch.tensor(self.state2matrix(S), dtype=torch.float32)
             X = X.unsqueeze(0)
             ys = self.model(X)
             ys = ys.squeeze(0)
             legal = S.getLegalActions()
             random.shuffle(legal)
             return max(legal, key=lambda a: ys[self.actionList.index(a)], default=None)
-        
 
     def update(self, S, A, S_, R: float) -> None:
-
         self.memory.append((S, A, S_, R))
         if len(self.memory) > self.memory_size:
             self.memory.pop(0)
         if len(self.memory) < self.batch_size:
             return
-        
+
         batch = random.sample(self.memory, self.batch_size)
-        S_batch = torch.tensor([self.state2tensor(s) for s, _, _, _ in batch], dtype=torch.float32, device=self.device)
-        A_batch = torch.tensor([self.actionList.index(a) for _, a, _, _ in batch], dtype=torch.long, device=self.device)
-        S_batch_ = torch.tensor([self.state2tensor(s_) for _, _, s_, _ in batch], dtype=torch.float32, device=self.device)
-        R_batch = torch.tensor([r for _, _, _, r in batch], dtype=torch.float32, device=self.device)
+        S_batch = torch.tensor([self.state2matrix(s) for s, _, _, _ in batch], dtype=torch.float32)
+        A_batch = torch.tensor([self.actionList.index(a) for _, a, _, _ in batch], dtype=torch.long)
+        S_batch_ = torch.tensor([self.state2matrix(s_) for _, _, s_, _ in batch], dtype=torch.float32)
+        R_batch = torch.tensor([r for _, _, _, r in batch], dtype=torch.float32)
 
         Q_batch = self.model(S_batch).gather(1, A_batch.unsqueeze(1)).squeeze(1)
         Q_batch_ = self.model(S_batch_).max(1)[0].detach()
@@ -104,15 +111,16 @@ class DQNAgent(QLearningAgent):
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
     @abstractmethod
-    def state2tensor(self, S: GameState) -> torch.Tensor:
+    def state2matrix(s: GameState) -> np.ndarray:
         raise NotImplementedError
-    
+
     def load(self, path: str):
         self.model.load_state_dict(torch.load(path))
 
     def save(self, path: str):
         torch.save(self.model.state_dict(), path)
-    
+
+
 class OneHotDQNAgent(DQNAgent):
     @type_check
     def __init__(self, map_size: Vector2d):
@@ -124,25 +132,25 @@ class OneHotDQNAgent(DQNAgent):
             nn.Flatten(),
             nn.Linear(32 * map_size.x * map_size.y, 128),
             nn.ReLU(),
-            nn.Linear(128, 9)
+            nn.Linear(128, 9),
         ))
 
-    def state2tensor(self, S: GameState) -> torch.Tensor:
+    def state2matrix(self, s: GameState) -> np.ndarray:
         # [3, map_size.x, map_size.y]
-        map_size = S.getMapSize()
-        mat = torch.zeros((3, map_size.x, map_size.y), dtype=torch.float32, device=self.device)
-        player_pos = S.getPlayerPosition()
-        mat[0][player_pos.y-1][player_pos.x-1] = 1
-        for ghost in S.getGhostStates():
+        map_size = s.getMapSize()
+        mat = np.zeros((3, map_size.x, map_size.y))
+        player_pos = s.getPlayerPosition()
+        mat[0][player_pos.y - 1][player_pos.x - 1] = 1
+        for ghost in s.getGhostStates():
             pos = ghost.getPosition()
             if ghost.dead:
-                mat[2][pos.y-1][pos.x-1] = 1
+                mat[2][pos.y - 1][pos.x - 1] = 1
             else:
-                mat[1][pos.y-1][pos.x-1] = 1
+                mat[1][pos.y - 1][pos.x - 1] = 1
         return mat
-    
-class FullyConnectedDQNAgent(DQNAgent):
 
+
+class FullyConnectedDQNAgent(DQNAgent):
     @type_check
     def __init__(self, map_size: Vector2d):
         super().__init__(nn.Sequential(
@@ -151,29 +159,28 @@ class FullyConnectedDQNAgent(DQNAgent):
             nn.ReLU(),
             nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(128, 9)
+            nn.Linear(128, 9),
         ))
 
-    def state2tensor(self, S: GameState) -> torch.Tensor:
+    def state2matrix(s: GameState) -> np.ndarray:
         # 0: empty
         # 1: player
         # 2: ghost
         # 3: dead ghost
-        map_size = S.getMapSize()
-        mat = torch.zeros((map_size.x, map_size.y), dtype=torch.float32, device=self.device)
-        player_pos = S.getPlayerPosition()
-        mat[player_pos.y-1][player_pos.x-1] = 1
-        for ghost in S.getGhostStates():
+        map_size = s.getMapSize()
+        mat = np.zeros((map_size.x, map_size.y))
+        player_pos = s.getPlayerPosition()
+        mat[player_pos.y - 1][player_pos.x - 1] = 1
+        for ghost in s.getGhostStates():
             pos = ghost.getPosition()
             if ghost.dead:
-                mat[pos.y-1][pos.x-1] = 3
+                mat[pos.y - 1][pos.x - 1] = 3
             else:
-                mat[pos.y-1][pos.x-1] = 2
+                mat[pos.y - 1][pos.x - 1] = 2
         return mat
 
 
 class ImitationAgent(OneHotDQNAgent):
-
     expert: Agent
     expert_loss_fn = nn.MSELoss()
 
@@ -186,12 +193,12 @@ class ImitationAgent(OneHotDQNAgent):
         env.resetState()
         S = env.getCurrentState()
         while True:
-            X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
+            X = torch.tensor(self.state2matrix(S), dtype=torch.float32)
             X = X.unsqueeze(0)
             Q = self.model(X)
             Q = Q.squeeze(0)
             A_expert = self.expert.getAction(S)
-            Q_expert = torch.tensor(A_expert.onehot[:9], dtype=torch.float32, device=self.device)
+            Q_expert = torch.tensor(A_expert.onehot[:9], dtype=torch.float32)
             loss = self.expert_loss_fn(Q, Q_expert)
             self.optimizer.zero_grad()
             loss.backward()
@@ -207,7 +214,7 @@ class ImitationAgent(OneHotDQNAgent):
 
     def getTrainAction(self, S: GameState) -> Action:
         with torch.no_grad():
-            X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
+            X = torch.tensor(self.state2matrix(S), dtype=torch.float32)
             X = X.unsqueeze(0)
             ys = self.model(X)
             ys = ys.squeeze(0)
@@ -217,13 +224,4 @@ class ImitationAgent(OneHotDQNAgent):
 
 
 if __name__ == "__main__":
-
-    from rich import print
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    a = FullyConnectedDQNAgent(Vector2d(15, 15))
-    X = torch.randn((1, 15, 15), dtype=torch.float32).to(device)
-    print(a.model)
-    y = a.model(X)
-    print(y.shape)
-    print(dict(a.model.named_parameters()))
+    pass

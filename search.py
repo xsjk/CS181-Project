@@ -11,7 +11,7 @@ class SearchProblem(ABC):
 
     @abstractmethod
     def getStartState(self):
-        return NotImplementedError
+        raise NotImplementedError
 
     @abstractmethod
     def isGoalState(self, state):
