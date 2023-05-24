@@ -588,7 +588,6 @@ class Game:
 
         self.display.initialize(self.state)
         player = self.agents[0]
-        assert player is self.state.agents[0]
         while not self.gameOver:
             # observation = self.state.deepCopy()
             action: Action = player.getAction(self.state)

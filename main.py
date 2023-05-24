@@ -28,8 +28,8 @@ if __name__ == "__main__":
     ghost_num = 4
     ghosts_pos = []
     player_pos = Vector2d(7, 7)
-    # playerAgent = PygameKeyboardAgent()
-    playerAgent = MaxScoreAgent()
+    playerAgent = PygameKeyboardAgent()
+    # playerAgent = MaxScoreAgent()
     # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
     # ghostsAgent = GhostsAgent(4)
     ghostsAgent = [GhostAgent(i) for i in range(1, ghost_num+1)]
@@ -42,9 +42,9 @@ if __name__ == "__main__":
         ghosts_pos=ghosts_pos,
     )
     runGames(
-        display=NullGraphics,
+        display=PygameGraphics,
         layout=layout,
         player=playerAgent,
         ghosts=ghostsAgent,
-        # numGames=100
+        numGames=100
     )

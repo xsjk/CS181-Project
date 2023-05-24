@@ -93,6 +93,7 @@ class PygameKeyboardAgent(PlayerAgent):
 
     def getAction(self, state: GameState) -> Action:
         action = None
+        legal = state.getLegalActions() + [Action.TP]
         while action == None:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -103,7 +104,10 @@ class PygameKeyboardAgent(PlayerAgent):
                     else:
                         for act in self.ACTION_KEYS:
                             if event.key in self.ACTION_KEYS[act]:
-                                action = act
+                                if act in legal:
+                                    action = act
+                                else:
+                                    print(f'Illegal action "{act}"')
                                 break
         assert action in Action, f'move action "{action}" is invalid'
         return action
