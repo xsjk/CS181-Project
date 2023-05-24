@@ -1,10 +1,8 @@
-from collections.abc import Iterator
-import pygame
-from util import *
 from layout import Layout
 from enum import Enum
 from abc import ABC, abstractmethod
 import numpy as np
+from util import Vector2d
 
 class Agent(ABC):
     def __init__(self, index: int):
@@ -71,19 +69,16 @@ class AgentState:
     """
     AgentStates hold the state of an agent (configuration, speed, color, radius, etc).
     """
-    dead: bool
+    dead: bool = False
+    isPlayer: bool
+    start: Configuration
+    configuration: Configuration
+    numCarrying: int
 
     def __init__(self, startConfiguration, isPlayer):
-        self.dead = False
-        self.start = startConfiguration
-        self.configuration: Configuration = startConfiguration
-        self.color = COLOR['ghost']
-        if isPlayer:
-            self.color = COLOR['player']
         self.isPlayer = isPlayer
-        # state below potentially used for contest only
-        self.numCarrying = 0
-        self.numReturned = 0
+        self.start = startConfiguration
+        self.configuration = startConfiguration
 
     def __str__(self):
         if self.isPlayer:
@@ -101,11 +96,8 @@ class AgentState:
 
     def copy(self):
         state = AgentState(self.start, self.isPlayer)
-        state.color = self.color
         state.dead = self.dead
         state.configuration = self.configuration
-        state.numCarrying = self.numCarrying
-        state.numReturned = self.numReturned
         return state
 
     def getPosition(self) -> Vector2d:
@@ -158,14 +150,7 @@ class Direction(Enum):
     def random() -> "Direction":
         return random.choice(list(Direction))
     
-COLOR = {
-    "default": pygame.colordict.THECOLORS["gray0"],
-    "tileBg0": pygame.colordict.THECOLORS["gray80"],
-    "tileBg1": pygame.colordict.THECOLORS["gray90"],
-    "player": pygame.colordict.THECOLORS["cornflowerblue"],
-    "ghost": pygame.colordict.THECOLORS["firebrick"],
-    "explosion": pygame.colordict.THECOLORS["orange"]
-}
+
 
 class Action(Enum):
     N = Direction.NORTH

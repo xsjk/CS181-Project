@@ -109,6 +109,13 @@ def type_check(func: Callable) -> Callable:
     return wrapper
 
 
+class Size:
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+        self.length = min(width, height)
+        self.sizeTuple = (self.width, self.height)
+
 class Vector2d:
 
     @overload
@@ -725,6 +732,9 @@ def sign(x):
     else:
         return -1
 
+
+def isOdd(x: int) -> bool:
+    return bool(x % 2)
 
 def arrayInvert(array):
     """
