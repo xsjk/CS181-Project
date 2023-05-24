@@ -2,7 +2,8 @@ from game import runGames, trainPlayer
 from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent, GhostsAgentSample
 from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
-from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent, DQNAgent, ImitationAgent
+from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent
+from deepLearningAgents import DQNAgent, ImitationAgent
 from searchAgents import MaxScoreAgent
 from displayModes import PygameGraphics, NullGraphics
 from layout import Layout

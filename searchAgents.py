@@ -88,18 +88,6 @@ class SearchAgent(Agent):
         return action
 
 
-class LongestLiveAgent(SearchAgent):
-
-    def prepareActions(self, state: GameState):
-        self.actions: list[Action] = []
-        self.actionIndex: int = 0
-        for i, actions in enumerate(search.breadthFirstSearchIterator(LongestLiveProblem(state))):
-            if len(actions) > len(self.actions):
-                self.actions = actions
-        #     print(f"searched {i} states", end='\r')
-        # print(f"searched {i} states")
-        self.actions.append(Action.TP)
-
 
 class MaxScoreAgent(SearchAgent):
 

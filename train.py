@@ -2,7 +2,8 @@ from game import runGames, trainPlayer
 from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent, GhostsAgentSample
 from playerAgents import KeyboardAgent, RandomAgent
 from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
-from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent, DQNAgent, ImitationAgent, ImitationAgent, QNet
+from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent
+from deepLearningAgents import DQNAgent, ImitationAgent, QNet
 from searchAgents import MaxScoreAgent
 from displayModes import PygameGraphics, NullGraphics
 from layout import Layout
@@ -25,17 +26,17 @@ if __name__ == "__main__":
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )
-    try:
-        trainPlayer(
-            display=NullGraphics,
-            layout=layout,
-            player=playerAgent,
-            ghosts=ghostsAgent,
-            numTrain=100000
-        )
-    except KeyboardInterrupt:
-        print("Training stopped by user.")
-    pickle.dump(playerAgent, open("ImitationAgent.pkl", "wb"))
+    # try:
+    #     trainPlayer(
+    #         display=NullGraphics,
+    #         layout=layout,
+    #         player=playerAgent,
+    #         ghosts=ghostsAgent,
+    #         numTrain=100000
+    #     )
+    # except KeyboardInterrupt:
+    #     print("Training stopped by user.")
+    # pickle.dump(playerAgent, open("ImitationAgent.pkl", "wb"))
 
     runGames(
         display=NullGraphics,

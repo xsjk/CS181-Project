@@ -482,7 +482,12 @@ class GameState:
     def isWin(self) -> bool:
         return self._win
     
-    def toMatrix(self):
+    def toOneHotMatrix(self):
+        """
+        Returns a one-hot matrix representation of the game state
+        shape: (3, height, width)
+        
+        """
         mat = np.zeros((3, self.layout.height, self.layout.width), dtype=int)
         # 0: player
         # 1: ghost
@@ -495,6 +500,27 @@ class GameState:
                 mat[2][pos.y-1][pos.x-1] = 1
             else:
                 mat[1][pos.y-1][pos.x-1] = 1
+        return mat
+    
+    def toMatrix(self):
+        """
+        Returns a matrix representation of the game state
+        shape: (height, width)
+        
+        """
+        # 0: empty
+        # 1: player
+        # 2: ghost
+        # 3: dead ghost
+        mat = np.zeros((self.layout.height, self.layout.width), dtype=int)
+        player_pos = self.getPlayerPosition()
+        mat[player_pos.y-1][player_pos.x-1] = 1
+        for ghost in self.getGhostStates():
+            pos = ghost.getPosition()
+            if ghost.dead:
+                mat[pos.y-1][pos.x-1] = 3
+            else:
+                mat[pos.y-1][pos.x-1] = 2
         return mat
 
 
