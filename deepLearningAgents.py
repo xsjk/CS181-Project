@@ -8,12 +8,13 @@ from abc import ABC, abstractmethod
 from environment import Environment
 import random
 
+torch.set_default_device(torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+
 
 class QNet(nn.Module):
     def __init__(self, map_size: Vector2d):
         super().__init__()
         self.map_size = map_size
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         # input dim: [3, map_size.x, map_size.y]
         # output dim: [9]
         self.model = nn.Sequential(
@@ -25,17 +26,13 @@ class QNet(nn.Module):
             nn.Linear(32 * map_size.x * map_size.y, 128),
             nn.ReLU(),
             nn.Linear(128, 9)
-        ).to(self.device)
-
+        )
     def forward(self, x):
         y = self.model(x)
         return y
 
 
-
 class DQNAgent(QLearningAgent):
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def __init__(self, net: nn.Module):
         super().__init__()
@@ -110,6 +107,12 @@ class DQNAgent(QLearningAgent):
     def state2tensor(self, S: GameState) -> torch.Tensor:
         raise NotImplementedError
     
+    def load(self, path: str):
+        self.model.load_state_dict(torch.load(path))
+
+    def save(self, path: str):
+        torch.save(self.model.state_dict(), path)
+    
 class OneHotDQNAgent(DQNAgent):
     @type_check
     def __init__(self, map_size: Vector2d):
@@ -122,7 +125,7 @@ class OneHotDQNAgent(DQNAgent):
             nn.Linear(32 * map_size.x * map_size.y, 128),
             nn.ReLU(),
             nn.Linear(128, 9)
-        ).to(self.device))
+        ))
 
     def state2tensor(self, S: GameState) -> torch.Tensor:
         # [3, map_size.x, map_size.y]
@@ -149,7 +152,7 @@ class FullyConnectedDQNAgent(DQNAgent):
             nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(128, 9)
-        ).to(self.device))
+        ))
 
     def state2tensor(self, S: GameState) -> torch.Tensor:
         # 0: empty

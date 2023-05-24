@@ -167,12 +167,12 @@ class ClassicGameRules:
 
     def win(self, state: "GameState", game: "Game"):
         if not self.quiet:
-            print("Player emerges victorious! Score: %d" % state.score)
+            print(f"Player emerges victorious! Score: {state.score}")
         game.gameOver = True
 
     def lose(self, state: "GameState", game: "Game"):
         if not self.quiet:
-            print("Player died! Score: %d" % state.score)
+            print(f"Player died! Score: {state.score}")
         game.gameOver = True
 
     def agentCrash(self, game: "Game", agentIndex: int):
@@ -259,7 +259,7 @@ class GameState:
         pos = layout.agentPositions[0]
         self.agentStates.append(AgentState(
             Configuration(pos, Direction.NORTH.vector), True))
-        for i in range(1, layout.ghostNum+1):
+        for i in range(1, layout.ghost_num+1):
             pos = layout.agentPositions[i]
             self.agentStates.append(AgentState(
                 Configuration(pos, Direction.NORTH.vector), False))
@@ -391,13 +391,11 @@ class GameState:
 
     def changeToNextState(self, action: Action):
         self.changeToPlayerNextState(action)
-        if (self.isLose()):
+        if self.isLose():
             return
         # First check if the player is dead
         # Then we update the remaind agents: ghosts
-        actions = []
-        for agentIndex in range(1, self.getGhostNum()+1):
-            actions.append(self.agents[agentIndex].getAction(self))
+        actions = [ghost.getAction(self) for ghost in self.agents[1:]]
             # print("The ghost action here is", action)
         self.changeToGhostsNextState(actions)
 
@@ -530,9 +528,11 @@ def isOdd(x: int) -> bool:
 
 class Game:
 
-    display: Display
     agents: list[Agent]
+    display: Display
     rules: ClassicGameRules
+    state: GameState
+    gameOver: bool = False
     
     def __init__(self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions):
         # pygame.init()
@@ -540,13 +540,10 @@ class Game:
 
         self.agents = agents
         self.rules = gameRule
-
-        self.startingIndex = 0
-        self.gameOver = False
+        
         self.catchExceptions = catchExceptions
         self.moveHistory: list[tuple[int, Action]] = []
         self.score = 0
-        self.state: GameState
 
     def _agentCrash(self, agentIndex, quiet=False):
         "Helper method for handling agent crashes"
@@ -568,22 +565,15 @@ class Game:
                 self._agentCrash(i, quiet=True)
                 return
 
-        agentIndex = self.startingIndex
-        numAgents = len(self.agents)
 
         self.display.initialize(self.state)
-
+        player = self.agents[0]
+        assert player is self.state.agents[0]
         while not self.gameOver:
-            sleep(1)
-            # Execute the action
-            agent = self.agents[agentIndex]
-
             # observation = self.state.deepCopy()
-            action: Action = agent.getAction(self.state)
-            assert isinstance(
-                action, Action), "action must be an Action object"
+            action: Action = player.getAction(self.state)
+            # assert isinstance(action, Action), "action must be an Action object"
 
-            # self.moveHistory.append((agentIndex, action))
             self.state.changeToNextState(action)
 
             # Allow for game specific conditions (winning, losing, etc.)
@@ -607,7 +597,7 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
     gameDisplay = display(layout.map_size, layout.tile_size)
 
     for i in range(numGames):
-        layout.arrangeAgents(layout.player_pos, layout.ghost_pos)
+        layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
 
         rules.quiet = False
 

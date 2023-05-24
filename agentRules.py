@@ -3,6 +3,7 @@ from enum import Enum
 from abc import ABC, abstractmethod
 import numpy as np
 from util import Vector2d
+import random
 
 class Agent(ABC):
     def __init__(self, index: int):
@@ -168,7 +169,7 @@ class Action(Enum):
     def vector(self) -> Vector2d:
         match self:
             case Action.TP:
-                raiseNotDefined()
+                raise NotImplementedError
             case Action.STOP:
                 return Vector2d(0, 0)
             case _:

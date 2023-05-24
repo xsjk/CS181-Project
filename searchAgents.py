@@ -91,7 +91,7 @@ class SearchAgent(Agent):
 
 class MaxScoreAgent(SearchAgent):
 
-    depth: int = 2
+    depth: int = 3
 
     def prepareActions(self, state: GameState):
         max_score = -float('inf')

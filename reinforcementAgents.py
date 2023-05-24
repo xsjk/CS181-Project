@@ -327,3 +327,7 @@ class MCTSAgent(Agent):
         self.root = best_child
         print(f"Best child visited {best_child.visits} times")
         return Action.from_vector(best_child.state.getAgentState(self.index).configuration.direction)
+
+
+from deepLearningAgents import *
+# This is only for compatibility with the old pickled models

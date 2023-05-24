@@ -22,7 +22,7 @@ if __name__ == "__main__":
     layout = Layout(
         map_size = map_size,
         tile_size = (30,30),
-        ghostNum = 5,
+        ghost_num = 5,
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )

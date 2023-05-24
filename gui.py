@@ -66,7 +66,7 @@ class PygameGraphics(Display):
                 pos[1] * self.TILE_SIZE.height - self.TILE_SIZE.height // 2)
     
     @staticmethod
-    def getColor(agent: AgentState):
+    def getColor(agent: AgentState) -> tuple[int, int, int, int]:
         if agent.isPlayer:
             return COLOR["player"]
         elif agent.dead:
@@ -101,8 +101,8 @@ class PygameKeyboardAgent(PlayerAgent):
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
                     else:
-                        for act in KeyboardAgent.ACTION_KEYS:
-                            if event.key in KeyboardAgent.ACTION_KEYS[act]:
+                        for act in self.ACTION_KEYS:
+                            if event.key in self.ACTION_KEYS[act]:
                                 action = act
                                 break
         assert action in Action, f'move action "{action}" is invalid'
