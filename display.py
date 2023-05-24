@@ -1,25 +1,25 @@
 import time
-from game import GameState
 from abc import ABC, abstractmethod
 
+SLEEP_TIME = 0
 DRAW_EVERY = 1
 DISPLAY_MOVES = False
 QUIET = False  # Supresses output
 
 
-class GraphicMode(ABC):
+class Display(ABC):
     @abstractmethod
-    def initialize(self, state: GameState):
+    def initialize(self, state):
         raise NotImplementedError
 
     @abstractmethod
-    def update(self, state: GameState):
+    def update(self, state):
         raise NotImplementedError
 
     def pause(self):
         time.sleep(SLEEP_TIME)
 
-    def draw(self, state: GameState):
+    def draw(self, state):
         print(state)
 
     @abstractmethod
@@ -27,18 +27,15 @@ class GraphicMode(ABC):
         raise NotImplementedError
 
 
-class NullGraphics(GraphicMode):
+class NullGraphics(Display):
 
     def __init__(self, *args, **kwargs):
         pass
 
-    # gamestate
-    def __init__(self, *args, **kargs):
-        pass
-    def initialize(self, state: GameState):
+    def initialize(self, state):
         pass
 
-    def update(self, state: GameState):
+    def update(self, state):
         for state in state.agentStates:
             print(state)
 

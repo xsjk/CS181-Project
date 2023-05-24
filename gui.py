@@ -1,12 +1,11 @@
 
 from agentRules import Action, AgentState
-from displayModes import GraphicMode, SLEEP_TIME
+from display import Display
 from game import GameState
 from playerAgents import PlayerAgent
 from util import Vector2d, Size, isOdd
 import pygame
 from pygame.colordict import THECOLORS
-import time
 
 
 TITLE = "Robots"
@@ -20,9 +19,8 @@ COLOR = {
     "explosion": THECOLORS["orange"]
 }
 
-class PygameGraphics(GraphicMode):
+class PygameGraphics(Display):
     def __init__(self, map_size: Vector2d, tile_size: Vector2d):
-        self.display = pygame.display
         self.MAP_SIZE = Size(map_size.x, map_size.y)
         self.TILE_SIZE = Size(tile_size.x, tile_size.y)
         self.WINDOW_SIZE = Size(self.MAP_SIZE.width * self.TILE_SIZE.width,
@@ -31,7 +29,7 @@ class PygameGraphics(GraphicMode):
 
     def initialize(self, state):
         print("Game begins!")
-        self.surface: pygame.Surface = self.display.set_mode(self.WINDOW_SIZE.sizeTuple)
+        self.surface: pygame.Surface = pygame.display.set_mode(self.WINDOW_SIZE.sizeTuple)
         self.update(state)
 
     # agent_state
@@ -40,7 +38,7 @@ class PygameGraphics(GraphicMode):
         for x in range(self.MAP_SIZE.width):
             for y in range(self.MAP_SIZE.height):
                 pygame.draw.rect(
-                    self.display.get_surface(),
+                    pygame.display.get_surface(),
                     COLOR["tileBg0"] if isOdd(x + y) else COLOR["tileBg1"],
                     (x * self.TILE_SIZE.width, y * self.TILE_SIZE.height,
                      self.TILE_SIZE.width, self.TILE_SIZE.height)
@@ -55,10 +53,7 @@ class PygameGraphics(GraphicMode):
                 radius = self.radius
             )
 
-        self.display.update()
-
-    def pause(self):
-        time.sleep(SLEEP_TIME)
+        pygame.display.update()
 
     def draw(self, state):
         print(state)
@@ -82,7 +77,7 @@ class PygameGraphics(GraphicMode):
 
 
 
-class KeyboardAgent(PlayerAgent):
+class PygameKeyboardAgent(PlayerAgent):
 
     ACTION_KEYS = {
         Action.N: {pygame.K_UP, pygame.K_w, pygame.K_k},

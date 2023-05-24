@@ -1,4 +1,5 @@
 from time import sleep
+from display import Display
 from environment import Environment, PlayerGameEnvironment
 from util import *
 from agentRules import *
@@ -152,8 +153,6 @@ class ClassicGameRules:
         initState.initialize(layout, agents)
         game = Game(agents, display, self, catchExceptions=catchExceptions)
         game.state = initState
-        self.initialState = initState.deepCopy()
-        self.display = display
         self.quiet = quiet
         return game
 
@@ -530,6 +529,11 @@ def isOdd(x: int) -> bool:
 
 
 class Game:
+
+    display: Display
+    agents: list[Agent]
+    rules: ClassicGameRules
+    
     def __init__(self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions):
         # pygame.init()
         self.display = display

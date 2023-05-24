@@ -1,12 +1,11 @@
-from displayModes import GraphicMode
-
+from display import Display
 import textual
 from textual.app import App, CSSPathType, ComposeResult
 from textual import events, on
 from textual.driver import Driver
+from util import Vector2d, Size
 
-
-class RichGraphics(GraphicMode):
+class TextualGraphics(Display):
 
     app: App
 
@@ -32,8 +31,8 @@ class RichGraphics(GraphicMode):
         self._state = state
         self._frame.refresh()
 
-    def pause(self):
-        time.sleep(SLEEP_TIME)
-
     def draw(self, state):
         pass
+
+class TextualKeyboardAgent(Display):
+    pass
