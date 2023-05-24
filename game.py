@@ -586,13 +586,13 @@ def runGames(display: type, layout: Layout, player: Agent, ghosts: list[Agent], 
         game.run()
         games.append(game)
 
-        scores = [game.state.getScore() for game in games]
-        wins = [game.state.isWin() for game in games]
-        winRate = wins.count(True) / float(len(wins))
-        print('Average Score:', sum(scores) / float(len(scores)))
-        print('Scores:       ', ', '.join([str(score) for score in scores]))
-        print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
-        print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
+    scores = [game.state.getScore() for game in games]
+    wins = [game.state.isWin() for game in games]
+    winRate = wins.count(True) / float(len(wins))
+    print('Average Score:', sum(scores) / float(len(scores)))
+    print('Scores:       ', ', '.join([str(score) for score in scores]))
+    print(f'Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})')
+    print('Record:       ', ', '.join(['Loss', 'Win'][int(w)] for w in wins))
     return games
 
 

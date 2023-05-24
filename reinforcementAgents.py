@@ -129,7 +129,7 @@ class QNet(nn.Module):
         self.device = torch.device(
             'cuda' if torch.cuda.is_available() else 'cpu')
         # input dim: [3, map_size.x, map_size.y]
-        # output dim: [10]
+        # output dim: [9]
         self.model = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
@@ -138,37 +138,13 @@ class QNet(nn.Module):
             nn.Flatten(),
             nn.Linear(32 * map_size.x * map_size.y, 128),
             nn.ReLU(),
-            nn.Linear(128, 10)
+            nn.Linear(128, 9)
         ).to(self.device)
 
     def forward(self, x):
         y = self.model(x)
         return y
 
-
-
-class QNet(nn.Module):
-    def __init__(self, map_size: Vector2d):
-        super().__init__()
-        self.map_size = map_size
-        self.device = torch.device(
-            'cuda' if torch.cuda.is_available() else 'cpu')
-        # input dim: [3, map_size.x, map_size.y]
-        # output dim: [10]
-        self.model = nn.Sequential(
-            nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(32 * map_size.x * map_size.y, 128),
-            nn.ReLU(),
-            nn.Linear(128, 10)
-        ).to(self.device)
-
-    def forward(self, x):
-        y = self.model(x)
-        return y
 
 class DQNAgent(QLearningAgent):
     def __init__(self, net: nn.Module):
@@ -177,7 +153,7 @@ class DQNAgent(QLearningAgent):
 
         self.actionList = list(Action)
 
-        # action encoding: [10]
+        # action encoding: [9]
         # N, S, E, W, NW, NE, SW, SE, TP, STOP
 
         # state encoding: [map_size.x, map_size.y]
@@ -251,14 +227,13 @@ class ImitationAgent(DQNAgent):
     def train(self, env: Environment):
         env.resetState()
         S = env.getCurrentState()
-        A = self.getTrainAction(S)
         while True:
             X = torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device)
             X = X.unsqueeze(0)
             Q = self.model(X)
             Q = Q.squeeze(0)
             A_expert = self.expert.getAction(S)
-            Q_expert = torch.tensor(A_expert.onehot, dtype=torch.float32, device=self.device)
+            Q_expert = torch.tensor(A_expert.onehot[:9], dtype=torch.float32, device=self.device)
             loss = self.loss_fn(Q, Q_expert)
             self.optimizer.zero_grad()
             loss.backward()

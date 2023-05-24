@@ -14,7 +14,7 @@ if __name__ == "__main__":
     map_size = Vector2d(15, 15)
     expertAgent  = MaxScoreAgent()
     playerAgent = ImitationAgent(QNet(map_size), expertAgent)
-    # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
     ghosts_pos = []
     player_pos = Vector2d(7, 7)
     ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
@@ -25,17 +25,20 @@ if __name__ == "__main__":
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )
-    trainPlayer(
-        display=NullGraphics,
-        layout=layout,
-        player=playerAgent,
-        ghosts=ghostsAgent,
-        numTrain=10000
-    )
+    try:
+        trainPlayer(
+            display=NullGraphics,
+            layout=layout,
+            player=playerAgent,
+            ghosts=ghostsAgent,
+            numTrain=100000
+        )
+    except KeyboardInterrupt:
+        print("Training stopped by user.")
     pickle.dump(playerAgent, open("ImitationAgent.pkl", "wb"))
 
     runGames(
-        display=PygameGraphics,
+        display=NullGraphics,
         layout=layout,
         player=playerAgent,
         ghosts=ghostsAgent,

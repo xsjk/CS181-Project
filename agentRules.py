@@ -167,8 +167,6 @@ COLOR = {
     "explosion": pygame.colordict.THECOLORS["orange"]
 }
 
-GHOST_NUMBER = 10
-
 class Action(Enum):
     N = Direction.NORTH
     S = Direction.SOUTH
