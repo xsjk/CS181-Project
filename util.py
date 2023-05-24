@@ -37,7 +37,11 @@ def convert_arg(arg, target_type, verbose: bool = False):
         else:
             raise TypeError(f'Unknown type {target_type}')
     elif type(target_type) == types.UnionType:
-        pass
+        target_types = target_type.__args__
+        # TODO
+        return arg
+    elif type(target_type) == types.NoneType:
+        return None
     else:
         raise TypeError(f'Unknown type {target_type}')
     
@@ -80,8 +84,10 @@ def auto_convert(verbose: bool = False):
             signature = inspect.signature(func)
             parameters = signature.parameters
             converted_args = [
-                convert_arg(arg, param.annotation, verbose)
-                for arg, param in zip(args, parameters.values())
+                arg if (i, param.name)==(0,"self") else \
+                      convert_arg(arg, param.annotation, verbose)
+                for i, (arg, param) in enumerate(zip(args, parameters.values()))
+                
             ]
             converted_kwargs = {
                 key: convert_arg(value, parameters[key].annotation, verbose)
