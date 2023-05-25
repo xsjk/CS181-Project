@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from enum import Enum
 import time
 import signal
@@ -6,7 +7,7 @@ import inspect
 import sys
 import heapq
 import math
-from typing import Any, TypeVar, Iterable, Callable, Union, overload
+from typing import Any, Type, TypeVar, Iterable, Callable, Union, overload, List
 from dataclasses import dataclass, field
 from functools import partial, wraps
 import types
@@ -113,6 +114,39 @@ def type_check(func: Callable) -> Callable:
         assert_arg(res, signature.return_annotation)
         return res
     return wrapper
+
+class classproperty(property):
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+    
+class Singleton(ABCMeta):
+    """ 
+    This is a metaclass for classes that should only have one instance.
+    If a class is instantiated with the twice, the same instance is returned.
+
+    Usage:
+    class MyClass(metaclass=Singleton):
+        pass
+    """
+    _instances: dict[type, Any] = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+class Uniqueton(Singleton):
+    """
+    This is a metaclass for classes that should only have one instance.
+    If a class is instantiated with the twice, an error is raised.
+
+    Usage:
+    class MyClass(metaclass=Uniqueton):
+        pass
+    """
+    def __call__(cls, *args, **kwargs):
+        if cls in cls._instances:
+            raise RuntimeError(f'{cls.__name__} is already instantiated')
+        return super().__call__(*args, **kwargs)
 
 
 class Size:
@@ -294,7 +328,7 @@ class VectorBool:
         return VectorBool(data=self.data)
 
 
-class Stack:
+class Stack(Type[T]):
     "A container with a last-in-first-out (LIFO) queuing policy."
 
     def __init__(self):
@@ -313,7 +347,7 @@ class Stack:
         return len(self.list) == 0
 
 
-class Queue:
+class Queue(Type[T]):
     "A container with a first-in-first-out (FIFO) queuing policy."
 
     def __init__(self):
@@ -335,7 +369,7 @@ class Queue:
         return len(self.list) == 0
 
 
-class PriorityQueue:
+class PriorityQueue(Queue):
     """
       Implements a priority queue data structure. Each inserted item
       has a priority associated with it and the client is usually interested
