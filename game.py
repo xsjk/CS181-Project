@@ -334,7 +334,6 @@ class GameState:
     def getLegalPlayerActions(self) -> list[Action]:
         return self.getLegalActions(0)
 
-    @type_check
     def getNextState(self, action: Action) -> "GameState":
         """
         Returns the successor state after the specified agent takes the action.
@@ -370,6 +369,8 @@ class GameState:
         """
         state = GameState(self)
         PlayerRules.applyAction(state, action)
+        dir = state.getPlayerState().getDirection()
+        assert action == Action.from_vector(state.getPlayerState().getDirection())
         state.score += state.scoreChange
 
         playerPosition = state.getPlayerPosition()

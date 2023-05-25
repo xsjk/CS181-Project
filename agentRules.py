@@ -32,7 +32,6 @@ class Configuration:
         assert isinstance(direction, Vector2d)
         self.pos = pos
         self.direction = direction
-        # self.direction = direction
 
     def getPosition(self) -> Vector2d:
         return self.pos
@@ -61,8 +60,6 @@ class Configuration:
 
         Actions are movement vectors.
         """
-        if displacement == Vector2d(0, 0):
-            return self
         return Configuration(self.pos + displacement, displacement)
 
 
