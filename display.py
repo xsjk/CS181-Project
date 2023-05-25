@@ -1,5 +1,5 @@
-import time
-from abc import ABC, abstractmethod
+from abc import ABC, ABCMeta, abstractmethod
+from asyncio import sleep
 
 SLEEP_TIME = 0
 DRAW_EVERY = 1
@@ -17,7 +17,7 @@ class Display(ABC):
         raise NotImplementedError
 
     def pause(self):
-        time.sleep(SLEEP_TIME)
+        sleep(SLEEP_TIME)
 
     def draw(self, state):
         print(state)
@@ -42,3 +42,7 @@ class NullGraphics(Display):
     def finish(self):
         pass
 
+
+if __name__ == "__main__":
+    print(type(Display))
+    print(type(NullGraphics))

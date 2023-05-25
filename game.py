@@ -1,4 +1,3 @@
-from time import sleep
 from display import Display
 from environment import Environment, PlayerGameEnvironment
 from util import *
@@ -587,21 +586,22 @@ class Game:
                 return
 
         self.display.initialize(self.state)
-        player = self.agents[0]
-        while not self.gameOver:
-            # observation = self.state.deepCopy()
-            action: Action = player.getAction(self.state)
-            # assert isinstance(action, Action), "action must be an Action object"
 
-            self.state.changeToNextState(action)
+        def display_thread():
+            while not self.gameOver:
+                self.display.update(self.state)
+        def game_thread():
+            while not self.gameOver:
+                player = self.agents[0]
+                action: Action = player.getAction(self.state)
+                self.state.changeToNextState(action)
+                self.rules.process(self.state, self)
 
-            # Allow for game specific conditions (winning, losing, etc.)
-            # Track progress
-            self.rules.process(self.state, self)
-
-            # Update the gui
-            self.display.update(self.state)
-
+        import threading
+        t = threading.Thread(target=game_thread)
+        t.start()
+        display_thread()
+        t.join()
         self.display.finish()
 
 

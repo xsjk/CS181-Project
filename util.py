@@ -133,6 +133,10 @@ class Singleton(ABCMeta):
         if cls not in cls._instances:
             cls._instances[cls] = super().__call__(*args, **kwargs)
         return cls._instances[cls]
+    
+    @classmethod
+    def __getitem__(cls, key):
+        return cls._instances[key]
 
 class Uniqueton(Singleton):
     """
@@ -328,7 +332,7 @@ class VectorBool:
         return VectorBool(data=self.data)
 
 
-class Stack(Type[T]):
+class Stack:
     "A container with a last-in-first-out (LIFO) queuing policy."
 
     def __init__(self):
@@ -347,7 +351,7 @@ class Stack(Type[T]):
         return len(self.list) == 0
 
 
-class Queue(Type[T]):
+class Queue:
     "A container with a first-in-first-out (FIFO) queuing policy."
 
     def __init__(self):

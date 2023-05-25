@@ -3,47 +3,81 @@ from agentRules import Action, AgentState
 from display import Display
 from game import GameState
 from playerAgents import PlayerAgent
-from util import Vector2d, Size, isOdd
+from util import Uniqueton, Vector2d, Size, Queue
 import pygame
 from pygame.colordict import THECOLORS
+from typing import Callable, Optional
 
 
-TITLE = "Robots"
+class PygameGraphics(Display, metaclass=Uniqueton):
+    '''
+    PygameGraphics is a class that uses Pygame to graphically display the game state.
+    Note that only one PygameGraphics object should be created at a time.
+    '''
 
-COLOR = {
-    "default": THECOLORS["gray0"],
-    "tileBg0": THECOLORS["gray80"],
-    "tileBg1": THECOLORS["gray90"],
-    "player": THECOLORS["cornflowerblue"],
-    "ghost": THECOLORS["firebrick"],
-    "explosion": THECOLORS["orange"]
-}
+    TITLE = "Robots"
 
-class PygameGraphics(Display):
+    COLOR = {
+        "default": THECOLORS["gray0"],
+        "tileBg0": THECOLORS["gray80"],
+        "tileBg1": THECOLORS["gray90"],
+        "player": THECOLORS["cornflowerblue"],
+        "ghost": THECOLORS["firebrick"],
+        "explosion": THECOLORS["orange"]
+    }
+
+    # object attributes
+    surface: pygame.Surface
+    map_size: Size
+    tile_size: Size
+    window_size: Size
+    radius: float
+    running: bool
+
+    event_handler: Optional[Callable[[pygame.event.Event], None]] = None
+
     def __init__(self, map_size: Vector2d, tile_size: Vector2d):
-        self.MAP_SIZE = Size(map_size.x, map_size.y)
-        self.TILE_SIZE = Size(tile_size.x, tile_size.y)
-        self.WINDOW_SIZE = Size(self.MAP_SIZE.width * self.TILE_SIZE.width,
-                                self.MAP_SIZE.height * self.TILE_SIZE.height)
-        self.radius = self.TILE_SIZE.length * 0.8 / 2
+        # if PygameGraphics.instance is not None:
+        #     raise RuntimeError("Only one PygameGraphics object should be created at a time.")
+        # PygameGraphics.instance = self
 
-    def initialize(self, state):
+        self.map_size = Size(map_size.x, map_size.y)
+        self.tile_size = Size(tile_size.x, tile_size.y)
+        self.window_size = Size(self.map_size.width * self.tile_size.width,
+                                self.map_size.height * self.tile_size.height)
+        self.radius = self.tile_size.length * 0.8 / 2
+
+    def initialize(self, state: GameState):
         print("Game begins!")
-        self.surface: pygame.Surface = pygame.display.set_mode(self.WINDOW_SIZE.sizeTuple)
+        self.surface = pygame.display.set_mode(self.window_size.sizeTuple)
+        self.running = True
+        pygame.display.set_caption(self.TITLE)
         self.update(state)
 
     # agent_state
     def update(self, state: GameState):
-        # draw the back ground
-        for x in range(self.MAP_SIZE.width):
-            for y in range(self.MAP_SIZE.height):
+        if self.running:
+            self.draw(state)
+            pygame.display.update()
+            for event in pygame.event.get():
+                match event.type:
+                    case pygame.QUIT:
+                        self.finish()
+                    case pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            self.finish()
+                if self.event_handler is not None:
+                    self.event_handler(event)
+
+    def draw(self, state: GameState):
+        for x in range(self.map_size.width):
+            for y in range(self.map_size.height):
                 pygame.draw.rect(
                     pygame.display.get_surface(),
-                    COLOR["tileBg0"] if isOdd(x + y) else COLOR["tileBg1"],
-                    (x * self.TILE_SIZE.width, y * self.TILE_SIZE.height,
-                     self.TILE_SIZE.width, self.TILE_SIZE.height)
+                    self.COLOR[f"tileBg{(x+y)%2}"],
+                    (x * self.tile_size.width, y * self.tile_size.height,
+                    self.tile_size.width, self.tile_size.height)
                 )
-
         # draw the agents
         for state in state.agentStates:
             pygame.draw.circle(
@@ -53,31 +87,27 @@ class PygameGraphics(Display):
                 radius = self.radius
             )
 
-        pygame.display.update()
-
-    def draw(self, state):
-        print(state)
-
     def finish(self):
-        pass
+        pygame.quit()
+        self.running = False
 
-    def gridToPixel(self, pos: tuple) -> Vector2d:
-        return (pos[0] * self.TILE_SIZE.width - self.TILE_SIZE.width // 2,
-                pos[1] * self.TILE_SIZE.height - self.TILE_SIZE.height // 2)
+    def gridToPixel(self, pos: tuple) -> tuple:
+        return (pos[0] * self.tile_size.width - self.tile_size.width // 2,
+                pos[1] * self.tile_size.height - self.tile_size.height // 2)
     
-    @staticmethod
-    def getColor(agent: AgentState) -> tuple[int, int, int, int]:
+    @classmethod
+    def getColor(cls, agent: AgentState) -> tuple[int, int, int, int]:
         if agent.isPlayer:
-            return COLOR["player"]
+            return cls.COLOR["player"]
         elif agent.dead:
-            return COLOR["explosion"]
+            return cls.COLOR["explosion"]
         else:
-            return COLOR["ghost"]
+            return cls.COLOR["ghost"]
         
 
 
 
-class PygameKeyboardAgent(PlayerAgent):
+class PygameKeyboardAgent(PlayerAgent, metaclass=Uniqueton):
 
     ACTION_KEYS = {
         Action.N: {pygame.K_UP, pygame.K_w, pygame.K_k},
@@ -91,23 +121,29 @@ class PygameKeyboardAgent(PlayerAgent):
         Action.TP: {pygame.K_t, pygame.K_SPACE}
     }
 
+    KEY_ACTION = {k: a for a, keys in ACTION_KEYS.items() for k in keys}
+
+    action_queue: Queue
+
+    def __init__(self):
+        PygameGraphics.event_handler = self.action_getter
+        self.action_queue = Queue()
+
+    def __del__(self):
+        PygameGraphics.event_handler = None
+
+    def action_getter(self, event: pygame.event.Event):
+        if event.type == pygame.KEYDOWN:
+            if event.key in self.KEY_ACTION:
+                self.action_queue.push(self.KEY_ACTION[event.key])
+
     def getAction(self, state: GameState) -> Action:
-        action = None
         legal = state.getLegalActions() + [Action.TP]
-        while action == None:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
-                    else:
-                        for act in self.ACTION_KEYS:
-                            if event.key in self.ACTION_KEYS[act]:
-                                if act in legal:
-                                    action = act
-                                else:
-                                    print(f'Illegal action "{act}"')
-                                break
-        assert action in Action, f'move action "{action}" is invalid'
+        while self.action_queue.isEmpty():
+            pass
+        action = self.action_queue.pop()
+        if action not in legal:
+            print(f"Invalid action {action}")
+            return self.getAction(state)
         return action
+        
