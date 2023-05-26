@@ -871,3 +871,6 @@ def deepmap(f: Callable, x: Any):
     else:
         return f(x)
     
+
+class ThreadTerminated(Exception):
+    pass

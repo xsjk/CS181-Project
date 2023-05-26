@@ -1,10 +1,11 @@
 from display import Display
 from environment import Environment, PlayerGameEnvironment
-from util import *
-from agentRules import *
+from util import ThreadTerminated, sign, Vector2d
+from agentRules import Action, AgentState, Actions, Agent, Configuration, Direction
 import traceback
 from layout import Layout
 import numpy as np
+from threading import Thread
 from rich.progress import track
 
 
@@ -552,6 +553,7 @@ class Game:
     rules: ClassicGameRules
     state: GameState
     gameOver: bool = False
+    gameThread: Thread
 
     def __init__(
         self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions
@@ -565,6 +567,7 @@ class Game:
         self.catchExceptions = catchExceptions
         self.moveHistory: list[tuple[int, Action]] = []
         self.score = 0
+        self.gameThread = Thread(target=self.gameLoop)
 
     def _agentCrash(self, agentIndex, quiet=False):
         "Helper method for handling agent crashes"
@@ -587,24 +590,22 @@ class Game:
                 return
 
         self.display.initialize(self.state)
+        self.gameThread.start()
+        while not self.gameOver and self.display.running:
+            self.display.update(self.state)
+        self.display.finish()
+        self.gameThread.join()
 
-        def display_thread():
+    def gameLoop(self) -> None:
+        try:
             while not self.gameOver:
-                self.display.update(self.state)
-        def game_thread():
-            while not self.gameOver:
-                player = self.agents[0]
+                player: Agent = self.agents[0]
                 action: Action = player.getAction(self.state)
                 self.state.changeToNextState(action)
                 self.rules.process(self.state, self)
-
-        import threading
-        t = threading.Thread(target=game_thread)
-        t.start()
-        display_thread()
-        t.join()
-        self.display.finish()
-
+        except ThreadTerminated:
+            self.score -= 500
+            pass
 
 def runGames(
     display: type,
@@ -623,22 +624,25 @@ def runGames(
     gameDisplay = display(layout.map_size, layout.tile_size)
 
     try:
-        for i in track(range(numGames)):
+        for i in range(numGames):
+            print(">>> Start game", i)
             layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
-            rules.quiet = False
             game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
             game.run()
             games.append(game)
     except KeyboardInterrupt:
         print(">>> Exit with KeyboardInterrupt")
-
-    scores = [game.state.getScore() for game in games]
-    wins = [game.state.isWin() for game in games]
-    winRate = wins.count(True) / float(len(wins))
-    print("Average Score:", sum(scores) / float(len(scores)))
-    # print("Scores:       ", ", ".join([str(score) for score in scores]))
-    print(f"Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})")
-    # print("Record:       ", ", ".join(["Loss", "Win"][int(w)] for w in wins))
+        gameDisplay.finish()
+    finally:
+        if i > 0:
+            scores = [game.state.getScore() for game in games]
+            wins = [game.state.isWin() for game in games]
+            winRate = wins.count(True) / float(len(wins))
+            print("Average Score:", sum(scores) / float(len(scores)))
+            # print("Scores:       ", ", ".join([str(score) for score in scores]))
+            print(f"Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})")
+            # print("Record:       ", ", ".join(["Loss", "Win"][int(w)] for w in wins))
+            
     return games
 
 

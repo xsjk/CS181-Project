@@ -297,8 +297,8 @@ class MCTSAgent(Agent):
             self.root.parent = None
         else:
             self.root = MCTSNode(state, agent=self)
-
-        for _ in track(range(self.num_simulations), description="MCTS simulations", total=self.num_simulations):
+        
+        for _ in track(range(self.num_simulations), description="MCTS simulations", total=self.num_simulations) if not self.quiet else range(self.num_simulations):
             node = self.root
 
             # Selection
@@ -325,7 +325,8 @@ class MCTSAgent(Agent):
         random.shuffle(self.root.children)
         best_child: MCTSNode = max(self.root.children, key=lambda child: child.visits)
         self.root = best_child
-        print(f"Best child visited {best_child.visits} times")
+        if not self.quiet:
+            print(f"Best child visited {best_child.visits} times")
         return Action.from_vector(best_child.state.getAgentState(self.index).configuration.direction)
 
 

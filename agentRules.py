@@ -6,8 +6,9 @@ from util import Vector2d
 import random
 
 class Agent(ABC):
-    def __init__(self, index: int):
+    def __init__(self, index: int, quiet=False):
         self.index = index
+        self.quiet = quiet
 
     @abstractmethod
     def getAction(self, state) -> "Action":
@@ -17,6 +18,8 @@ class Agent(ABC):
         """
         raise NotImplementedError
 
+    def bequiet(self):
+        self.quiet = True
 
 class Configuration:
     """

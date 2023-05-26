@@ -1,5 +1,6 @@
 from abc import ABC, ABCMeta, abstractmethod
 from asyncio import sleep
+from util import classproperty
 
 SLEEP_TIME = 0
 DRAW_EVERY = 1
@@ -8,6 +9,9 @@ QUIET = False  # Supresses output
 
 
 class Display(ABC):
+
+    _running: bool = False
+
     @abstractmethod
     def initialize(self, state):
         raise NotImplementedError
@@ -25,6 +29,14 @@ class Display(ABC):
     @abstractmethod
     def finish(self):
         raise NotImplementedError
+    
+    @property
+    def running(self):
+        return self._running
+    
+    @running.setter
+    def running(self, value):
+        self._running = value
 
 
 class NullGraphics(Display):
@@ -33,13 +45,13 @@ class NullGraphics(Display):
         pass
 
     def initialize(self, state):
-        pass
+        self._running = True
 
     def update(self, state):
         pass
     
     def finish(self):
-        pass
+        self._running = False
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from agentRules import Action, AgentState
 from display import Display
 from game import GameState
 from playerAgents import PlayerAgent
-from util import Uniqueton, Vector2d, Size, Queue
+from util import Uniqueton, Vector2d, Size, Queue, ThreadTerminated
 import pygame
 from pygame.colordict import THECOLORS
 from typing import Callable, Optional
@@ -32,7 +32,6 @@ class PygameGraphics(Display, metaclass=Uniqueton):
     tile_size: Size
     window_size: Size
     radius: float
-    running: bool
 
     event_handler: Optional[Callable[[pygame.event.Event], None]] = None
 
@@ -50,24 +49,23 @@ class PygameGraphics(Display, metaclass=Uniqueton):
     def initialize(self, state: GameState):
         print("Game begins!")
         self.surface = pygame.display.set_mode(self.window_size.sizeTuple)
-        self.running = True
+        PygameGraphics.running = True
         pygame.display.set_caption(self.TITLE)
         self.update(state)
 
     # agent_state
     def update(self, state: GameState):
-        if self.running:
-            self.draw(state)
-            pygame.display.update()
-            for event in pygame.event.get():
-                match event.type:
-                    case pygame.QUIT:
+        self.draw(state)
+        pygame.display.update()
+        for event in pygame.event.get():
+            match event.type:
+                case pygame.QUIT:
+                    self.finish()
+                case pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
                         self.finish()
-                    case pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
-                            self.finish()
-                if self.event_handler is not None:
-                    self.event_handler(event)
+            if self.event_handler is not None:
+                self.event_handler(event)
 
     def draw(self, state: GameState):
         for x in range(self.map_size.width):
@@ -89,7 +87,7 @@ class PygameGraphics(Display, metaclass=Uniqueton):
 
     def finish(self):
         pygame.quit()
-        self.running = False
+        PygameGraphics.running = False
 
     def gridToPixel(self, pos: tuple) -> tuple:
         return (pos[0] * self.tile_size.width - self.tile_size.width // 2,
@@ -140,7 +138,8 @@ class PygameKeyboardAgent(PlayerAgent, metaclass=Uniqueton):
     def getAction(self, state: GameState) -> Action:
         legal = state.getLegalActions() + [Action.TP]
         while self.action_queue.isEmpty():
-            pass
+            if not PygameGraphics.running:
+                raise ThreadTerminated()
         action = self.action_queue.pop()
         if action not in legal:
             print(f"Invalid action {action}")

@@ -1,5 +1,8 @@
-from game import *
+from game import Agent, GameState, Action, Direction, Actions
 from itertools import product
+import random
+from abc import ABC, abstractmethod
+from util import Vector2d
 
 
 class GhostAgent(Agent):
