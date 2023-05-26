@@ -622,24 +622,23 @@ def runGames(
 
     gameDisplay = display(layout.map_size, layout.tile_size)
 
-    for i in range(numGames):
-        layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
-
-        rules.quiet = False
-
-        game = rules.newGame(
-            layout, player, ghosts, gameDisplay, False, catchExceptions
-        )
-        game.run()
-        games.append(game)
+    try:
+        for i in track(range(numGames)):
+            layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
+            rules.quiet = False
+            game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
+            game.run()
+            games.append(game)
+    except KeyboardInterrupt:
+        print(">>> Exit with KeyboardInterrupt")
 
     scores = [game.state.getScore() for game in games]
     wins = [game.state.isWin() for game in games]
     winRate = wins.count(True) / float(len(wins))
     print("Average Score:", sum(scores) / float(len(scores)))
-    print("Scores:       ", ", ".join([str(score) for score in scores]))
+    # print("Scores:       ", ", ".join([str(score) for score in scores]))
     print(f"Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})")
-    print("Record:       ", ", ".join(["Loss", "Win"][int(w)] for w in wins))
+    # print("Record:       ", ", ".join(["Loss", "Win"][int(w)] for w in wins))
     return games
 
 
@@ -664,7 +663,7 @@ def trainPlayer(
         player.train(env)
 
         scores = env.state.getScore()
-        wins = game.state.isWin()
-        print(f"Score: {scores}, Win: {wins}")
+        wins = env.state.isWin()
+        print(f"Score: {scores}, Win: {wins}, Epsilon: {player.epsilon}")
     player.epsilon = 0.0
     return player

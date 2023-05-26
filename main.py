@@ -11,7 +11,7 @@ import pickle
 
 import pkgutil
 if pkgutil.find_loader("rich"):
-    from rich import traceback
+    from rich import traceback, print
     traceback.install()
 if pkgutil.find_loader("torch"):
     from deepLearningAgents import DQNAgent, ImitationAgent

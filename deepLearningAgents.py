@@ -8,8 +8,8 @@ from environment import Environment
 import random
 import numpy as np
 
-torch.set_default_device(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+torch.set_default_device(device)
 
 class QNet(nn.Module):
     def __init__(self, map_size: Vector2d):
@@ -78,7 +78,7 @@ class DQNAgent(QLearningAgent):
 
     def getAction(self, S: GameState) -> Action:
         with torch.no_grad():
-            X = torch.tensor(self.state2matrix(S), dtype=torch.float32)
+            X = torch.tensor(self.state2matrix(S), dtype=torch.float32).to(device)
             X = X.unsqueeze(0)
             ys = self.model(X)
             ys = ys.squeeze(0)
@@ -110,6 +110,7 @@ class DQNAgent(QLearningAgent):
 
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
+    @staticmethod
     @abstractmethod
     def state2matrix(s: GameState) -> np.ndarray:
         raise NotImplementedError
@@ -135,7 +136,8 @@ class OneHotDQNAgent(DQNAgent):
             nn.Linear(128, 9),
         ))
 
-    def state2matrix(self, s: GameState) -> np.ndarray:
+    @staticmethod
+    def state2matrix(s: GameState) -> np.ndarray:
         # [3, map_size.x, map_size.y]
         map_size = s.getMapSize()
         mat = np.zeros((3, map_size.x, map_size.y))
@@ -155,13 +157,14 @@ class FullyConnectedDQNAgent(DQNAgent):
     def __init__(self, map_size: Vector2d):
         super().__init__(nn.Sequential(
             nn.Flatten(),
-            nn.Linear(map_size.x * map_size.y, 256),
+            nn.Linear(map_size.x * map_size.y, 1024),
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(1024, 128),
             nn.ReLU(),
             nn.Linear(128, 9),
         ))
 
+    @staticmethod
     def state2matrix(s: GameState) -> np.ndarray:
         # 0: empty
         # 1: player
@@ -221,6 +224,8 @@ class ImitationAgent(OneHotDQNAgent):
             legal = S.getLegalActions()
             random.shuffle(legal)
             return max(legal, key=lambda a: ys[self.actionList.index(a)], default=None)
+        
+
 
 
 if __name__ == "__main__":

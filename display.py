@@ -36,9 +36,8 @@ class NullGraphics(Display):
         pass
 
     def update(self, state):
-        for state in state.agentStates:
-            print(state)
-
+        pass
+    
     def finish(self):
         pass
 

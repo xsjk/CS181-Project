@@ -14,21 +14,15 @@ if pkgutil.find_loader("rich"):
     from rich import traceback
     traceback.install()
 if pkgutil.find_loader("torch"):
-    from deepLearningAgents import DQNAgent, OneHotDQNAgent, FullyConnectedDQNAgent ,ImitationAgent
-if pkgutil.find_loader("pygame"):
-    from gui import PygameKeyboardAgent
-    from gui import PygameGraphics
-if pkgutil.find_loader("textual"):
-    from tui import TextualKeyboardAgent
-    from tui import TextualGraphics
-
+    from deepLearningAgents import OneHotDQNAgent, FullyConnectedDQNAgent ,ImitationAgent
 
 if __name__ == "__main__":
     # ghostsAgent = GhostsAgent(4)
     map_size = Vector2d(15, 15)
     expertAgent  = MaxScoreAgent()
     playerAgent = OneHotDQNAgent(map_size)
-    # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("OneHotDQNAgent.pkl", "rb"))
+    playerAgent.epsilon_min = 0.9
     ghosts_pos = []
     player_pos = Vector2d(7, 7)
     ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
@@ -45,7 +39,7 @@ if __name__ == "__main__":
             layout=layout,
             player=playerAgent,
             ghosts=ghostsAgent,
-            numTrain=100000
+            numTrain=1000000
         )
     except KeyboardInterrupt:
         print("Training stopped by user.")
