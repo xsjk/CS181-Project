@@ -1,7 +1,7 @@
 from game import runGames, trainPlayer
-from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent, GhostsAgentSample
+from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
-from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
+from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
 from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent
 from searchAgents import MaxScoreAgent
 from display import NullGraphics
@@ -33,9 +33,9 @@ if __name__ == "__main__":
     # playerAgent = RandomAgent()
     # playerAgent = MaxScoreAgent()
     # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
-    # ghostsAgent = GhostsAgent(4)
-    ghostsAgent = [GhostAgent(i) for i in range(1, ghost_num+1)]
-    # ghostsAgent = list(map(GhostAgent, range(1, ghost_num+1)))
+    # ghostsAgent = SmartGhostsAgent(4)
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
+    # ghostsAgent = list(map(GreedyGhostAgent, range(1, ghost_num+1)))
     layout = Layout(
         map_size=map_size,
         tile_size=(30, 30),

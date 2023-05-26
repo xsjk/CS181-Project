@@ -4,12 +4,12 @@ import random
 from abc import ABC, abstractmethod
 from util import Vector2d
 
-
 class GhostAgent(Agent):
     def __init__(self, index: int):
         assert index > 0
         super().__init__(index)
 
+class GreedyGhostAgent(GhostAgent):
     def getAction(self, state: GameState) -> Action:
         """
         return a move string given player's position
@@ -32,7 +32,7 @@ class GhostAgent(Agent):
         return action
 
 
-class GhostAgentSlightlyRandom(GhostAgent):
+class GhostAgentSlightlyRandom(GreedyGhostAgent):
     def __init__(self, index: int):
         assert index > 0
         super().__init__(index)
@@ -48,14 +48,18 @@ class GhostAgentSlightlyRandom(GhostAgent):
 
 class ChildGhostAgent(GhostAgent):
     index: int
-    father: "GhostsAgent"
+    father: "GhostsAgentBase"
 
-    def __init__(self, father: "GhostsAgent", index: int):
+    def __init__(self, father: "GhostsAgentBase", index: int):
         self.index = index
         self.father = father
 
     def getAction(self, state: GameState) -> Action:
         return self.father.getAction(state, self.index)
+    
+    def __str__(self):
+        class_name = type(self.father).__name__
+        return f"{class_name}({self.index})"
 
 
 class GhostsAgentBase(list):
@@ -101,7 +105,7 @@ class GhostsAgentSample(GhostsAgentBase):
 
         return max(actionsList, key=evaluate)
 
-class GhostsAgent(GhostsAgentBase):
+class SmartGhostsAgent(GhostsAgentBase):
     def __init__(self, numGhosts: int):
         super().__init__(numGhosts)
 

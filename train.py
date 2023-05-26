@@ -1,7 +1,7 @@
 from game import runGames, trainPlayer
-from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent, GhostsAgentSample
+from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
-from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
+from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
 from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent
 from searchAgents import MaxScoreAgent
 from display import NullGraphics
@@ -17,7 +17,7 @@ if pkgutil.find_loader("torch"):
     from deepLearningAgents import OneHotDQNAgent, FullyConnectedDQNAgent ,ImitationAgent
 
 if __name__ == "__main__":
-    # ghostsAgent = GhostsAgent(4)
+    # ghostsAgent = SmartGhostsAgent(4)
     map_size = Vector2d(15, 15)
     expertAgent  = MaxScoreAgent()
     playerAgent = OneHotDQNAgent(map_size)
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     playerAgent.epsilon_min = 0.9
     ghosts_pos = []
     player_pos = Vector2d(7, 7)
-    ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
     layout = Layout(
         map_size = map_size,
         tile_size = (30,30),

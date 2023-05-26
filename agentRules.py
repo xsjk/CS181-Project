@@ -21,6 +21,13 @@ class Agent(ABC):
     def bequiet(self):
         self.quiet = True
 
+    def __str__(self):
+        class_name = self.__class__.__name__
+        return f"{class_name}({self.index})"
+    
+    def __repr__(self):
+        return str(self)
+
 class Configuration:
     """
     A Configuration holds the (x,y) coordinate of a character, along with its
