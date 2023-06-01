@@ -42,7 +42,7 @@ class PlayerRules:
                 assert "1234"
                 raise Exception(f"Illegal action {action}")
             # Update Configuration
-            vector = Actions.actionToVector(action, PlayerRules.PLAYER_SPEED)
+            vector = Actions.actionToVector(action)
         
         playerState = state.agentStates[0]
 
@@ -82,7 +82,7 @@ class GhostRules:
         if ghostState.dead:
             return
         speed = GhostRules.GHOST_SPEED
-        vector = Actions.actionToVector(action, speed)
+        vector = Actions.actionToVector(action)
         ghostState.configuration = ghostState.configuration.getNextState(
             vector)
 
