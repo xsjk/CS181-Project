@@ -1,6 +1,4 @@
 
-import torch
-from torch import nn
 from enum import Enum
 from typing import Optional
 from environment import Environment
@@ -120,97 +118,6 @@ class QLearningAgent(ReinforcementAgent):
             S = S_
             if done:
                 break
-
-
-class QNet(nn.Module):
-    def __init__(self, map_size: Vector2d):
-        super().__init__()
-        self.map_size = map_size
-        self.device = torch.device(
-            'cuda' if torch.cuda.is_available() else 'cpu')
-        # input dim: [3, map_size.x, map_size.y]
-        # output dim: [10]
-        self.model = nn.Sequential(
-            nn.Conv2d(3, 16, 3),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, 3),
-            nn.ReLU(),
-            nn.Flatten(),
-            nn.Linear(32 * (map_size.x - 2) * (map_size.y - 2), 64),
-            nn.ReLU(),
-            nn.Linear(64, 10)
-        ).to(self.device)
-
-    def forward(self, x):
-        x = x.unsqueeze(0)
-        y = self.model(x)
-        return y
-
-
-class DQNAgent(QLearningAgent):
-    def __init__(self, map_size: Vector2d):
-        super().__init__()
-        self.map_size = map_size
-        self.device = torch.device(
-            'cuda' if torch.cuda.is_available() else 'cpu')
-
-        self.actionList = list(Action)
-
-        # action encoding: [10]
-        # N, S, E, W, NW, NE, SW, SE, TP, STOP
-
-        # state encoding: [map_size.x, map_size.y]
-        self.model = QNet(map_size)
-
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=1e-3)
-        self.loss_fn = nn.MSELoss()
-
-        self.epsilon = 1.0
-        self.epsilon_decay = 0.999
-        self.epsilon_min = 0.01
-        self.gamma = 0.99
-        self.batch_size = 64
-        self.memory = []
-        self.memory_size = 10000
-        self.update_freq = 1000
-        self.update_counter = 0
-
-    def getQValue(self, S: GameState, A: Action):
-        index = self.actionList.index(A)
-        with torch.no_grad():
-            return self.model(torch.tensor(S.toMatrix(), dtype=torch.float32, device=self.device))[index].item()
-    
-
-    def getAction(self, S) -> Action:
-        with torch.no_grad():
-            index = self.model(torch.tensor(
-                S.toMatrix(), dtype=torch.float32, device=self.device)).argmax().item()
-            return self.actionList[index]
-
-    def update(self, S, A, S_, R: float) -> None:
-
-        self.memory.append((S, A, S_, R))
-        if len(self.memory) > self.memory_size:
-            self.memory.pop(0)
-        if len(self.memory) < self.batch_size:
-            return
-        
-        batch = random.sample(self.memory, self.batch_size)
-        S_batch = torch.tensor([s.toMatrix() for s, _, _, _ in batch], dtype=torch.float32, device=self.device)
-        A_batch = torch.tensor([self.actionList.index(a) for _, a, _, _ in batch], dtype=torch.long, device=self.device)
-        S_batch_ = torch.tensor([s_.toMatrix() for _, _, s_, _ in batch], dtype=torch.float32, device=self.device)
-        R_batch = torch.tensor([r for _, _, _, r in batch], dtype=torch.float32, device=self.device)
-
-        Q_batch = self.model(S_batch).gather(1, A_batch.unsqueeze(1)).squeeze(1)
-        Q_batch_ = self.model(S_batch_).max(1)[0].detach()
-        target = R_batch + self.gamma * Q_batch_
-
-        loss = self.loss_fn(Q_batch, target)
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-
-        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
 
 
@@ -390,8 +297,8 @@ class MCTSAgent(Agent):
             self.root.parent = None
         else:
             self.root = MCTSNode(state, agent=self)
-
-        for _ in track(range(self.num_simulations), description="MCTS simulations", total=self.num_simulations):
+        
+        for _ in track(range(self.num_simulations), description="MCTS simulations", total=self.num_simulations) if not self.quiet else range(self.num_simulations):
             node = self.root
 
             # Selection
@@ -418,5 +325,10 @@ class MCTSAgent(Agent):
         random.shuffle(self.root.children)
         best_child: MCTSNode = max(self.root.children, key=lambda child: child.visits)
         self.root = best_child
-        print(f"Best child visited {best_child.visits} times")
+        if not self.quiet:
+            print(f"Best child visited {best_child.visits} times")
         return Action.from_vector(best_child.state.getAgentState(self.index).configuration.direction)
+
+
+from deepLearningAgents import *
+# This is only for compatibility with the old pickled models

@@ -33,7 +33,7 @@ def inverseManhattanEvaluationFunction(currentGameState: GameState, action: Opti
         return min(map(partial(Vector2d.manhattanDistance, newPos), ghostPos))
 
 
-class GreedyAgent(PlayerAgent):
+class TimidAgent(PlayerAgent):
 
     def __init__(self, evalFn=inverseManhattanEvaluationFunction):
         super().__init__()

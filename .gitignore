@@ -131,3 +131,6 @@ dmypy.json
 
 # mac
 .idea
+
+# test
+test.py

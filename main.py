@@ -1,48 +1,52 @@
 from game import runGames, trainPlayer
-from ghostAgents import GhostAgent, GhostAgentSlightlyRandom, GhostsAgent
-from playerAgents import KeyboardAgent, RandomAgent
-from multiAgents import GreedyAgent, AlphaBetaAgent, ExpectimaxAgent
-from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent, DQNAgent
+from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
+from playerAgents import RandomAgent
+from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
+from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent
 from searchAgents import MaxScoreAgent
-from displayModes import PygameGraphics, NullGraphics
+from display import NullGraphics
 from layout import Layout
 from util import Vector2d
 import pickle
 
+import pkgutil
+if pkgutil.find_loader("rich"):
+    from rich import traceback, print
+    traceback.install()
+if pkgutil.find_loader("torch"):
+    from deepLearningAgents import DQNAgent, ImitationAgent
+if pkgutil.find_loader("pygame"):
+    from gui import PygameKeyboardAgent
+    from gui import PygameGraphics
+if pkgutil.find_loader("textual"):
+    from tui import TextualKeyboardAgent
+    from tui import TextualGraphics
+
+
 if __name__ == "__main__":
-    # ghostsAgent = GhostsAgent(4)
     map_size = Vector2d(15, 15)
-    # playerAgent = DQNAgent(map_size)
-    # playerAgent = QLearningAgent()
+    ghost_num = 4
     ghosts_pos = []
-    player_pos = Vector2d(1, 6)
-    playerAgent = GreedyAgent()
-    # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
-    # ghostsAgent = [GhostAgent(i) for i in range(1, 6)]
-    ghostsAgent = [GhostAgent(i) for i in range(1,6)]
+    player_pos = Vector2d(7, 7)
+    # playerAgent = PygameKeyboardAgent()
+    playerAgent = MCTSAgent()
+    # playerAgent = RandomAgent()
+    # playerAgent = MaxScoreAgent()
+    # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
+    # ghostsAgent = SmartGhostsAgent(4)
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
+    # ghostsAgent = list(map(GreedyGhostAgent, range(1, ghost_num+1)))
     layout = Layout(
-        map_size = map_size,
-        tile_size = (30,30),
-        ghostNum = 5,
-        player_pos = player_pos,
-        ghosts_pos = ghosts_pos,
+        map_size=map_size,
+        tile_size=(30, 30),
+        ghost_num=ghost_num,
+        player_pos=player_pos,
+        ghosts_pos=ghosts_pos,
     )
-
-    # trainPlayer(
-    #     display=NullGraphics,
-    #     layout=layout,
-    #     player=playerAgent,
-    #     ghosts=ghostsAgent,
-    #     numTrain=1000
-    # )
-    # pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
-    # pickle.dump(playerAgent, open("DQNAgent.pkl", "wb"))
-    # pickle.dump(playerAgent, open("SarsaLambdaAgent.pkl", "wb"))
-
     runGames(
         display=PygameGraphics,
         layout=layout,
         player=playerAgent,
         ghosts=ghostsAgent,
-        numGames=3
+        numGames=100
     )

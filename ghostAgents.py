@@ -1,12 +1,15 @@
-from game import *
+from game import Agent, GameState, Action, Direction, Actions
 from itertools import product
-
+import random
+from abc import ABC, abstractmethod
+from util import Vector2d
 
 class GhostAgent(Agent):
     def __init__(self, index: int):
         assert index > 0
         super().__init__(index)
 
+class GreedyGhostAgent(GhostAgent):
     def getAction(self, state: GameState) -> Action:
         """
         return a move string given player's position
@@ -29,7 +32,7 @@ class GhostAgent(Agent):
         return action
 
 
-class GhostAgentSlightlyRandom(GhostAgent):
+class GhostAgentSlightlyRandom(GreedyGhostAgent):
     def __init__(self, index: int):
         assert index > 0
         super().__init__(index)
@@ -45,14 +48,18 @@ class GhostAgentSlightlyRandom(GhostAgent):
 
 class ChildGhostAgent(GhostAgent):
     index: int
-    father: "GhostsAgent"
+    father: "GhostsAgentBase"
 
-    def __init__(self, father: "GhostsAgent", index: int):
+    def __init__(self, father: "GhostsAgentBase", index: int):
         self.index = index
         self.father = father
 
     def getAction(self, state: GameState) -> Action:
         return self.father.getAction(state, self.index)
+    
+    def __str__(self):
+        class_name = type(self.father).__name__
+        return f"{class_name}({self.index})"
 
 
 class GhostsAgentBase(list):
@@ -71,7 +78,7 @@ class GhostsAgentBase(list):
         raise NotImplementedError
 
 
-class GhostsAgent(GhostsAgentBase):
+class GhostsAgentSample(GhostsAgentBase):
     def __init__(self, numGhosts: int):
         super().__init__(numGhosts)
 
@@ -97,3 +104,50 @@ class GhostsAgent(GhostsAgentBase):
             )
 
         return max(actionsList, key=evaluate)
+
+class SmartGhostsAgent(GhostsAgentBase):
+    def __init__(self, numGhosts: int):
+        super().__init__(numGhosts)
+
+    @staticmethod
+    def shuffle(actions: list[Action]):
+        actions = actions.copy()
+        random.shuffle(actions)
+        return actions
+
+    def getActions(self, state: GameState) -> list[Action]:
+        currentLive = sum(ghostState.dead == False for ghostState in state.agentStates[1:])
+        LEGALACTIONSLIST: list[list[Action]] = [
+            state.getLegalActions(i + 1) for i in range(state.getGhostNum())
+        ]
+        actions = []
+        def dfs(state: GameState):
+            index = len(actions)
+            if index == state.getGhostNum():
+                return actions
+            for action in sorted(LEGALACTIONSLIST[index], key=lambda action: Vector2d.manhattanDistance(Actions.actionToVector(action) + state.getGhostPosition(index + 1), state.getPlayerPosition())):
+                nextState = state.getGhostNextState(action, index + 1)
+                if sum(ghostState.dead == False for ghostState in nextState.agentStates[1:]) == currentLive:
+                    actions.append(action)
+                    return dfs(nextState)
+            actions.pop()
+
+        dfs(state)
+        return actions
+
+        # def evaluate(actions):
+        #     nextState = state.getGhostsNextState(actions)
+        #     return sum(
+        #         ghostState.dead == False for ghostState in nextState.agentStates[1:]
+        #     ) - (
+        #         sum(
+        #             Vector2d.manhattanDistance(
+        #                 ghostState.getPosition(), nextState.agentStates[0].getPosition()
+        #             )
+        #             for ghostState in nextState.agentStates[1:]
+        #         )
+        #         + 1
+        #         + random.random() / 2
+        #     )
+        #
+        # return max(actionsList, key=evaluate)

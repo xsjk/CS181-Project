@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from enum import Enum
 import time
 import signal
@@ -6,7 +7,7 @@ import inspect
 import sys
 import heapq
 import math
-from typing import Any, TypeVar, Iterable, Callable, Union, overload
+from typing import Any, Type, TypeVar, Iterable, Callable, Union, overload, List
 from dataclasses import dataclass, field
 from functools import partial, wraps
 import types
@@ -37,7 +38,11 @@ def convert_arg(arg, target_type, verbose: bool = False):
         else:
             raise TypeError(f'Unknown type {target_type}')
     elif type(target_type) == types.UnionType:
-        pass
+        target_types = target_type.__args__
+        # TODO
+        return arg
+    elif type(target_type) == types.NoneType:
+        return None
     else:
         raise TypeError(f'Unknown type {target_type}')
     
@@ -80,8 +85,10 @@ def auto_convert(verbose: bool = False):
             signature = inspect.signature(func)
             parameters = signature.parameters
             converted_args = [
-                convert_arg(arg, param.annotation, verbose)
-                for arg, param in zip(args, parameters.values())
+                arg if (i, param.name)==(0,"self") else \
+                      convert_arg(arg, param.annotation, verbose)
+                for i, (arg, param) in enumerate(zip(args, parameters.values()))
+                
             ]
             converted_kwargs = {
                 key: convert_arg(value, parameters[key].annotation, verbose)
@@ -108,6 +115,50 @@ def type_check(func: Callable) -> Callable:
         return res
     return wrapper
 
+class classproperty(property):
+    def __get__(self, cls, owner):
+        return self.fget.__get__(None, owner)()
+    
+class Singleton(ABCMeta):
+    """ 
+    This is a metaclass for classes that should only have one instance.
+    If a class is instantiated with the twice, the same instance is returned.
+
+    Usage:
+    class MyClass(metaclass=Singleton):
+        pass
+    """
+    _instances: dict[type, Any] = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+    
+    @classmethod
+    def __getitem__(cls, key):
+        return cls._instances[key]
+
+class Uniqueton(Singleton):
+    """
+    This is a metaclass for classes that should only have one instance.
+    If a class is instantiated with the twice, an error is raised.
+
+    Usage:
+    class MyClass(metaclass=Uniqueton):
+        pass
+    """
+    def __call__(cls, *args, **kwargs):
+        if cls in cls._instances:
+            raise RuntimeError(f'{cls.__name__} is already instantiated')
+        return super().__call__(*args, **kwargs)
+
+
+class Size:
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+        self.length = min(width, height)
+        self.sizeTuple = (self.width, self.height)
 
 class Vector2d:
 
@@ -322,7 +373,7 @@ class Queue:
         return len(self.list) == 0
 
 
-class PriorityQueue:
+class PriorityQueue(Queue):
     """
       Implements a priority queue data structure. Each inserted item
       has a priority associated with it and the client is usually interested
@@ -726,6 +777,9 @@ def sign(x):
         return -1
 
 
+def isOdd(x: int) -> bool:
+    return bool(x % 2)
+
 def arrayInvert(array):
     """
     Inverts a matrix stored as a list of lists.
@@ -817,3 +871,6 @@ def deepmap(f: Callable, x: Any):
     else:
         return f(x)
     
+
+class ThreadTerminated(Exception):
+    pass
