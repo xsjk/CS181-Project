@@ -281,7 +281,7 @@ class Actions:
                 # TODO:
                 pass
             elif action == Action.UNDO:
-                raise NotImplementedError
+                return False
             else:
                 return Actions.isPosValid(*(action.vector + config.pos),layout.width,layout.height)
         return list(filter(isValid, Action))
