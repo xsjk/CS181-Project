@@ -447,7 +447,7 @@ class GameState:
             ghostState = self.agentStates[index]
             ghostPosition = ghostState.getPosition()
             if GhostRules.canKill(playerPosition, ghostPosition):
-                GhostRules.collide(self)
+                self.updateScore(3)
 
     def getPlayerState(self) -> AgentState:
         """
