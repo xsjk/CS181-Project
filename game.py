@@ -35,6 +35,8 @@ class PlayerRules:
         if action == Action.TP:
             vector = Actions.translateVector(state)
             print("You use TP!")
+        elif action == Action.UNDO:
+            raise NotImplementedError
         else:
             legal = PlayerRules.getLegalActions(state)
             # print("The legal actions are",legal)
@@ -200,19 +202,20 @@ class ClassicGameRules:
 
 
 class GameState:
+
+    _lose: bool = False
+    _win: bool = False
+
+    agentStates: list[AgentState]
+    scoreChange: list[float] = []
+    score: float = 0
+    layout: Layout
+    actionsTaken: list[Action] = []
+
     def __init__(self, prevState=None):
         """
         Generates a new data packet by copying information from its predecessor.
         """
-        self.agentStates: list[AgentState]
-
-        self._agentMoved = None
-        self._lose: bool = False
-        self._win: bool = False
-        self.scoreChange: list = []
-        self.score = 0
-        self.layout: Layout
-        self.actionsTaken = []
 
         if prevState != None:
             self.agentStates = self.copyAgentStates(prevState.agentStates)
@@ -224,7 +227,6 @@ class GameState:
 
     def deepCopy(self):
         state = GameState(self)
-        # state._agentMoved = self._agentMoved
         return state
 
     def copyAgentStates(self, agentStates: list[AgentState]):
@@ -553,10 +555,6 @@ class GameState:
                     rewards += 5
         return rewards
         
-            
-                        
-
-
     def isLose(self) -> bool:
         return self._lose
 
@@ -658,13 +656,21 @@ class Game:
         self.gameThread.join()
 
     def gameLoop(self) -> None:
+        self.history = []
         try:
             while not self.gameOver:
                 player: Agent = self.agents[0]
                 action: Action = player.getAction(self.state)
-                self.state.changeToNextState(action)
-                self.numMoves += 1
-                self.rules.process(self.state, self)
+                if action == Action.UNDO:
+                    if self.history == []:
+                        print("history is empty!")
+                    else:
+                        self.state = self.history.pop()
+                else:
+                    self.history.append(self.state.deepCopy())
+                    self.numMoves += 1
+                    self.state.changeToNextState(action)
+                    self.rules.process(self.state, self)
         except ThreadTerminated:
             self.updateScore(3)
             pass

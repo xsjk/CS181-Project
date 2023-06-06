@@ -116,7 +116,9 @@ class PygameKeyboardAgent(PlayerAgent, metaclass=Uniqueton):
         Action.NE: {pygame.K_e, pygame.K_u},
         Action.SW: {pygame.K_z, pygame.K_b},
         Action.SE: {pygame.K_x, pygame.K_n},
-        Action.TP: {pygame.K_t, pygame.K_SPACE}
+        Action.TP: {pygame.K_t, pygame.K_SPACE},
+        Action.STOP: {pygame.K_p},
+        Action.UNDO: {pygame.K_u},
     }
 
     KEY_ACTION = {k: a for a, keys in ACTION_KEYS.items() for k in keys}
@@ -136,7 +138,7 @@ class PygameKeyboardAgent(PlayerAgent, metaclass=Uniqueton):
                 self.action_queue.push(self.KEY_ACTION[event.key])
 
     def getAction(self, state: GameState) -> Action:
-        legal = state.getLegalActions() + [Action.TP]
+        legal = state.getLegalActions() + [Action.TP, Action.UNDO]
         while self.action_queue.isEmpty():
             if not PygameGraphics.running:
                 raise ThreadTerminated()

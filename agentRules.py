@@ -171,11 +171,14 @@ class Action(Enum):
     SE = Direction.SOUTHEAST
     STOP = "STOP"
     TP = "TP"
+    UNDO = "UNDO"
 
     @property
     def vector(self) -> Vector2d:
         match self:
             case Action.TP:
+                raise NotImplementedError
+            case Action.UNDO:
                 raise NotImplementedError
             case Action.STOP:
                 return Vector2d(0, 0)
@@ -205,6 +208,8 @@ class Action(Enum):
                 return 8
             case Action.TP:
                 return 9
+            case Action.UNDO:
+                return 10
     
     @property
     def onehot(self) -> np.ndarray:
@@ -275,6 +280,8 @@ class Actions:
             if action == Action.TP:
                 # TODO:
                 pass
+            elif action == Action.UNDO:
+                raise NotImplementedError
             else:
                 return Actions.isPosValid(*(action.vector + config.pos),layout.width,layout.height)
         return list(filter(isValid, Action))
