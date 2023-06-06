@@ -1,6 +1,6 @@
 from display import Display, NullGraphics
 from environment import Environment, PlayerGameEnvironment
-from util import ThreadTerminated, sign, Vector2d
+from util import ThreadTerminated, sign, Vector2d, Queue
 from agentRules import Action, AgentState, Actions, Agent, Configuration, Direction
 import traceback
 from layout import Layout
@@ -388,7 +388,7 @@ class GameState:
             ghostState = state.agentStates[index]
             ghostPosition = ghostState.getPosition()
             if GhostRules.canKill(playerPosition, ghostPosition):
-                GhostRules.collide(state)
+                state.updateScore(3)
 
         self.actionsTaken.append(action)
 
@@ -450,6 +450,17 @@ class GameState:
             ghostPosition = ghostState.getPosition()
             if GhostRules.canKill(playerPosition, ghostPosition):
                 self.updateScore(3)
+
+    def getSuccessors(self)-> list:
+        """
+        Generates the successor states after any legal actions
+        """
+        legal_actions = self.getLegalActions()
+        next_states = []
+        for action in legal_actions:
+            next_states.append(self.getNextState(action))
+
+        return next_states
 
     def getPlayerState(self) -> AgentState:
         """
@@ -584,13 +595,31 @@ class GameState:
                         else: rewards += 10
         return rewards
         
-    def getBfsReward(self) -> float:
+    def getBfsReward(self,depth:int = 2) -> float:
         '''
         Return a reward of the current state using the position detection.
         
         '''    
-        states = []
-                  
+        from util import Queue
+        score = self.getScore()
+        scores = []
+        actions_num = len(self.actionsTaken)
+        start_state = GameState(self)
+        states = Queue()
+
+        states.push(start_state)
+
+        while states.isEmpty() != True:
+            state = states.pop()
+            if(state.isWin() or state.isLose() or
+            len(state.actionsTaken) - actions_num > depth):
+                scores.append(state.getScore())
+                continue
+            for next_state in state.getSuccessors():
+                states.push(next_state)
+        
+        return max(scores) - score
+
 
 
     def isLose(self) -> bool:
@@ -703,7 +732,7 @@ class Game:
                 self.state.changeToNextState(action)
                 self.numMoves += 1
                 self.rules.process(self.state, self)
-                print("The reward is",self.state.getDetecReward(),"\n")
+                print("The reward is",self.state.getBfsReward(3),"\n")
         except ThreadTerminated:
             self.updateScore(3)
             pass
