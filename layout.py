@@ -25,10 +25,10 @@ class Layout:
         """
         self.agentPositions = []
         ghosts_pos = deepcopy(o_ghosts_pos)
-        if player_pos:
-            self.agentPositions.append(player_pos)
-        else:
-            self.agentPositions.append(Vector2d(self.width//2, self.height//2))
+        if player_pos is None:
+            player_pos = Vector2d(random.randint(1, self.map_size.x),
+                                  random.randint(1, self.map_size.y))
+        self.agentPositions.append(player_pos)
 
         if player_pos in ghosts_pos:
             raise Exception("Player and ghost have the same initial position!")

@@ -7,14 +7,19 @@ from searchAgents import MaxScoreAgent
 from display import NullGraphics
 from layout import Layout
 from util import Vector2d
+from copy import deepcopy
+from collections import deque
 import pickle
+from torch.utils.tensorboard import SummaryWriter
+
 
 import pkgutil
 if pkgutil.find_loader("rich"):
     from rich import traceback
     traceback.install()
 if pkgutil.find_loader("torch"):
-    from deepLearningAgents import OneHotDQNAgent, FullyConnectedDQNAgent ,ImitationAgent
+    import torch
+    from deepLearningAgents import OneHotDQNAgent, FullyConnectedDQNAgent ,ImitationAgent, AutoPriorityReplayBuffer
 
 if __name__ == "__main__":
     # ghostsAgent = SmartGhostsAgent(4)
@@ -22,9 +27,19 @@ if __name__ == "__main__":
     expertAgent  = MaxScoreAgent()
     playerAgent = OneHotDQNAgent(map_size)
     playerAgent = pickle.load(open("OneHotDQNAgent.pkl", "rb"))
-    playerAgent.epsilon_min = 0.9
+    # playerAgent.writer = SummaryWriter("runs/OneHotDQNAgent")
+    playerAgent.epsilon_min = 0.1
+    playerAgent.epsilon_decay = 1e-5
+    # playerAgent.memory = AutoPriorityReplayBuffer(playerAgent.memory_size, playerAgent.abs_td_error)
+    # playerAgent.optimizer = torch.optim.RMSprop(playerAgent.model.parameters(), lr=0.0025, alpha=0.95, eps=0.01)
+    # playerAgent.target_model = deepcopy(playerAgent.model)
+    # playerAgent.target_model.eval()
+    # playerAgent.target_model.requires_grad_(False)
+    # playerAgent.memory = deque(maxlen=playerAgent.memory_size)
+    # playerAgent.batch_size = 10
+
     ghosts_pos = []
-    player_pos = Vector2d(7, 7)
+    player_pos = None
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
     layout = Layout(
         map_size = map_size,
@@ -34,8 +49,9 @@ if __name__ == "__main__":
         ghosts_pos = ghosts_pos,
     )
     try:
+        playerAgent.writer.flush()
         trainPlayer(
-            display=NullGraphics,
+            displayType=NullGraphics,
             layout=layout,
             player=playerAgent,
             ghosts=ghostsAgent,
@@ -43,4 +59,6 @@ if __name__ == "__main__":
         )
     except KeyboardInterrupt:
         print("Training stopped by user.")
+    finally:
+        playerAgent.writer.close()
     pickle.dump(playerAgent, open("OneHotDQNAgent.pkl", "wb"))

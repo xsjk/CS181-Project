@@ -9,6 +9,9 @@ class GhostAgent(Agent):
         assert index > 0
         super().__init__(index)
 
+    def getAction(self, state: GameState) -> Action:
+        pass
+
 class GreedyGhostAgent(GhostAgent):
     def getAction(self, state: GameState) -> Action:
         """

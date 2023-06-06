@@ -184,7 +184,27 @@ class Action(Enum):
     
     @property
     def index(self) -> int:
-        return list(Action).index(self)
+        match self:
+            case Action.N:
+                return 0
+            case Action.S:
+                return 1
+            case Action.E:
+                return 2
+            case Action.W:
+                return 3
+            case Action.NW:
+                return 4
+            case Action.NE:
+                return 5
+            case Action.SW:
+                return 6
+            case Action.SE:
+                return 7
+            case Action.STOP:
+                return 8
+            case Action.TP:
+                return 9
     
     @property
     def onehot(self) -> np.ndarray:
@@ -219,7 +239,11 @@ class Action(Enum):
             return self.value.value
         else:
             return self.value
+    
+    # def __getitem__(self, key):
+    #     return self.value[key]
 
+Action.list = list(Action)
 
 class Actions:
     """
@@ -284,3 +308,9 @@ class Actions:
             if not walls[x_][y_]:
                 neighbors.append((x_, y_))
         return neighbors
+
+
+if __name__ == "__main__":
+    print(Action._value2member_map_)
+    print(Action._member_map_)
+    print(Action._member_names_)

@@ -56,7 +56,33 @@ class PlayerGameEnvironment(Environment):
         lastScore: float = self.state.getScore()
         self.state.changeToNextState(action)
         reward: float = self.state.getScore() - lastScore
+        reward /= 500
         return (self.state, reward, self.state.isWin() or self.state.isLose())
     
     def resetState(self):
         self.state = self.startState.deepCopy()
+
+
+
+
+class NullRewardEnvironment(Environment):
+    def __init__(self, player: "Agent", startState: "GameState"):
+        self.player = player
+        self.startState = startState.deepCopy()
+        self.state = startState
+
+    def getCurrentState(self) -> "GameState":
+        return self.state
+    
+    def getLegalActions(self) -> list[Action]:
+        return self.state.getLegalActions(self.player.index)
+    
+    def takeAction(self, action: Action) -> tuple["GameState", float]:
+        self.state.changeToNextState(action)
+        reward: float = 0
+        return (self.state, reward, self.state.isWin() or self.state.isLose())
+    
+    def resetState(self):
+        self.state = self.startState.deepCopy()
+
+

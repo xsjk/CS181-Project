@@ -43,11 +43,11 @@ def parse_args() -> dict:
                             "RandomAgent", "TimidAgent", "AlphaBetaAgent", "ExpectimaxAgent",
                             "MCTSAgent", "MaxScoreAgent",
                             "QLearningAgent", "SarsaAgent", "SarsaLambdaAgent",
-                            "FullyConnectedDQNAgent", "OneHotDQNAgent", "ImitationAgent"
+                            "FullyConnectedDQNAgent", "OneHotDQNAgent", "ImitationAgent", "ActorCriticsAgent",
                             "PygameKeyboardAgent", "TextualKeyboardAgent",
                         ],
                         help="The agent to use, default is PygameKeyboardAgent.")
-    parser.add_argument("--ghosts", action="store", type=str, default="SmartGhostsAgent", 
+    parser.add_argument("--ghosts", action="store", type=str, default="GreedyGhostAgent", 
                         choices=[
                             "GreedyGhostAgent", "GhostAgentSlightlyRandom", "SmartGhostsAgent",
                         ],
@@ -93,6 +93,8 @@ def parse_args() -> dict:
             config["player"] = pickle.load(open("FullyConnectedDQNAgent.pkl", "rb"))
         case "ImitationAgent":
             config["player"] = pickle.load(open("ImitationAgent.pkl", "rb"))
+        case "ActorCriticsAgent":
+            config["player"] = pickle.load(open("ActorCriticsAgent.pkl", "rb"))
         case "PygameKeyboardAgent":
             config["player"] = PygameKeyboardAgent()
         case "TextualKeyboardAgent":

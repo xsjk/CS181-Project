@@ -22,7 +22,6 @@ class ValueEstimationAgent(Agent):
     epsilon: float = 0.05
     gamma: float = 0.8
     lambd: float = 0.9
-    numTraining: int = 10
 
     @abstractmethod
     def getQValue(self, state, action):
@@ -104,9 +103,9 @@ class QLearningAgent(ReinforcementAgent):
     def getQValue(self, S: GameState, A: Action):
         return self.values[(S, A)]
 
-    def update(self, S, A, S_, R: float) -> None:
+    def update(self, S, A, S_, R, done: bool):
         self.values[(S, A)] = (1 - self.alpha) * self.values[(S, A)] + \
-            self.alpha * (R + self.gamma * self.getValue(S_))
+            self.alpha * (R + self.gamma * (0 if done else self.getValue(S_)))
 
     def train(self, env: Environment):
         env.resetState()
@@ -114,7 +113,7 @@ class QLearningAgent(ReinforcementAgent):
         while True:
             A = self.getTrainAction(S)
             S_, R, done = env.takeAction(A)
-            self.update(S, A, S_, R)
+            self.update(S, A, S_, R, done)
             S = S_
             if done:
                 break
@@ -129,9 +128,9 @@ class SarsaAgent(ReinforcementAgent):
     def getQValue(self, S, A: Action):
         return self.values[(S, A)]
 
-    def update(self, S, A, R, S_, A_):
+    def update(self, S, A, R, S_, A_, done: bool):
         self.values[(S, A)] = (1 - self.alpha) * self.values[(S, A)] + \
-            self.alpha * (R + self.gamma * self.getQValue(S_, A_))
+            self.alpha * (R + self.gamma * (0 if done else self.getQValue(S_, A_)))
 
     def observationFunction(self, state):
         if not self.lastState is None:
@@ -146,12 +145,12 @@ class SarsaAgent(ReinforcementAgent):
         A = self.getTrainAction(S)
         while True:
             S_, R, done = env.takeAction(A)
-            if done:
-                break
-            A_ = self.getTrainAction(S_)
-            self.update(S, A, R, S_, A_)
+            A_ = self.getTrainAction(S_) if not done else None
+            self.update(S, A, R, S_, A_, done)
             S = S_
             A = A_
+            if done:
+                break
 
 
 class SarsaLambdaAgent(SarsaAgent):
@@ -161,10 +160,10 @@ class SarsaLambdaAgent(SarsaAgent):
         self.values = util.Counter()
         self.eligibility = util.Counter()
         
-    def update(self, S, A, R, S_, A_) -> None:
+    def update(self, S, A, R, S_, A_, done: bool):
+        delta = R + self.gamma * (0 if done else self.getQValue(S_, A_)) - self.getQValue(S, A)
         self.eligibility[(S, A)] += 1
-        delta = R + self.gamma * self.getQValue(S_, A_) - self.getQValue(S, A)
-        for (S, A), e in self.eligibility.copy().items():
+        for (S, A), e in self.eligibility.items():
             self.values[(S, A)] += self.alpha * delta * e
             self.eligibility[(S, A)] *= self.gamma * self.lambd
 
@@ -184,8 +183,6 @@ class PlayerQAgent(QLearningAgent, PlayerAgent):
         """
         alpha    - learning rate
         epsilon  - exploration rate
-        gamma    - discount factor
-        numTraining - number of training episodes, i.e. no learning after these many episodes
         """
         PlayerAgent.__init__(self)
         QLearningAgent.__init__(self, **args)
@@ -209,11 +206,10 @@ class ApproximateQAgent(PlayerQAgent):
     def getQValue(self, S, A: Action) -> float:
         return self.getWeights() * self.featExtractor.getFeatures(S, A)
 
-    def update(self, S, A: Action, S_, R: float):
-        difference = (R + self.gamma *
-                      self.computeValueFromQValues(S_)) - self.getQValue(S, A)
-        for k, v in self.featExtractor.getFeatures(S, A).items():
-            self.weights[k] += self.alpha * difference * v
+    def update(self, S, A: Action, S_, R: float, done: bool):
+        difference = (R + self.gamma * (0 if done else self.getValue(S_))) - self.getQValue(S, A)
+        for f, v in self.featExtractor.getFeatures(S, A).items():
+            self.weights[f] += self.alpha * difference * v
 
 
 class MCTSNode:
@@ -329,6 +325,3 @@ class MCTSAgent(Agent):
             print(f"Best child visited {best_child.visits} times")
         return Action.from_vector(best_child.state.getAgentState(self.index).configuration.direction)
 
-
-from deepLearningAgents import *
-# This is only for compatibility with the old pickled models
