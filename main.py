@@ -28,14 +28,15 @@ if __name__ == "__main__":
     ghost_num = 4
     ghosts_pos = []
     player_pos = Vector2d(7, 7)
-    # playerAgent = PygameKeyboardAgent()
-    playerAgent = MCTSAgent()
+    playerAgent = PygameKeyboardAgent()
+    # playerAgent = MCTSAgent()
     # playerAgent = RandomAgent()
     # playerAgent = MaxScoreAgent()
     # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
     # ghostsAgent = SmartGhostsAgent(4)
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     # ghostsAgent = list(map(GreedyGhostAgent, range(1, ghost_num+1)))
+    scoreChange = [50,250,1000,-1000] # 0-3: normal, kill, win, lose
     layout = Layout(
         map_size=map_size,
         tile_size=(30, 30),
@@ -48,5 +49,6 @@ if __name__ == "__main__":
         layout=layout,
         player=playerAgent,
         ghosts=ghostsAgent,
+        scoreChange=scoreChange,
         numGames=100
     )

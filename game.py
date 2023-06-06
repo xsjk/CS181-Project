@@ -93,8 +93,7 @@ class GhostRules:
         for index in range(1, len(state.agentStates)):
             GhostRules.checkOneDeath(state, index)
             # print("ghosts collides")
-
-        GhostRules.checkWin(state)
+        state.updateScore(2)
 
     @staticmethod
     def checkOneDeath(state: "GameState", index: int):
@@ -102,7 +101,7 @@ class GhostRules:
         ghostState = state.agentStates[index]
         ghostPosition = ghostState.getPosition()
         if GhostRules.canKill(playerPosition, ghostPosition):
-            GhostRules.collide(state)
+            state.updateScore(3)
         if not state.agentStates[index].dead:
             # check if a ghost will boom with another ghost
             for i in range(1, len(state.agentStates)):
@@ -114,18 +113,18 @@ class GhostRules:
                         GhostRules.boom(
                             state, state.agentStates[i], state.agentStates[index]
                         )
-                        state.score += 125
+                        state.updateScore(1)
                         return
 
     @staticmethod
     def canKill(playerPosition: Vector2d, ghostPosition: Vector2d) -> bool:
         return playerPosition == ghostPosition
 
-    @staticmethod
-    def collide(state: "GameState"):
-        if not state._win and not state._lose:
-            state.score -= 500
-            state._lose = True
+    # @staticmethod
+    # def collide(state: "GameState"):
+    #     if not state._win and not state._lose:
+    #         state.score -= 500
+    #         state._lose = True
 
     @staticmethod
     # Notice that the boom will be called twice if a boom happen.
@@ -135,15 +134,15 @@ class GhostRules:
         ghost_state1.dead = True
         ghost_state2.dead = True
 
-    @staticmethod
-    def checkWin(state):
-        # if win
-        num = sum(
-            [state.agentStates[i].dead == False for i in range(1, state.getNumAgents())]
-        )
-        if not state._lose and num == 0 and not state._win:
-            state.score += 750
-            state._win = True
+    # @staticmethod
+    # def checkWin(state):
+    #     # if win
+    #     num = sum(
+    #         [state.agentStates[i].dead == False for i in range(1, state.getNumAgents())]
+    #     )
+    #     if not state._lose and num == 0 and not state._win:
+    #         state.score += 750
+    #         state._win = True
 
     @staticmethod
     def placeGhost(state: "GameState", ghostState: "AgentState"):
@@ -162,13 +161,14 @@ class ClassicGameRules:
         playerAgent: Agent,
         ghostAgents: list[Agent],
         display,
+        scoreChange: list[int],
         quiet: bool = False,
         catchExceptions: bool = False,
     ):
         # print(ghostAgents)
         agents = [playerAgent] + ghostAgents
         initState = GameState()
-        initState.initialize(layout, agents)
+        initState.initialize(layout, agents, scoreChange)
         game = Game(agents, display, self, catchExceptions=catchExceptions)
         game.state = initState
         self.quiet = quiet
@@ -210,7 +210,7 @@ class GameState:
         self._agentMoved = None
         self._lose: bool = False
         self._win: bool = False
-        self.scoreChange = 0
+        self.scoreChange: list = []
         self.score = 0
         self.layout: Layout
         self.actionsTaken = []
@@ -259,13 +259,13 @@ class GameState:
                 # hash(state)
         return int((hash(tuple(self.agentStates))))
 
-    def initialize(self, layout: Layout, agents: list[Agent]):
+    def initialize(self, layout: Layout, agents: list[Agent], scoreChange: list[int]):
         """
         Creates an initial game state from a layout array (see layout.py).
         """
         # self.capsules = []
         self.score = 0
-        self.scoreChange = 1
+        self.scoreChange = scoreChange
 
         self.agentStates = []
         numGhosts = 0
@@ -372,7 +372,7 @@ class GameState:
         PlayerRules.applyAction(state, action)
         dir = state.getPlayerState().getDirection()
         assert action == Action.from_vector(state.getPlayerState().getDirection())
-        state.score += state.scoreChange
+        state.updateScore(0)
 
         playerPosition = state.getPlayerPosition()
 
@@ -432,7 +432,7 @@ class GameState:
         Generates the successor state after the specified player move
         """
         PlayerRules.applyAction(self, action)
-        self.score += self.scoreChange
+        self.updateScore(0)
         self.actionsTaken.append(action)
 
         playerPosition = self.getPlayerPosition()
@@ -485,12 +485,71 @@ class GameState:
 
     def getScore(self) -> float:
         return float(self.score)
+    
+    def updateScore(self, index:int) -> int:
+        '''
+        index 0-3: normal,kill_ghost,win,lose
+        
+        '''
+        if(index == 0):
+            self.score += self.scoreChange[0]
+        elif(index == 1):
+            self.score += self.scoreChange[1]
+        elif(index == 2):
+            num = sum(
+                [self.agentStates[i].dead == False for i in range(1, self.getNumAgents())]
+            )
+            if not self._lose and num == 0 and not self._win:
+                self.score += self.scoreChange[2]
+                self._win = True
+        elif(index == 3):
+            if not self._win and not self._lose:
+                self.score += self.scoreChange[3]
+                self._lose = True
+        else:
+            NotImplementedError("The index is out of range")
 
     def getActionsTaken(self) -> list[Action]:
         return self.actionsTaken
 
     def getActionsNum(self) -> int:
         return len(self.actionsTaken)
+
+    def getDeadNum(self) -> int:
+        '''
+        Returns the number of the dead ghosts.
+
+        '''
+        return sum(
+         [self.agentStates[i].dead == False for i in range(1, self.getNumAgents())]
+        )
+
+    def getDetecReward(self,deep:int) -> float:
+        '''
+        Return a reward of the current state using the position detection.
+        
+        '''
+        rewards:float = 0.0
+        # rewards += self.getDeadNum()
+        player_pos = self.getPlayerPosition()
+        for i in range(1,self.getNumAgents()):
+            ghost_pos = self.getGhostPosition(i)
+            distance = Vector2d.manhattanDistance(player_pos,ghost_pos)
+            if(self.agentStates[i].dead == False):
+                rewards +=  distance
+            else:
+                rewards += 20 / distance
+            for j in range(i,self.getNumAgents()):
+                ghost_pos2 = self.getGhostPosition(j)
+                if(ghost_pos.x == ghost_pos2.x and abs(ghost_pos.y - ghost_pos2.y) == 1):
+                    rewards += 5
+                elif(ghost_pos.y == ghost_pos2.y and abs(ghost_pos.x - ghost_pos2.x) == 1):
+                    rewards += 5
+        return rewards
+        
+            
+                        
+
 
     def isLose(self) -> bool:
         return self._lose
@@ -538,10 +597,6 @@ class GameState:
             else:
                 mat[pos.y - 1][pos.x - 1] = 2
         return mat
-
-
-def isOdd(x: int) -> bool:
-    return bool(x % 2)
 
 
 # The main controll flow
@@ -604,7 +659,7 @@ class Game:
                 self.state.changeToNextState(action)
                 self.rules.process(self.state, self)
         except ThreadTerminated:
-            self.score -= 500
+            self.updateScore(3)
             pass
 
 def runGames(
@@ -613,6 +668,7 @@ def runGames(
     player: Agent,
     ghosts: list[Agent],
     numGames: int = 1,
+    scoreChange: list[int] = [1,125,750,-500],
     catchExceptions: bool = False,
 ):
     rules = ClassicGameRules()
@@ -627,7 +683,7 @@ def runGames(
         for i in range(numGames):
             print(">>> Start game", i)
             layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
-            game = rules.newGame(layout, player, ghosts, gameDisplay, False, catchExceptions)
+            game = rules.newGame(layout, player, ghosts, gameDisplay, scoreChange ,False, catchExceptions)
             game.run()
             games.append(game)
     except KeyboardInterrupt:
