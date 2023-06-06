@@ -163,13 +163,12 @@ class ClassicGameRules:
         display,
         scoreChange: list[int],
         quiet: bool = False,
-        catchExceptions: bool = False,
     ):
         # print(ghostAgents)
         agents = [playerAgent] + ghostAgents
         initState = GameState()
         initState.initialize(layout, agents, scoreChange)
-        game = Game(agents, display, self, catchExceptions=catchExceptions)
+        game = Game(agents, display, self)
         game.state = initState
         self.quiet = quiet
         return game
@@ -618,7 +617,7 @@ class Game:
     gameThread: Thread
 
     def __init__(
-        self, agents: list[Agent], display, gameRule: ClassicGameRules, catchExceptions
+        self, agents: list[Agent], display, gameRule: ClassicGameRules
     ):
         # pygame.init()
         self.display = display
@@ -626,7 +625,6 @@ class Game:
         self.agents = agents
         self.rules = gameRule
 
-        self.catchExceptions = catchExceptions
         self.moveHistory: list[tuple[int, Action]] = []
         self.score = 0
         self.gameThread = Thread(target=self.gameLoop)
@@ -679,7 +677,6 @@ def runGames(
     ghosts: list[Agent],
     numGames: int = 1,
     scoreChange: list[int] = [1,125,750,-500],
-    catchExceptions: bool = False,
 ):
     rules = ClassicGameRules()
     games = []
@@ -693,7 +690,7 @@ def runGames(
         for i in range(numGames):
             print(">>> Start game", i)
             layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
-            game = rules.newGame(layout, player, ghosts, gameDisplay, scoreChange ,False, catchExceptions)
+            game = rules.newGame(layout, player, ghosts, gameDisplay, scoreChange ,False)
             game.run()
             games.append(game)
     except KeyboardInterrupt:
@@ -721,7 +718,7 @@ def trainPlayer(
     ghosts: list[Agent],
     envType: type = PlayerGameEnvironment,
     numTrain: int = 100,
-    catchExceptions: bool = False,
+    scoreChange: list[int] = [1,125,750,-500],
 ):
     rules = ClassicGameRules()
 
@@ -732,7 +729,7 @@ def trainPlayer(
         layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
         # print(layout.agentPositions)
         game: Game = rules.newGame(
-            layout, player, ghosts, display, False, catchExceptions
+            layout, player, ghosts, display, scoreChange, 
         )
         env: Environment = envType(player, startState=game.state)
         player.train(env)
