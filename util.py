@@ -7,7 +7,7 @@ import inspect
 import sys
 import heapq
 import math
-from typing import Any, Type, TypeVar, Iterable, Callable, Union, overload, List
+from typing import Any, Type, TypeVar, Iterable, Callable, Union, overload, List, Generic
 from dataclasses import dataclass, field
 from functools import partial, wraps
 import types

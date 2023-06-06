@@ -7,7 +7,9 @@ from searchAgents import MaxScoreAgent
 from display import NullGraphics
 from layout import Layout
 from util import Vector2d
+from copy import deepcopy
 import pickle
+
 
 import pkgutil
 if pkgutil.find_loader("rich"):
@@ -29,10 +31,29 @@ if __name__ == "__main__":
     ghosts_pos = []
     player_pos = Vector2d(7, 7)
     # playerAgent = PygameKeyboardAgent()
-    playerAgent = MCTSAgent()
+    # playerAgent = MCTSAgent()
     # playerAgent = RandomAgent()
     # playerAgent = MaxScoreAgent()
-    # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("OneHotDQNAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("OneHotDQNAgent2.pkl", "rb"))
+    playerAgent = pickle.load(open("OneHotDQNAgent3.pkl", "rb"))
+    playerAgent = pickle.load(open("FullyConnectedDQNAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("FullyConnectedDQNAgent2.pkl", "rb"))
+    playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("ActorCriticsAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("AttentionPosDQNAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("FixnumPosDQNAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("GCNDQNAgent.pkl", "rb"))
+    playerAgent.target_model = deepcopy(playerAgent.model)
+    playerAgent.target_model.eval()
+    playerAgent.target_model.requires_grad_(False)
+    playerAgent.memory.clear()
+    playerAgent.tau = 0.1
+    pickle.dump(playerAgent, open("GCNDQNAgent.pkl", "wb"))
+    exit()
+    
+    playerAgent = pickle.load(open("AttentionPosDQNAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
     # ghostsAgent = SmartGhostsAgent(4)
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     # ghostsAgent = list(map(GreedyGhostAgent, range(1, ghost_num+1)))
@@ -44,9 +65,9 @@ if __name__ == "__main__":
         ghosts_pos=ghosts_pos,
     )
     runGames(
-        display=PygameGraphics,
+        display=NullGraphics,
         layout=layout,
         player=playerAgent,
         ghosts=ghostsAgent,
-        numGames=100
+        numGames=1000
     )

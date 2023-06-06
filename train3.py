@@ -6,38 +6,37 @@ from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLamb
 from searchAgents import MaxScoreAgent
 from display import NullGraphics
 from layout import Layout
+from environment import NullRewardEnvironment
 from util import Vector2d
 from copy import deepcopy
 from collections import deque
 import pickle
 from torch.utils.tensorboard import SummaryWriter
 
-
 import pkgutil
 if pkgutil.find_loader("rich"):
     from rich import traceback
     traceback.install()
 if pkgutil.find_loader("torch"):
-    import torch
     from deepLearningAgents import OneHotDQNAgent, FullyConnectedDQNAgent ,ImitationAgent, AutoPriorityReplayBuffer
+if pkgutil.find_loader("pygame"):
+    from gui import PygameKeyboardAgent
+    from gui import PygameGraphics
+if pkgutil.find_loader("textual"):
+    from tui import TextualKeyboardAgent
+    from tui import TextualGraphics
+
 
 if __name__ == "__main__":
     # ghostsAgent = SmartGhostsAgent(4)
     map_size = Vector2d(15, 15)
     expertAgent  = MaxScoreAgent()
-    playerAgent = OneHotDQNAgent(map_size)
-    playerAgent = pickle.load(open("OneHotDQNAgent.pkl", "rb"))
-    # playerAgent.writer = SummaryWriter("runs/OneHotDQNAgent")
+    playerAgent = ImitationAgent(map_size, expertAgent)
+    playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
     playerAgent.epsilon_min = 0.1
     playerAgent.epsilon_decay = 1e-5
+    # playerAgent.writer = SummaryWriter("runs/ImitationAgent")
     # playerAgent.memory = AutoPriorityReplayBuffer(playerAgent.memory_size, playerAgent.abs_td_error)
-    # playerAgent.optimizer = torch.optim.RMSprop(playerAgent.model.parameters(), lr=0.0025, alpha=0.95, eps=0.01)
-    # playerAgent.target_model = deepcopy(playerAgent.model)
-    # playerAgent.target_model.eval()
-    # playerAgent.target_model.requires_grad_(False)
-    # playerAgent.memory = deque(maxlen=playerAgent.memory_size)
-    # playerAgent.batch_size = 10
-
     ghosts_pos = []
     player_pos = None
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
@@ -49,16 +48,16 @@ if __name__ == "__main__":
         ghosts_pos = ghosts_pos,
     )
     try:
-        playerAgent.writer.flush()
         trainPlayer(
             displayType=NullGraphics,
+            envType=NullRewardEnvironment,
             layout=layout,
             player=playerAgent,
             ghosts=ghostsAgent,
-            numTrain=1000000
+            numTrain=100000
         )
     except KeyboardInterrupt:
         print("Training stopped by user.")
     finally:
         playerAgent.writer.close()
-    pickle.dump(playerAgent, open("OneHotDQNAgent.pkl", "wb"))
+    pickle.dump(playerAgent, open("ImitationAgent.pkl", "wb"))

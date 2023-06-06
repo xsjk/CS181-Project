@@ -1,4 +1,4 @@
-from display import Display
+from display import Display, NullGraphics
 from environment import Environment, PlayerGameEnvironment
 from util import ThreadTerminated, sign, Vector2d
 from agentRules import Action, AgentState, Actions, Agent, Configuration, Direction
@@ -292,7 +292,7 @@ class GameState:
         GameState.explored = set()
         return tmp
 
-    def getLegalActions(self, agentIndex: int = 0):
+    def getLegalActions(self, agentIndex: int = 0) -> list[Action]:
         """
         Returns the legal actions for the agent specified.
         """
@@ -304,6 +304,13 @@ class GameState:
             return PlayerRules.getLegalActions(self)
         else:
             return GhostRules.getLegalActions(self, agentIndex)
+    
+    def getLegalActionIndices(self, agentIndex: int = 0):
+        """
+        Returns the legal actions for the agent specified.
+        """
+        actions = self.getLegalActions(agentIndex)
+        return [a.index for a in actions]
 
     def getLikelyActions(self, agentIndex: int = 1):
         """
@@ -591,8 +598,9 @@ class Game:
 
         self.display.initialize(self.state)
         self.gameThread.start()
-        while not self.gameOver and self.display.running:
-            self.display.update(self.state)
+        if not isinstance(self.display, NullGraphics):
+            while not self.gameOver and self.display.running:
+                self.display.update(self.state)
         self.display.finish()
         self.gameThread.join()
 
@@ -602,10 +610,12 @@ class Game:
                 player: Agent = self.agents[0]
                 action: Action = player.getAction(self.state)
                 self.state.changeToNextState(action)
+                self.numMoves += 1
                 self.rules.process(self.state, self)
         except ThreadTerminated:
             self.score -= 500
             pass
+        print(">>> Game loop finished")
 
 def runGames(
     display: type,
@@ -638,32 +648,37 @@ def runGames(
             scores = [game.state.getScore() for game in games]
             wins = [game.state.isWin() for game in games]
             winRate = wins.count(True) / float(len(wins))
-            print("Average Score:", sum(scores) / float(len(scores)))
+            print(f"Average Score: {sum(scores) / float(len(scores))}")
             # print("Scores:       ", ", ".join([str(score) for score in scores]))
-            print(f"Win Rate:      {wins.count(True)}/{len(wins)} ({winRate:.2f})")
+            print(f"Win Rate: {wins.count(True)}/{len(wins)} ({winRate:.2f})")
             # print("Record:       ", ", ".join(["Loss", "Win"][int(w)] for w in wins))
+            print(f"Avg. Moves: {sum(game.numMoves for game in games) / float(len(games)):5.1f}")
             
     return games
 
 
+
 def trainPlayer(
-    display: type,
+    displayType: type,
     layout: Layout,
     player: Agent,
     ghosts: list[Agent],
+    envType: type = PlayerGameEnvironment,
     numTrain: int = 100,
     catchExceptions: bool = False,
 ):
     rules = ClassicGameRules()
 
-    gameDisplay = display(layout.map_size, layout.tile_size)
+    display = displayType(layout.map_size, layout.tile_size)
     player.epsilon = 1.0
+
     for _ in track(range(numTrain), description="Training..."):
         layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
+        # print(layout.agentPositions)
         game: Game = rules.newGame(
-            layout, player, ghosts, gameDisplay, False, catchExceptions
+            layout, player, ghosts, display, False, catchExceptions
         )
-        env: Environment = PlayerGameEnvironment(player, startState=game.state)
+        env: Environment = envType(player, startState=game.state)
         player.train(env)
 
         scores = env.state.getScore()
