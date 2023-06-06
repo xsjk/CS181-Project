@@ -14,11 +14,12 @@ import numpy as np
 import math
 import time
 from rich.progress import track
+from torch.utils.tensorboard import SummaryWriter
 
 
 @dataclass
 class ValueEstimationAgent(Agent):
-    alpha: float = 1.0
+    alpha: float = 0.002
     epsilon: float = 0.05
     gamma: float = 0.8
     lambd: float = 0.9
@@ -42,7 +43,7 @@ class ValueEstimationAgent(Agent):
 
 class FeatureExtractor(ABC):
     @abstractmethod
-    def getFeatures(self, S, A: Action) -> dict:
+    def getFeatures(self, S: GameState, A: Action) -> dict:
         """
           Returns a dict from features to counts
           Usually, the count will just be 1.0 for
@@ -193,7 +194,39 @@ class PlayerQAgent(QLearningAgent, PlayerAgent):
         return A
 
 
+class MyFeatures(FeatureExtractor):
+    def getFeatures(self, s: GameState, a: Action) -> dict:
+        playerPos = s.getPlayerPosition()
+        sortedAliveGhostPositions = sorted(s.getAliveGhostPositions(), key=lambda ghostPos: Vector2d.manhattanDistance(ghostPos, playerPos))
+        sortedDeadGhostPositions = sorted(s.getDeadGhostPositions(), key=lambda ghostPos: Vector2d.manhattanDistance(ghostPos, playerPos))
+        features = {}
+        features["aliveNum"] = len(sortedAliveGhostPositions)
+        features["deadNum"] = len(sortedDeadGhostPositions)
+        features["d2WallUp"] = playerPos.y - 1
+        features["d2WallDown"] = s.layout.height - playerPos.y
+        features["d2WallLeft"] = playerPos.x - 1
+        features["d2WallRight"] = s.layout.width - playerPos.x
+        features["minD2Wall"] = min([features["d2WallUp"], features["d2WallDown"], features["d2WallLeft"], features["d2WallRight"]])
+        if len(sortedAliveGhostPositions) >= 2:
+            features["closestAliveGhostAΔx"] = playerPos.x - sortedAliveGhostPositions[0].x
+            features["1/closestAliveGhostAΔx"] = 1 / (abs(playerPos.x - sortedAliveGhostPositions[0].x) + 1)
+            features["closestAliveGhostAΔy"] = playerPos.y - sortedAliveGhostPositions[0].y
+            features["1/closestAliveGhostAΔy"] = 1 / (abs(playerPos.y - sortedAliveGhostPositions[0].y) + 1)
+            features["closestAliveGhostBΔx"] = playerPos.x - sortedAliveGhostPositions[1].x
+            features["1/closestAliveGhostBΔx"] = 1 / (abs(playerPos.x - sortedAliveGhostPositions[1].x) + 1)
+            features["closestAliveGhostBΔy"] = playerPos.y - sortedAliveGhostPositions[1].y
+            features["1/closestAliveGhostBΔy"] = 1 / (abs(playerPos.y - sortedAliveGhostPositions[1].y) + 1)
+        if len(sortedDeadGhostPositions) >= 1:
+            features["closestDeadGhostΔx"] = playerPos.x - sortedDeadGhostPositions[0].x
+            features["1/closestDeadGhostΔx"] = 1 / (abs(playerPos.x - sortedDeadGhostPositions[0].x) + 1)
+            features["closestDeadGhostΔy"] = playerPos.y - sortedDeadGhostPositions[0].y
+            features["1/closestDeadGhostΔy"] = 1 / (abs(playerPos.y - sortedDeadGhostPositions[0].y) + 1)
+        return features
+
 class ApproximateQAgent(PlayerQAgent):
+
+    update_counter: int = 0
+    writer = SummaryWriter('runs/test')
 
     def __init__(self, extractor=IdentityExtractor, **args):
         self.featExtractor = extractor
@@ -210,7 +243,8 @@ class ApproximateQAgent(PlayerQAgent):
         difference = (R + self.gamma * (0 if done else self.getValue(S_))) - self.getQValue(S, A)
         for f, v in self.featExtractor.getFeatures(S, A).items():
             self.weights[f] += self.alpha * difference * v
-
+            self.writer.add_scalar(f, self.weights[f], self.update_counter)
+        self.update_counter += 1
 
 class MCTSNode:
     state: GameState

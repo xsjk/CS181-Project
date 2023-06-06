@@ -495,6 +495,12 @@ class GameState:
     def getGhostPositions(self) -> list[Vector2d]:
         return [s.getPosition() for s in self.getGhostStates()]
 
+    def getAliveGhostPositions(self) -> list[Vector2d]:
+        return [s.getPosition() for s in self.getGhostStates() if not s.dead]
+
+    def getDeadGhostPositions(self) -> list[Vector2d]:
+        return [s.getPosition() for s in self.getGhostStates() if s.dead]
+
     def getNumAgents(self) -> int:
         return len(self.agentStates)
 
@@ -800,7 +806,6 @@ def trainPlayer(
     rules = ClassicGameRules()
 
     display = displayType(layout.map_size, layout.tile_size)
-    player.epsilon = 1.0
 
     for _ in track(range(numTrain), description="Training..."):
         layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
