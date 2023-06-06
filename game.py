@@ -211,6 +211,7 @@ class GameState:
     score: float = 0
     layout: Layout
     actionsTaken: list[Action] = []
+    deadGhosts: int = 0
 
     def __init__(self, prevState=None):
         """
@@ -224,6 +225,7 @@ class GameState:
             self.scoreChange = prevState.scoreChange
             self.agents = prevState.agents
             self.actionsTaken = prevState.actionsTaken
+            self.deadGhosts = prevState.deadGhosts
 
     def deepCopy(self):
         state = GameState(self)
@@ -529,32 +531,70 @@ class GameState:
 
         '''
         return sum(
-         [self.agentStates[i].dead == False for i in range(1, self.getNumAgents())]
+         [self.agentStates[i].dead == True for i in range(1, self.getNumAgents())]
         )
 
-    def getDetecReward(self,deep:int) -> float:
+    def getDetecReward(self) -> float:
         '''
         Return a reward of the current state using the position detection.
         
         '''
+        if self.isLose(): return 0.0
         rewards:float = 0.0
         # rewards += self.getDeadNum()
         player_pos = self.getPlayerPosition()
+        
+        lay_dis = abs(player_pos.x - self.layout.width//2) + abs(player_pos.y - self.layout.height//2)
+        rewards -= lay_dis / (self.layout.width + self.layout.height)
+
+        dead_num = self.getDeadNum()
+        rewards += (dead_num - self.deadGhosts)*20
+
         for i in range(1,self.getNumAgents()):
             ghost_pos = self.getGhostPosition(i)
             distance = Vector2d.manhattanDistance(player_pos,ghost_pos)
             if(self.agentStates[i].dead == False):
-                rewards +=  distance
-            else:
-                rewards += 20 / distance
-            for j in range(i,self.getNumAgents()):
-                ghost_pos2 = self.getGhostPosition(j)
-                if(ghost_pos.x == ghost_pos2.x and abs(ghost_pos.y - ghost_pos2.y) == 1):
-                    rewards += 5
-                elif(ghost_pos.y == ghost_pos2.y and abs(ghost_pos.x - ghost_pos2.x) == 1):
-                    rewards += 5
+                # 最开始先计算鬼离人的距离
+                if(distance <= 2): 
+                    rewards -= 100
+                    break
+                rewards += distance
+                for j in range(i+1,self.getNumAgents()):
+                    ghost_pos2 = self.getGhostPosition(j)
+                    # check if the ghosts are close to each other
+                    if(abs(ghost_pos.x - ghost_pos2.x) == 1 and abs(ghost_pos.y - ghost_pos2.y) == 1):
+                        rewards += 5
+                    # 鬼同列
+                    elif(ghost_pos.y == ghost_pos2.y):
+                        # 当和玩家同列
+                        if(ghost_pos.y == player_pos.y):
+                            # if another ghost is alive
+                            if(self.agentStates[j].dead == False): rewards -= 10
+                            # if another ghost is dead 
+                            else: rewards += 10
+                        # 当不和玩家同列
+                        else: rewards += 10
+                    # 鬼同行
+                    elif(ghost_pos.x == ghost_pos2.x):
+                        # 当和玩家同行
+                        if(ghost_pos.x == player_pos.x):
+                            # if another ghost is alive
+                            if(self.agentStates[j].dead == False): rewards -= 10
+                            # if another ghost is dead 
+                            else: rewards += 10
+                        # 当不和玩家同行
+                        else: rewards += 10
         return rewards
         
+    def getBfsReward(self) -> float:
+        '''
+        Return a reward of the current state using the position detection.
+        
+        '''    
+        states = []
+                  
+
+
     def isLose(self) -> bool:
         return self._lose
 
@@ -647,11 +687,13 @@ class Game:
                 self._agentCrash(i, quiet=True)
                 return
 
+
         self.display.initialize(self.state)
         self.gameThread.start()
         if not isinstance(self.display, NullGraphics):
             while not self.gameOver and self.display.running:
                 self.display.update(self.state)
+        
         self.display.finish()
         self.gameThread.join()
 
