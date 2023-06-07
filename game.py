@@ -255,13 +255,13 @@ class GameState:
         """
         Allows states to be keys of dictionaries.
         """
-        for i, state in enumerate(self.agentStates):
+        for state in self.agentStates:
             try:
                 int(hash(state))
             except TypeError as e:
                 print(e)
                 # hash(state)
-        return int((hash(tuple(self.agentStates))))
+        return hash(tuple(self.agentStates))
 
     def initialize(self, layout: Layout, agents: list[Agent], scoreChange: list[int]):
         """
