@@ -167,7 +167,7 @@ class SarsaLambdaAgent(SarsaAgent):
     def update(self, S, A, R, S_, A_, done: bool):
         delta = R + self.gamma * (0 if done else self.getQValue(S_, A_)) - self.getQValue(S, A)
         self.eligibility[(S, A)] += 1
-        for (S, A), e in self.eligibility.items():
+        for (S, A), e in list(self.eligibility.items()):
             self.values[(S, A)] += self.alpha * delta * e
             self.eligibility[(S, A)] *= self.gamma * self.lambd
 

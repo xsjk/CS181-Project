@@ -21,8 +21,8 @@ if pkgutil.find_loader("torch"):
 if __name__ == "__main__":
     map_size = Vector2d(15, 15)
     ghost_num = 4
-    playerAgent = QLearningAgent()
-    # playerAgent = pickle.load(open("QLearningAgent.pkl", "rb"))
+    playerAgent = SarsaLambdaAgent()
+    # playerAgent = pickle.load(open("SarsaLambdaAgent.pkl", "rb"))
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     try:
         trainPlayer(
@@ -37,4 +37,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Training stopped by user.")
     finally:
-        pickle.dump(playerAgent, open("QLearningAgent.pkl", "wb"))
+        pickle.dump(playerAgent, open("SarsaLambdaAgent.pkl", "wb"))

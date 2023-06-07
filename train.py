@@ -54,7 +54,7 @@ def trainPlayer(
 
         scores = env.state.getScore()
         wins = env.state.isWin()
-        print(f"Score: {scores}, Win: {wins}, Epsilon: {player.epsilon}")
+        print(f"Score: {scores+500}, Win: {wins}, Epsilon: {player.epsilon}")
     player.epsilon = 0.0
     return player
 

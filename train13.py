@@ -21,8 +21,8 @@ if pkgutil.find_loader("torch"):
 if __name__ == "__main__":
     map_size = Vector2d(15, 15)
     ghost_num = 4
-    playerAgent = ApproximateQAgent(MyFeatures())
-    # playerAgent = pickle.load(open("ApproximateQAgent.pkl", "rb"))
+    playerAgent = SarsaAgent()
+    # playerAgent = pickle.load(open("SarsaAgent.pkl", "rb"))
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     try:
         trainPlayer(
@@ -37,5 +37,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Training stopped by user.")
     finally:
-        playerAgent.writer.close()
-        pickle.dump(playerAgent, open("ApproximateQAgent.pkl", "wb"))
+        pickle.dump(playerAgent, open("SarsaAgent.pkl", "wb"))

@@ -37,5 +37,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Training stopped by user.")
     finally:
-        playerAgent.writer.close()
         pickle.dump(playerAgent, open("ApproximateQAgent.pkl", "wb"))

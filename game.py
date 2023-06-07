@@ -186,12 +186,12 @@ class ClassicGameRules:
 
     def win(self, state: "GameState", game: "Game"):
         if not self.quiet:
-            print(f"Player emerges victorious! Score: {state.score}")
+            print(f"Player emerges victorious! Score: {state.score+500}")
         game.gameOver = True
 
     def lose(self, state: "GameState", game: "Game"):
         if not self.quiet:
-            print(f"Player died! Score: {state.score}")
+            print(f"Player died! Score: {state.score+500}")
         game.gameOver = True
 
     def agentCrash(self, game: "Game", agentIndex: int):
@@ -416,7 +416,6 @@ class GameState:
         state = GameState(self)
         GhostRules.applyAction(state, action, index)
         GhostRules.checkOneDeath(state, index)
-        # GhostRules.checkWin(state)
         return state
 
     def changeToNextState(self, action: Action):

@@ -13,14 +13,6 @@
             "justMyCode": true
         },
         {
-            "name": "Python: main.py",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        },
-        {
             "name": "Python: train.py",
             "type": "python",
             "request": "launch",
@@ -34,9 +26,11 @@
             "request": "launch",
             "program": "${workspaceFolder}/run.py",
             "args": [
-                "--player", "FixnumPosDQNAgent",
-                "-n", "100",
-                "--no-graphic"
+                "--player", 
+                "FullyConnectedDSLAgent",
+                "-n", "1",
+                // "--ghosts", "SmartGhostsAgent",
+                // "--no-graphic"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

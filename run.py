@@ -1,7 +1,7 @@
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
-from reinforcementAgents import MCTSAgent, ApproximateQAgent
+from reinforcementAgents import MCTSAgent, ApproximateQAgent, ReinforcementAgent
 from searchAgents import MaxScoreAgent
 from display import NullGraphics
 from layout import Layout
@@ -51,7 +51,9 @@ def runGames(
                     
             if layout.player_pos == Vector2d(-1,-1):
                 if len(layout.ghosts_pos) == 0:
-                    layoutGenerator = SpecialLayoutGenerator() if issubclass(type(player), DQNAgent) else RandomLayoutGenerator()
+                    layoutGenerator = SpecialLayoutGenerator() \
+                        if issubclass(type(player), DQNAgent) or isinstance(player, ApproximateQAgent) \
+                        else RandomLayoutGenerator()
                     layout_ = layoutGenerator.generate(layout.map_size,layout.ghost_num)
                 # else:
                 #     layout.player_pos = Vector2d(*np.random.randint(1, layout.map_size.x+1, 2))
@@ -73,7 +75,7 @@ def runGames(
             winRate = wins.count(True) / float(len(wins))
             averageScore = sum(scores) / float(len(scores))
             averageMoves = sum(game.numMoves for game in games) / float(len(games))
-            print(f"Average Score: {averageScore}")
+            print(f"Average Score: {averageScore+500}")
             print(f"Win Rate: {wins.count(True)}/{len(wins)} ({winRate:.2f})")
             print(f"Avg. Moves: {averageMoves:5.1f}")
             
@@ -107,7 +109,7 @@ def parse_args() -> dict:
                             "MCTSAgent", "MaxScoreAgent",
                             "QLearningAgent", "SarsaAgent", "SarsaLambdaAgent", "ApproximateQAgent",
                             "FullyConnectedDQNAgent", "OneHotDQNAgent", "ImitationAgent", "ActorCriticsAgent",
-                            "FixnumPosDQNAgent",
+                            "FixnumPosDQNAgent", "FullyConnectedDSLAgent", "GCNDQNAgent", "AttentionPosDQNAgent",
                             "PygameKeyboardAgent",
                         ],
                         help="The agent to use, default is PygameKeyboardAgent.")
@@ -115,9 +117,9 @@ def parse_args() -> dict:
                         choices=[
                             "GreedyGhostAgent", "GhostAgentSlightlyRandom", "SmartGhostsAgent",
                         ],
-                        help="The agent to use, default is SmartGhostsAgent.")
+                        help="The agent to use, default is GreedyGhostAgent.")
     parser.add_argument("--no-graphic", action="store_true", 
-                        help="Whether to use graphic display, default is true.")
+                        help="Whether to use graphic display, default is show graphic.")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Whether to print verbose information, default is false.")
     parser.add_argument("-n", "--num-of-games", action="store", type=int, default=1, 
@@ -159,6 +161,12 @@ def parse_args() -> dict:
             config["player"] = pickle.load(open("ActorCriticsAgent.pkl", "rb"))
         case "FixnumPosDQNAgent":
             config["player"] = pickle.load(open("FixnumPosDQNAgent.pkl", "rb"))
+        case "AttentionPosDQNAgent":
+            config["player"] = pickle.load(open("AttentionPosDQNAgent.pkl", "rb"))
+        case "FullyConnectedDSLAgent":
+            config["player"] = pickle.load(open("FullyConnectedDSLAgent.pkl", "rb"))
+        case "GCNDQNAgent":
+            config["player"] = pickle.load(open("GCNDQNAgent.pkl", "rb"))
         case "PygameKeyboardAgent":
             config["player"] = PygameKeyboardAgent()
         case "ApproximateQAgent":

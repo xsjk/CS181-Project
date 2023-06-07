@@ -637,6 +637,7 @@ class GCNnet(nn.Module):
         x = torch.mean(x, dim=1)  # Aggregate node features
         q_values = self.fc(x)
         return q_values
+        
     
 class GCNDQNAgent(PosDQNAgent):
 
@@ -730,6 +731,18 @@ class GCNDQNAgent(PosDQNAgent):
         error = Q - Q_target
         error = error.detach().cpu().numpy()
         return error
+
+    def getAction(self, S: GameState) -> Action:
+        X = torch.tensor(self.state2matrix(S), dtype=torch.float32).to(device)
+        X = X.unsqueeze(0)
+        ys = self.target_model(Data(
+            x=X,
+            edge_index=self.edge_index,
+        ))
+        ys = ys.squeeze(0)
+        legal = S.getLegalActionIndices()
+        random.shuffle(legal)
+        return Action.list[max(legal, key=lambda i: ys[i], default=None)]
         
         
         
@@ -943,7 +956,7 @@ class DSLAgent(SarsaLambdaAgent):
         return Action.list[max(legal, key=lambda i: Qs[i])]
 
     def getQValues(self, S: GameState) -> torch.Tensor:
-        X = torch.tensor(self.state2matrix(S), dtype=torch.float32)
+        X = torch.tensor(self.state2matrix(S), dtype=torch.float32, device=device)
         X = X.unsqueeze(0)
         ys = self.target_model(X)
         ys = ys.squeeze(0)
