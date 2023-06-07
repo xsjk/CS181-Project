@@ -1,4 +1,5 @@
-from game import runGames, trainPlayer
+from game import runGames
+from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
@@ -6,9 +7,11 @@ from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLamb
 from searchAgents import MaxScoreAgent
 from display import NullGraphics
 from layout import Layout
+from layoutGenerator import LayoutGenerator, RandomLayoutGenerator, SpecialLayoutGenerator
 from environment import NullRewardEnvironment
 from util import Vector2d
 from copy import deepcopy
+from environment import Environment, NaiveRewardEnvironment, BFSRewardEnvironment
 from collections import deque
 import pickle
 from torch.utils.tensorboard import SummaryWriter
@@ -30,9 +33,10 @@ if pkgutil.find_loader("textual"):
 if __name__ == "__main__":
     # ghostsAgent = SmartGhostsAgent(4)
     map_size = Vector2d(15, 15)
+    ghost_num = 5
     expertAgent  = MaxScoreAgent()
     playerAgent = ImitationAgent(map_size, expertAgent)
-    playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
+    # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
     playerAgent.epsilon_min = 0.1
     playerAgent.epsilon_decay = 1e-5
     # playerAgent.writer = SummaryWriter("runs/ImitationAgent")
@@ -40,21 +44,15 @@ if __name__ == "__main__":
     ghosts_pos = []
     player_pos = None
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
-    layout = Layout(
-        map_size = map_size,
-        tile_size = (30,30),
-        ghost_num = 5,
-        player_pos = player_pos,
-        ghosts_pos = ghosts_pos,
-    )
     try:
         trainPlayer(
-            displayType=NullGraphics,
-            envType=NullRewardEnvironment,
-            layout=layout,
+            envType=BFSRewardEnvironment,
+            map_size=map_size,
+            ghost_num=ghost_num,
+            layoutGenerator=SpecialLayoutGenerator(),
             player=playerAgent,
             ghosts=ghostsAgent,
-            numTrain=100000
+            numTrain=1000000
         )
     except KeyboardInterrupt:
         print("Training stopped by user.")

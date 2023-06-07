@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from agentRules import Agent
-from game import runGames, trainPlayer
+from game import runGames
+from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
@@ -22,7 +23,7 @@ import os
 import matplotlib.pyplot as plt
 from time import sleep, time
 from pprint import pprint
-from environment import PlayerGameEnvironment
+from environment import NaiveRewardEnvironment
 from abc import abstractmethod, ABC
 from typing import Callable
 
@@ -299,7 +300,6 @@ if __name__ == '__main__':
     try:
         playerAgent.writer.flush()
         trainPlayer(
-            displayType=NullGraphics,
             layout=layout,
             player=playerAgent,
             ghosts=ghostsAgent,

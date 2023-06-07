@@ -11,8 +11,9 @@ from ghostAgents import GreedyGhostAgent
 import os
 from rich.progress import track
 
+
 class LayoutGenerator(ABC):
-    
+
     @abstractmethod
     def generate(self, map_size: Vector2d, ghost_num: int) -> Layout:
         raise NotImplementedError

@@ -38,9 +38,8 @@ class Environment(ABC):
         actions = self.getPossibleActions(state)
         return len(actions) == 0
     
-
-
-class PlayerGameEnvironment(Environment):
+class PlayerEnvironment(Environment):
+    
     def __init__(self, player: "Agent", startState: "GameState"):
         self.player = player
         self.startState = startState.deepCopy()
@@ -53,36 +52,52 @@ class PlayerGameEnvironment(Environment):
         return self.state.getLegalActions(self.player.index)
     
     def takeAction(self, action: Action) -> tuple["GameState", float]:
-        lastScore: float = self.state.getScore()
-        self.state.changeToNextState(action)
-        reward: float = self.state.getScore() - lastScore
-        reward /= 500
-        return (self.state, reward, self.state.isWin() or self.state.isLose())
+        raise NotImplementedError
     
     def resetState(self):
         self.state = self.startState.deepCopy()
 
 
-
-
-class NullRewardEnvironment(Environment):
-    def __init__(self, player: "Agent", startState: "GameState"):
-        self.player = player
-        self.startState = startState.deepCopy()
-        self.state = startState
-
-    def getCurrentState(self) -> "GameState":
-        return self.state
-    
-    def getLegalActions(self) -> list[Action]:
-        return self.state.getLegalActions(self.player.index)
+class NullRewardEnvironment(PlayerEnvironment):
     
     def takeAction(self, action: Action) -> tuple["GameState", float]:
         self.state.changeToNextState(action)
         reward: float = 0
         return (self.state, reward, self.state.isWin() or self.state.isLose())
     
-    def resetState(self):
-        self.state = self.startState.deepCopy()
+class NaiveRewardEnvironment(PlayerEnvironment):
+
+    def takeAction(self, action: Action) -> tuple["GameState", float]:
+        lastScore: float = self.state.getScore()
+        self.state.changeToNextState(action)
+        reward: float = self.state.getScore() - lastScore
+        reward /= 500
+        return (self.state, reward, self.state.isWin() or self.state.isLose())
+
+class DetectRewardEnvironment(NaiveRewardEnvironment):
+    
+    def takeAction(self, action: Action) -> tuple["GameState", float]:
+        self.state.changeToNextState(action)
+        reward = self.state.getDetectReward()
+        return (self.state, reward, self.state.isWin() or self.state.isLose())
+
+
+class BFSRewardEnvironment(NaiveRewardEnvironment):
+    
+    def takeAction(self, action: Action) -> tuple["GameState", float]:
+        self.state.changeToNextState(action)
+        reward = self.state.getBFSReward()
+        return (self.state, reward, self.state.isWin() or self.state.isLose())
+
+
+class PatternRewardEnvironment(NaiveRewardEnvironment):
+    
+    def takeAction(self, action: Action) -> tuple["GameState", float]:
+        self.state.changeToNextState(action)
+        reward = self.state.getPatternReward()
+        return (self.state, reward, self.state.isWin() or self.state.isLose())
+
+
+
 
 
