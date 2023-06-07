@@ -751,7 +751,6 @@ class Game:
         except ThreadTerminated:
             self.updateScore(3)
             pass
-        print(">>> Game loop finished")
 
 def runGames(
     display: type,

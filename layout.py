@@ -2,7 +2,6 @@ import random
 from util import auto_convert, type_check, Vector2d
 from copy import deepcopy
 from dataclasses import dataclass
-from abc import ABC, abstractmethod
 
 @dataclass
 class Layout:
@@ -10,10 +9,10 @@ class Layout:
     A Layout manages the static information about the game board.
     """
     map_size: Vector2d
-    tile_size: Vector2d
     ghost_num: int
     player_pos: Vector2d
     ghosts_pos: list[Vector2d]
+    tile_size: Vector2d = Vector2d(30, 30)
 
     def getNumGhosts(self):
         return self.ghost_num
@@ -59,24 +58,6 @@ class Layout:
     def tile_height(self):
         return self.tile_size.y
 
-Layout.__init__ = auto_convert(verbose=True)(Layout.__init__)
+Layout.__init__ = auto_convert(verbose=False)(Layout.__init__)
 
 
-
-
-class LayoutGenerator(ABC):
-
-    @abstractmethod
-    def generate(self):
-        raise NotImplementedError
-
-    pass
-
-
-class RandomLayoutGenerator(LayoutGenerator):
-
-    def generate(self):
-        pass
-
-class SpecialLayoutGenerator(LayoutGenerator):
-    pass
