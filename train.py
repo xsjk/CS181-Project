@@ -1,4 +1,4 @@
-from game import runGames, Game
+from game import Game
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent

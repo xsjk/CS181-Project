@@ -1,5 +1,3 @@
-from game import runGames
-from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
@@ -11,6 +9,9 @@ from util import Vector2d,random
 import pickle
 import argparse
 from layoutGenerator import SpecialLayoutGenerator
+from game import Agent, Game, ClassicGameRules
+import numpy as np
+
 
 import pkgutil
 if pkgutil.find_loader("rich"):
@@ -24,6 +25,66 @@ if pkgutil.find_loader("pygame"):
 if pkgutil.find_loader("textual"):
     from tui import TextualKeyboardAgent
     from tui import TextualGraphics
+
+
+
+def runGames(
+    display: type,
+    layout: Layout,
+    player: Agent,
+    ghosts: list[Agent],
+    numGames: int = 1,
+    scoreChange: list[int] = [1,125,750,-500],
+    handleKeyboardInterrupt = True,
+) -> tuple[list[Game], dict[str, float]]:
+    rules = ClassicGameRules()
+    games = []
+
+    # 警告，判断一下ghost数量是不是等于ghost agent数量
+    assert len(ghosts) == layout.getNumGhosts()
+
+    gameDisplay = display(layout.map_size, layout.tile_size)
+
+    try:
+        for i in range(numGames):
+            print(">>> Start game", i)
+                    
+            if layout.player_pos == Vector2d(-1,-1):
+                if len(layout.ghosts_pos) == 0:
+                    layoutGenerator = SpecialLayoutGenerator()
+                    layout_ = layoutGenerator.generate(layout.map_size,layout.ghost_num)
+                # else:
+                #     layout.player_pos = Vector2d(*np.random.randint(1, layout.map_size.x+1, 2))
+
+            layout_.arrangeAgents(layout_.player_pos, layout_.ghosts_pos)
+            game = rules.newGame(layout_, player, ghosts, gameDisplay, scoreChange ,False)
+            game.run()
+            games.append(game)
+    except KeyboardInterrupt as e:
+        if handleKeyboardInterrupt:
+            print(">>> Exit with KeyboardInterrupt")
+            gameDisplay.finish()
+        else:
+            raise e
+    finally:
+        if i > 0:
+            scores = [game.state.getScore() for game in games]
+            wins = [game.state.isWin() for game in games]
+            winRate = wins.count(True) / float(len(wins))
+            averageScore = sum(scores) / float(len(scores))
+            averageMoves = sum(game.numMoves for game in games) / float(len(games))
+            print(f"Average Score: {averageScore}")
+            print(f"Win Rate: {wins.count(True)}/{len(wins)} ({winRate:.2f})")
+            print(f"Avg. Moves: {averageMoves:5.1f}")
+            
+            return games, {
+                "winRate": winRate,
+                "averageScore": averageScore,
+                "averageMoves": averageMoves
+            }
+
+
+
 
 def parse_args() -> dict:
     parser = argparse.ArgumentParser()
@@ -46,6 +107,7 @@ def parse_args() -> dict:
                             "MCTSAgent", "MaxScoreAgent",
                             "QLearningAgent", "SarsaAgent", "SarsaLambdaAgent", "ApproximateQAgent",
                             "FullyConnectedDQNAgent", "OneHotDQNAgent", "ImitationAgent", "ActorCriticsAgent",
+                            "FixnumPosDQNAgent",
                             "PygameKeyboardAgent", "TextualKeyboardAgent",
                         ],
                         help="The agent to use, default is PygameKeyboardAgent.")
@@ -97,6 +159,8 @@ def parse_args() -> dict:
             config["player"] = pickle.load(open("ImitationAgent.pkl", "rb"))
         case "ActorCriticsAgent":
             config["player"] = pickle.load(open("ActorCriticsAgent.pkl", "rb"))
+        case "FixnumPosDQNAgent":
+            config["player"] = pickle.load(open("FixnumPosDQNAgent.pkl", "rb"))
         case "PygameKeyboardAgent":
             config["player"] = PygameKeyboardAgent()
         case "TextualKeyboardAgent":
@@ -122,14 +186,6 @@ def parse_args() -> dict:
     else:
         config["display"] = PygameGraphics
     
-    if config['player_pos'] == Vector2d(-1,-1):
-        if len(config['ghosts_pos']) == 0:
-            layoutGenerator = SpecialLayoutGenerator()
-            layout = layoutGenerator.generate(config['map_size'],config['ghost_num'])
-            config["player_pos"] = layout.player_pos
-            config["ghosts_pos"] = layout.ghosts_pos
-        else:
-            config['player_pos'] = Vector2d(random.randint(1, config['map_size'].x), random.randint(1, config['map_size'].y))
     print(config)
     return config
 

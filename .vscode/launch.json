@@ -27,6 +27,19 @@
             "program": "${workspaceFolder}/train.py",
             "console": "integratedTerminal",
             "justMyCode": true
+        },
+        {
+            "name": "Python: run.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "args": [
+                "--player", "FixnumPosDQNAgent",
+                "-n", "100",
+                "--no-graphic"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
         }
 
     ]
