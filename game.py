@@ -648,21 +648,21 @@ class GameState:
             small_list = []
         # 1 + 3
         elif(abs(pattern_x) - ghostnum >= -2):
-            print("按行分3个\n")
+            print("按列分3个\n")
             large_list = list(filter(lambda key:key.getDirection().x*pattern_x >= 0,ghost_states))
             small_list = list(filter(lambda key:key.getDirection().x*pattern_x <= 0,ghost_states))
             pass
         elif(abs(pattern_y) - ghostnum >= -2):
-            print("按列分3个\n")
+            print("按行分3个\n")
             large_list = list(filter(lambda key:key.getDirection().y*pattern_y >= 0,ghost_states))
             small_list = list(filter(lambda key:key.getDirection().y*pattern_y <= 0,ghost_states))
         elif(abs(pattern_x) - ghostnum >=-4):
-            print("按行分2个\n")
+            print("按列分2个\n")
             large_list = list(filter(lambda key:key.getDirection().x*pattern_x >= 0,ghost_states))
             small_list = list(filter(lambda key:key.getDirection().x*pattern_x <= 0,ghost_states))
         # 2+2
         elif(abs(pattern_y) - ghostnum >= -4):
-            print("按列分2个\n")
+            print("按行分2个\n")
             large_list = list(filter(lambda key:key.getDirection().y >= 0,ghost_states))
             small_list = list(filter(lambda key:key.getDirection().y <= 0,ghost_states))
         
@@ -728,7 +728,8 @@ class GameState:
         # 2+2
         elif(len(large_states) == ghostnum-2):
             circle_dis2 = getCircle(small_states)
-            rewards += 20/circle_dis2
+            if(circle_dis2 == 0): circle_dis2 += 20
+            rewards += 20/(circle_dis2)
 
             rewards -= 10/math.exp(clo_live_dis) 
             if(clo_dead_dis != None): rewards += 10/math.exp(clo_dead_dis)
