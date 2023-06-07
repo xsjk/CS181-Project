@@ -27,15 +27,16 @@ if __name__ == "__main__":
     # ghostsAgent = SmartGhostsAgent(4)
     map_size = Vector2d(15, 15)
     expertAgent  = MaxScoreAgent()
-    ghost_num = 5
+    ghost_num = 4
     playerAgent = FullyConnectedDSLAgent(map_size)
+    # playerAgent = pickle.load(open("FullyConnectedDSLAgent.pkl", "rb"))
     # playerAgent.writer = SummaryWriter("runs/FullyConnectedDSLAgent")
     # playerAgent = pickle.load(open("FullyConnectedDSLAgent.pkl", "rb"))
     playerAgent.epsilon_decay = 1e-5
     playerAgent.epsilon_min = 0.1
     ghosts_pos = []
     player_pos = None
-    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     try:
         trainPlayer(
             envType=BFSRewardEnvironment,

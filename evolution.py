@@ -289,11 +289,11 @@ if __name__ == '__main__':
 
     ghosts_pos = []
     player_pos = None
-    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     layout = Layout(
         map_size = map_size,
         tile_size = (30,30),
-        ghost_num = 5,
+        ghost_num = 4,
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )

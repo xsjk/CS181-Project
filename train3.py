@@ -33,7 +33,7 @@ if pkgutil.find_loader("textual"):
 if __name__ == "__main__":
     # ghostsAgent = SmartGhostsAgent(4)
     map_size = Vector2d(15, 15)
-    ghost_num = 5
+    ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = ImitationAgent(map_size, expertAgent)
     # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # playerAgent.memory = AutoPriorityReplayBuffer(playerAgent.memory_size, playerAgent.abs_td_error)
     ghosts_pos = []
     player_pos = None
-    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     try:
         trainPlayer(
             envType=BFSRewardEnvironment,

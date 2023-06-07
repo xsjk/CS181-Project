@@ -26,7 +26,7 @@ if pkgutil.find_loader("torch"):
 if __name__ == "__main__":
     # ghostsAgent = SmartGhostsAgent(4)
     map_size = Vector2d(15, 15)
-    ghost_num = 5
+    ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = OneHotDQNAgent2(map_size)
     # playerAgent = pickle.load(open("OneHotDQNAgent2.pkl", "rb"))
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # playerAgent.target_model.eval()
     # playerAgent.target_model.requires_grad_(False)
     # playerAgent.batch_size = 10
-    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     try:
         trainPlayer(
             envType=BFSRewardEnvironment,

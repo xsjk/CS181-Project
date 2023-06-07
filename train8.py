@@ -26,7 +26,7 @@ if pkgutil.find_loader("torch"):
 if __name__ == "__main__":
     # ghostsAgent = SmartGhostsAgent(4)
     map_size = Vector2d(15, 15)
-    ghost_num = 5
+    ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = FixnumPosDQNAgent(ghost_num)
     # playerAgent = pickle.load(open("FixnumPosDQNAgent.pkl", "rb"))
@@ -37,16 +37,7 @@ if __name__ == "__main__":
     # playerAgent.optimizer = torch.optim.Adam(playerAgent.model.parameters(), lr=0.1)
     # playerAgent.memory = deque(maxlen=playerAgent.memory_size)
     # playerAgent.batch_size = 10
-    ghosts_pos = []
-    player_pos = None
-    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
-    layout = Layout(
-        map_size = map_size,
-        tile_size = (30,30),
-        ghost_num = ghost_num,
-        player_pos = player_pos,
-        ghosts_pos = ghosts_pos,
-    )
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     try:
         trainPlayer(
             envType=BFSRewardEnvironment,

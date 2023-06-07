@@ -6,25 +6,21 @@ from ghostAgents import GreedyGhostAgent
 from game import runGames
 from layout import Layout
 from util import Vector2d
+from layoutGenerator import SpecialLayoutGenerator
 
 if __name__ == "__main__":
 
     map_size = Vector2d(15, 15)
+    ghost_num = 4
 
     featureExtractor = MyFeatures()
     feature_names = featureExtractor.feature_names
     playerAgent = ApproximateQAgent(featureExtractor)
-    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     numGamesPerEvaluation = 100
-    layout = Layout(
-        map_size = map_size,
-        tile_size = (30,30),
-        ghost_num = 5,
-        player_pos = None,
-        ghosts_pos = [],
-    )
-
-
+    layoutGenerator = SpecialLayoutGenerator()
+    layout = layoutGenerator.generate(map_size, ghost_num)
+    
     def evaluator(params) -> float:
         playerAgent.setWeights(params)
         _, result = runGames(
