@@ -2,6 +2,7 @@ import random
 from util import auto_convert, type_check, Vector2d
 from copy import deepcopy
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
 
 @dataclass
 class Layout:
@@ -59,3 +60,23 @@ class Layout:
         return self.tile_size.y
 
 Layout.__init__ = auto_convert(verbose=True)(Layout.__init__)
+
+
+
+
+class LayoutGenerator(ABC):
+
+    @abstractmethod
+    def generate(self):
+        raise NotImplementedError
+
+    pass
+
+
+class RandomLayoutGenerator(LayoutGenerator):
+
+    def generate(self):
+        pass
+
+class SpecialLayoutGenerator(LayoutGenerator):
+    pass

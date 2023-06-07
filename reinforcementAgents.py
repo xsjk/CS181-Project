@@ -42,6 +42,9 @@ class ValueEstimationAgent(Agent):
 
 
 class FeatureExtractor(ABC):
+
+    feature_names: list[str]
+
     @abstractmethod
     def getFeatures(self, S: GameState, A: Action) -> dict:
         """
@@ -195,6 +198,29 @@ class PlayerQAgent(QLearningAgent, PlayerAgent):
 
 
 class MyFeatures(FeatureExtractor):
+
+    feature_names = [
+        "aliveNum",
+        "deadNum",
+        "d2WallUp",
+        "d2WallDown",
+        "d2WallLeft",
+        "d2WallRight",
+        "minD2Wall",
+        "closestAliveGhostAΔx",
+        "closestAliveGhostAΔy",
+        "closestAliveGhostBΔx",
+        "closestAliveGhostBΔy",
+        "ghostsSameX",
+        "ghostsSameY",
+        "playerGhostsSameX",
+        "playerGhostsSameY",
+        "closestSameXGhostPairΔx",
+        "closestSameYGhostPairΔy",
+        "closestDeadGhostΔx",
+        "closestDeadGhostΔy"
+    ]
+    
     def getFeatures(self, s: GameState, a: Action) -> dict:
         # if a is None:
             # return {}
@@ -254,6 +280,9 @@ class ApproximateQAgent(PlayerQAgent):
 
     def getWeights(self):
         return self.weights
+    
+    def setWeights(self, weights):
+        self.weights.update(weights)
 
     def getQValue(self, S, A: Action) -> float:
         return self.getWeights() * self.featExtractor.getFeatures(S, A)

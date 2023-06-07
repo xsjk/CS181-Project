@@ -18,6 +18,7 @@ if pkgutil.find_loader("torch"):
 if __name__ == "__main__":
     map_size = Vector2d(15, 15)
     playerAgent = ApproximateQAgent(MyFeatures())
+    # playerAgent = pickle.load(open("ApproximateQAgent.pkl", "rb"))
 
     ghosts_pos = []
     player_pos = None

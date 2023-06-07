@@ -760,7 +760,8 @@ def runGames(
     ghosts: list[Agent],
     numGames: int = 1,
     scoreChange: list[int] = [1,125,750,-500],
-):
+    handleKeyboardInterrupt = True,
+) -> tuple[list[Game], dict[str, float]]:
     rules = ClassicGameRules()
     games = []
 
@@ -776,21 +777,28 @@ def runGames(
             game = rules.newGame(layout, player, ghosts, gameDisplay, scoreChange ,False)
             game.run()
             games.append(game)
-    except KeyboardInterrupt:
-        print(">>> Exit with KeyboardInterrupt")
-        gameDisplay.finish()
+    except KeyboardInterrupt as e:
+        if handleKeyboardInterrupt:
+            print(">>> Exit with KeyboardInterrupt")
+            gameDisplay.finish()
+        else:
+            raise e
     finally:
         if i > 0:
             scores = [game.state.getScore() for game in games]
             wins = [game.state.isWin() for game in games]
             winRate = wins.count(True) / float(len(wins))
-            print(f"Average Score: {sum(scores) / float(len(scores))}")
-            # print("Scores:       ", ", ".join([str(score) for score in scores]))
+            averageScore = sum(scores) / float(len(scores))
+            averageMoves = sum(game.numMoves for game in games) / float(len(games))
+            print(f"Average Score: {averageScore}")
             print(f"Win Rate: {wins.count(True)}/{len(wins)} ({winRate:.2f})")
-            # print("Record:       ", ", ".join(["Loss", "Win"][int(w)] for w in wins))
-            print(f"Avg. Moves: {sum(game.numMoves for game in games) / float(len(games)):5.1f}")
+            print(f"Avg. Moves: {averageMoves:5.1f}")
             
-    return games
+    return games, {
+        "winRate": winRate,
+        "averageScore": averageScore,
+        "averageMoves": averageMoves
+    }
 
 
 
