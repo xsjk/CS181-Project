@@ -43,7 +43,7 @@ class GhostAgentSlightlyRandom(GreedyGhostAgent):
     def getAction(self, state: GameState) -> Action:
         if random.random() < 0.2:
             action = random.choice(state.getLegalActions(self.index))
-            print("Ghost action is:", action)
+            # print("Ghost action is:", action)
             return action
         else:
             return super().getAction(state)
