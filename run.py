@@ -2,7 +2,7 @@ from game import runGames, trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
-from reinforcementAgents import MCTSAgent
+from reinforcementAgents import MCTSAgent, ApproximateQAgent
 from searchAgents import MaxScoreAgent
 from display import NullGraphics
 from layout import Layout
@@ -42,7 +42,7 @@ def parse_args() -> dict:
                         choices=[
                             "RandomAgent", "TimidAgent", "AlphaBetaAgent", "ExpectimaxAgent",
                             "MCTSAgent", "MaxScoreAgent",
-                            "QLearningAgent", "SarsaAgent", "SarsaLambdaAgent",
+                            "QLearningAgent", "SarsaAgent", "SarsaLambdaAgent", "ApproximateQAgent",
                             "FullyConnectedDQNAgent", "OneHotDQNAgent", "ImitationAgent", "ActorCriticsAgent",
                             "PygameKeyboardAgent", "TextualKeyboardAgent",
                         ],
@@ -99,6 +99,8 @@ def parse_args() -> dict:
             config["player"] = PygameKeyboardAgent()
         case "TextualKeyboardAgent":
             config["player"] = TextualKeyboardAgent()
+        case "ApproximateQAgent":
+            config["player"] = pickle.load(open("ApproximateQAgent.pkl", "rb"))
         case _:
             raise ValueError(f"Unknown player agent {config['player']}")
     match config["ghosts"]:

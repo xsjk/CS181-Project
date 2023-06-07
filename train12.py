@@ -41,4 +41,4 @@ if __name__ == "__main__":
         print("Training stopped by user.")
     finally:
         playerAgent.writer.close()
-        pickle.dump(playerAgent, open("test.pkl", "wb"))
+        pickle.dump(playerAgent, open("ApproximateQAgent.pkl", "wb"))

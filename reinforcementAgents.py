@@ -160,7 +160,7 @@ class SarsaLambdaAgent(SarsaAgent):
         super().__init__(**args)
         self.values = util.Counter()
         self.eligibility = util.Counter()
-        
+
     def update(self, S, A, R, S_, A_, done: bool):
         delta = R + self.gamma * (0 if done else self.getQValue(S_, A_)) - self.getQValue(S, A)
         self.eligibility[(S, A)] += 1
@@ -189,38 +189,57 @@ class PlayerQAgent(QLearningAgent, PlayerAgent):
         QLearningAgent.__init__(self, **args)
 
     def getAction(self, S):
+        # input()
         A = QLearningAgent.getAction(self, S)
-        self.takeAction(S, A)
         return A
 
 
 class MyFeatures(FeatureExtractor):
     def getFeatures(self, s: GameState, a: Action) -> dict:
+        # if a is None:
+            # return {}
+        # s = s.getNextState(a)
         playerPos = s.getPlayerPosition()
         sortedAliveGhostPositions = sorted(s.getAliveGhostPositions(), key=lambda ghostPos: Vector2d.manhattanDistance(ghostPos, playerPos))
         sortedDeadGhostPositions = sorted(s.getDeadGhostPositions(), key=lambda ghostPos: Vector2d.manhattanDistance(ghostPos, playerPos))
-        features = {}
-        features["aliveNum"] = len(sortedAliveGhostPositions)
-        features["deadNum"] = len(sortedDeadGhostPositions)
-        features["d2WallUp"] = playerPos.y - 1
-        features["d2WallDown"] = s.layout.height - playerPos.y
-        features["d2WallLeft"] = playerPos.x - 1
-        features["d2WallRight"] = s.layout.width - playerPos.x
+        features = {
+            "aliveNum": len(sortedAliveGhostPositions),
+            "deadNum": len(sortedDeadGhostPositions),
+            "d2WallUp": playerPos.y - 1,
+            "d2WallDown": s.layout.height - playerPos.y,
+            "d2WallLeft": playerPos.x - 1,
+            "d2WallRight": s.layout.width - playerPos.x,
+        }
         features["minD2Wall"] = min([features["d2WallUp"], features["d2WallDown"], features["d2WallLeft"], features["d2WallRight"]])
         if len(sortedAliveGhostPositions) >= 2:
             features["closestAliveGhostAΔx"] = playerPos.x - sortedAliveGhostPositions[0].x
-            features["1/closestAliveGhostAΔx"] = 1 / (abs(playerPos.x - sortedAliveGhostPositions[0].x) + 1)
+            # features["1/closestAliveGhostAΔx"] = 1 / (abs(playerPos.x - sortedAliveGhostPositions[0].x) + 1)
             features["closestAliveGhostAΔy"] = playerPos.y - sortedAliveGhostPositions[0].y
-            features["1/closestAliveGhostAΔy"] = 1 / (abs(playerPos.y - sortedAliveGhostPositions[0].y) + 1)
+            # features["1/closestAliveGhostAΔy"] = 1 / (abs(playerPos.y - sortedAliveGhostPositions[0].y) + 1)
             features["closestAliveGhostBΔx"] = playerPos.x - sortedAliveGhostPositions[1].x
-            features["1/closestAliveGhostBΔx"] = 1 / (abs(playerPos.x - sortedAliveGhostPositions[1].x) + 1)
+            # features["1/closestAliveGhostBΔx"] = 1 / (abs(playerPos.x - sortedAliveGhostPositions[1].x) + 1)
             features["closestAliveGhostBΔy"] = playerPos.y - sortedAliveGhostPositions[1].y
-            features["1/closestAliveGhostBΔy"] = 1 / (abs(playerPos.y - sortedAliveGhostPositions[1].y) + 1)
+            # features["1/closestAliveGhostBΔy"] = 1 / (abs(playerPos.y - sortedAliveGhostPositions[1].y) + 1)
+            ghostsOnX = [0 for _ in range(s.layout.width + 1)]
+            ghostsOnY = [0 for _ in range(s.layout.height + 1)]
+            for ghostPos in sortedAliveGhostPositions:
+                ghostsOnX[ghostPos.x] += 1
+                ghostsOnY[ghostPos.y] += 1
+            ghostsOnX = [0 if i < 2 else 1 for i in ghostsOnX]
+            ghostsOnY = [0 if i < 2 else 1 for i in ghostsOnY]
+            features["ghostsSameX"] = sum(ghostsOnX)
+            features["ghostsSameY"] = sum(ghostsOnY)
+            features["playerGhostsSameX"] = int(ghostsOnX[playerPos.x] >= 1)
+            features["playerGhostsSameY"] = int(ghostsOnY[playerPos.y] >= 1)
+            if features["ghostsSameX"] > features["playerGhostsSameX"]:
+                features["closestSameXGhostPairΔx"] = min([x - playerPos.x if x!=playerPos.x and n!=0 else 100 for x,n in enumerate(ghostsOnX)], key=abs)
+            if features["ghostsSameY"] > features["playerGhostsSameY"]:
+                features["closestSameYGhostPairΔy"] = min([y - playerPos.y if y!=playerPos.y and n!=0 else 100 for y,n in enumerate(ghostsOnY)], key=abs)
         if len(sortedDeadGhostPositions) >= 1:
             features["closestDeadGhostΔx"] = playerPos.x - sortedDeadGhostPositions[0].x
-            features["1/closestDeadGhostΔx"] = 1 / (abs(playerPos.x - sortedDeadGhostPositions[0].x) + 1)
+            # features["1/closestDeadGhostΔx"] = 1 / (abs(playerPos.x - sortedDeadGhostPositions[0].x) + 1)
             features["closestDeadGhostΔy"] = playerPos.y - sortedDeadGhostPositions[0].y
-            features["1/closestDeadGhostΔy"] = 1 / (abs(playerPos.y - sortedDeadGhostPositions[0].y) + 1)
+            # features["1/closestDeadGhostΔy"] = 1 / (abs(playerPos.y - sortedDeadGhostPositions[0].y) + 1)
         return features
 
 class ApproximateQAgent(PlayerQAgent):
@@ -240,10 +259,11 @@ class ApproximateQAgent(PlayerQAgent):
         return self.getWeights() * self.featExtractor.getFeatures(S, A)
 
     def update(self, S, A: Action, S_, R: float, done: bool):
-        difference = (R + self.gamma * (0 if done else self.getValue(S_))) - self.getQValue(S, A)
-        for f, v in self.featExtractor.getFeatures(S, A).items():
-            self.weights[f] += self.alpha * difference * v
-            self.writer.add_scalar(f, self.weights[f], self.update_counter)
+        if not done:
+            difference = (R + self.gamma * (0 if done else self.getValue(S_))) - self.getQValue(S, A)
+            for f, v in self.featExtractor.getFeatures(S_, A).items():
+                self.weights[f] += self.alpha * difference * v
+                self.writer.add_scalar(f, self.weights[f], self.update_counter)
         self.update_counter += 1
 
 class MCTSNode:
@@ -327,7 +347,7 @@ class MCTSAgent(Agent):
             self.root.parent = None
         else:
             self.root = MCTSNode(state, agent=self)
-        
+
         for _ in track(range(self.num_simulations), description="MCTS simulations", total=self.num_simulations) if not self.quiet else range(self.num_simulations):
             node = self.root
 
