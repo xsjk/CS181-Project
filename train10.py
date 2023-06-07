@@ -29,9 +29,8 @@ if __name__ == "__main__":
     expertAgent  = MaxScoreAgent()
     ghost_num = 4
     playerAgent = FullyConnectedDSLAgent(map_size)
-    # playerAgent = pickle.load(open("FullyConnectedDSLAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("FullyConnectedDSLAgent.pkl", "rb"))
     # playerAgent.writer = SummaryWriter("runs/FullyConnectedDSLAgent")
-    # playerAgent = pickle.load(open("FullyConnectedDSLAgent.pkl", "rb"))
     playerAgent.epsilon_decay = 1e-5
     playerAgent.epsilon_min = 0.1
     ghosts_pos = []

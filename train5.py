@@ -29,7 +29,7 @@ if __name__ == "__main__":
     ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = OneHotDQNAgent3(map_size)
-    # playerAgent = pickle.load(open("OneHotDQNAgent3.pkl", "rb"))
+    playerAgent = pickle.load(open("OneHotDQNAgent3.pkl", "rb"))
     # playerAgent.writer = SummaryWriter("runs/OneHotDQNAgent3")
     # playerAgent.memory = AutoPriorityReplayBuffer(playerAgent.memory_size, playerAgent.abs_td_error)
     playerAgent.epsilon_min = 0.1

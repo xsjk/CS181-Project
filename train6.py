@@ -29,7 +29,7 @@ if __name__ == "__main__":
     ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = ActorCriticsAgent(map_size)
-    # playerAgent = pickle.load(open("ActorCriticsAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("ActorCriticsAgent.pkl", "rb"))
     # playerAgent.writer = SummaryWriter("runs/ActorCriticsAgent")
     # playerAgent.memory = AutoPriorityReplayBuffer(playerAgent.memory_size, playerAgent.abs_td_error)
     playerAgent.epsilon_min = 0.1

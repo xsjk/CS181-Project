@@ -36,7 +36,7 @@ if __name__ == "__main__":
     ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = ImitationAgent(map_size, expertAgent)
-    # playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("ImitationAgent.pkl", "rb"))
     playerAgent.epsilon_min = 0.1
     playerAgent.epsilon_decay = 1e-5
     # playerAgent.writer = SummaryWriter("runs/ImitationAgent")

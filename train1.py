@@ -29,7 +29,7 @@ if __name__ == "__main__":
     ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = OneHotDQNAgent2(map_size)
-    # playerAgent = pickle.load(open("OneHotDQNAgent2.pkl", "rb"))
+    playerAgent = pickle.load(open("OneHotDQNAgent2.pkl", "rb"))
     # playerAgent.writer = SummaryWriter('runs/OneHotDQNAgent2')
     playerAgent.optimizer = torch.optim.Adam(playerAgent.model.parameters(), lr=0.001)
     playerAgent.epsilon_min = 0.1
