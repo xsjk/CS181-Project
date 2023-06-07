@@ -8,7 +8,7 @@ from layout import Layout
 from util import Vector2d,random
 import pickle
 import argparse
-from layoutGenerator import SpecialLayoutGenerator
+from layoutGenerator import SpecialLayoutGenerator, RandomLayoutGenerator
 from game import Agent, Game, ClassicGameRules
 import numpy as np
 
@@ -51,7 +51,7 @@ def runGames(
                     
             if layout.player_pos == Vector2d(-1,-1):
                 if len(layout.ghosts_pos) == 0:
-                    layoutGenerator = SpecialLayoutGenerator()
+                    layoutGenerator = SpecialLayoutGenerator() if issubclass(type(player), DQNAgent) else RandomLayoutGenerator()
                     layout_ = layoutGenerator.generate(layout.map_size,layout.ghost_num)
                 # else:
                 #     layout.player_pos = Vector2d(*np.random.randint(1, layout.map_size.x+1, 2))
@@ -103,12 +103,12 @@ def parse_args() -> dict:
                         help="The position of the ghosts, default is empty, which means random.")
     parser.add_argument("--player", action="store", type=str, default="PygameKeyboardAgent", 
                         choices=[
-                            "RandomAgent", "TimidAgent", "AlphaBetaAgent", "ExpectimaxAgent",
+                            "RandomAgent", "TimidAgent", "AlphaBetaAgent", "AlphaBetaAgent",
                             "MCTSAgent", "MaxScoreAgent",
                             "QLearningAgent", "SarsaAgent", "SarsaLambdaAgent", "ApproximateQAgent",
                             "FullyConnectedDQNAgent", "OneHotDQNAgent", "ImitationAgent", "ActorCriticsAgent",
                             "FixnumPosDQNAgent",
-                            "PygameKeyboardAgent", "TextualKeyboardAgent",
+                            "PygameKeyboardAgent",
                         ],
                         help="The agent to use, default is PygameKeyboardAgent.")
     parser.add_argument("--ghosts", action="store", type=str, default="GreedyGhostAgent", 
@@ -122,8 +122,6 @@ def parse_args() -> dict:
                         help="Whether to print verbose information, default is false.")
     parser.add_argument("-n", "--num-of-games", action="store", type=int, default=1, 
                         help="The number of games to play, default is 1.")
-    parser.add_argument("-p", "--parallel", action="store", type=int, default=1, 
-                        help="The maximum number of processes allowed.")
     args = parser.parse_args()
 
     config = vars(args)
@@ -163,8 +161,6 @@ def parse_args() -> dict:
             config["player"] = pickle.load(open("FixnumPosDQNAgent.pkl", "rb"))
         case "PygameKeyboardAgent":
             config["player"] = PygameKeyboardAgent()
-        case "TextualKeyboardAgent":
-            config["player"] = TextualKeyboardAgent()
         case "ApproximateQAgent":
             config["player"] = pickle.load(open("ApproximateQAgent.pkl", "rb"))
         case _:
