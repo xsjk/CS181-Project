@@ -3,9 +3,12 @@
 Usage:
     python run.py [options]
 
+
 Example:
-    python run.py
+    python run.py 
     python run.py --player MaxScoreAgent --player-pos 7 7 --ghost-num 5
+    python run.py --player RandomAgent -n 100 --no-graphics
+
 
 The keyboard for keyboardAgent:
     -move                       W,A,S,D,Q,E,Z,X
@@ -47,6 +50,7 @@ General Options:
     -p PARALLEL, --parallel PARALLEL
                                 The maximum number of precesses allowed.
 
+
 Explanation for the Player Agents:
     PygameKeyboardAgent:        Using the keyboard to control the agent, the default agent.
 
@@ -63,6 +67,7 @@ Explanation for the Player Agents:
     MaxScoreAgent:              Using the BFS method to arrange the action for the player.
 
     Other Agents:               Using different ways of reinforcement learning to train the player.
+
 
 Explanation for the Enemy Agents:
     GreedyGhostAgent：          The ghosts only consider chasing the player. The default agent.
