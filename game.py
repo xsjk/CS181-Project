@@ -1,5 +1,4 @@
 from display import Display, NullGraphics
-from environment import Environment, PlayerGameEnvironment
 from util import ThreadTerminated, sign, Vector2d
 from agentRules import Action, AgentState, Actions, Agent, Configuration, Direction
 import traceback
@@ -255,13 +254,13 @@ class GameState:
         """
         Allows states to be keys of dictionaries.
         """
-        for i, state in enumerate(self.agentStates):
+        for state in self.agentStates:
             try:
                 int(hash(state))
             except TypeError as e:
                 print(e)
                 # hash(state)
-        return int((hash(tuple(self.agentStates))))
+        return hash(tuple(self.agentStates))
 
     def initialize(self, layout: Layout, agents: list[Agent], scoreChange: list[int]):
         """
@@ -552,7 +551,7 @@ class GameState:
          [self.agentStates[i].dead == True for i in range(1, self.getNumAgents())]
         )
 
-    def getDetecReward(self) -> float:
+    def getDetectReward(self) -> float:
         '''
         Return a reward of the current state using the position detection.
         
@@ -605,7 +604,7 @@ class GameState:
                         else: rewards += 5
         return rewards
         
-    def getBfsReward(self,depth:int = 2) -> float:
+    def getBFSReward(self,depth:int = 2) -> float:
         '''
         Return a reward of the current state using the position detection.
         
@@ -856,7 +855,7 @@ class Game:
                     self.numMoves += 1
                     self.state.changeToNextState(action)
                     self.rules.process(self.state, self)
-                print("The reward of that state is ",self.state.getPatternReward(),"\n")
+                # print("The reward of that state is ",self.state.getPatternReward(),"\n")
         except ThreadTerminated:
             self.updateScore(3)
             pass
@@ -909,31 +908,3 @@ def runGames(
     }
 
 
-
-def trainPlayer(
-    displayType: type,
-    layout: Layout,
-    player: Agent,
-    ghosts: list[Agent],
-    envType: type = PlayerGameEnvironment,
-    numTrain: int = 100,
-    scoreChange: list[int] = [1,125,750,-500],
-):
-    rules = ClassicGameRules()
-
-    display = displayType(layout.map_size, layout.tile_size)
-
-    for _ in track(range(numTrain), description="Training..."):
-        layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
-        # print(layout.agentPositions)
-        game: Game = rules.newGame(
-            layout, player, ghosts, display, scoreChange, 
-        )
-        env: Environment = envType(player, startState=game.state)
-        player.train(env)
-
-        scores = env.state.getScore()
-        wins = env.state.isWin()
-        print(f"Score: {scores}, Win: {wins}, Epsilon: {player.epsilon}")
-    player.epsilon = 0.0
-    return player

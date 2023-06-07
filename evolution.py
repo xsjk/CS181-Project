@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from agentRules import Agent
-from game import runGames, trainPlayer
+from game import runGames
+from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
@@ -22,7 +23,7 @@ import os
 import matplotlib.pyplot as plt
 from time import sleep, time
 from pprint import pprint
-from environment import PlayerGameEnvironment
+from environment import NaiveRewardEnvironment
 from abc import abstractmethod, ABC
 from typing import Callable
 
@@ -288,18 +289,17 @@ if __name__ == '__main__':
 
     ghosts_pos = []
     player_pos = None
-    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, 6)]
+    ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     layout = Layout(
         map_size = map_size,
         tile_size = (30,30),
-        ghost_num = 5,
+        ghost_num = 4,
         player_pos = player_pos,
         ghosts_pos = ghosts_pos,
     )
     try:
         playerAgent.writer.flush()
         trainPlayer(
-            displayType=NullGraphics,
             layout=layout,
             player=playerAgent,
             ghosts=ghostsAgent,

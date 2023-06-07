@@ -215,7 +215,7 @@ class Vector2d:
         return outer_format.format(*components)
     
     def __hash__(self):
-        return super().__hash__()
+        return hash((self.x, self.y))
     
     def __add__(self, other: "Vector2d") -> "Vector2d":
         return Vector2d(self.x + other.x, self.y + other.y)
