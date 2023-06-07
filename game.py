@@ -1,12 +1,13 @@
 from display import Display, NullGraphics
 from environment import Environment, PlayerGameEnvironment
-from util import ThreadTerminated, sign, Vector2d, Queue
+from util import ThreadTerminated, sign, Vector2d
 from agentRules import Action, AgentState, Actions, Agent, Configuration, Direction
 import traceback
 from layout import Layout
 import numpy as np
 from threading import Thread
 from rich.progress import track
+import math
 
 
 class PlayerRules:
@@ -550,6 +551,7 @@ class GameState:
         Return a reward of the current state using the position detection.
         
         '''
+        import math
         if self.isLose(): return 0.0
         rewards:float = 0.0
         # rewards += self.getDeadNum()
@@ -566,35 +568,35 @@ class GameState:
             distance = Vector2d.manhattanDistance(player_pos,ghost_pos)
             if(self.agentStates[i].dead == False):
                 # 最开始先计算鬼离人的距离
-                if(distance <= 2): 
-                    rewards -= 100
-                    break
-                rewards += distance
+                # if(distance <= 2): 
+                #     rewards -= 100
+                #     break
+                rewards -= 20/math.exp(distance) 
                 for j in range(i+1,self.getNumAgents()):
                     ghost_pos2 = self.getGhostPosition(j)
                     # check if the ghosts are close to each other
                     if(abs(ghost_pos.x - ghost_pos2.x) == 1 and abs(ghost_pos.y - ghost_pos2.y) == 1):
                         rewards += 5
                     # 鬼同列
-                    elif(ghost_pos.y == ghost_pos2.y):
+                    if(ghost_pos.y == ghost_pos2.y):
                         # 当和玩家同列
                         if(ghost_pos.y == player_pos.y):
                             # if another ghost is alive
-                            if(self.agentStates[j].dead == False): rewards -= 10
+                            if(self.agentStates[j].dead == False): rewards -= 5
                             # if another ghost is dead 
-                            else: rewards += 10
+                            else: rewards += 5
                         # 当不和玩家同列
-                        else: rewards += 10
+                        else: rewards += 5
                     # 鬼同行
-                    elif(ghost_pos.x == ghost_pos2.x):
+                    if(ghost_pos.x == ghost_pos2.x):
                         # 当和玩家同行
                         if(ghost_pos.x == player_pos.x):
                             # if another ghost is alive
-                            if(self.agentStates[j].dead == False): rewards -= 10
+                            if(self.agentStates[j].dead == False): rewards -= 5
                             # if another ghost is dead 
-                            else: rewards += 10
+                            else: rewards += 5
                         # 当不和玩家同行
-                        else: rewards += 10
+                        else: rewards += 5
         return rewards
         
     def getBfsReward(self,depth:int = 2) -> float:
@@ -622,6 +624,111 @@ class GameState:
         
         return max(scores) - score
 
+    def getCluster(self,ghost_states:list[AgentState])->tuple[list[AgentState],list[AgentState]]:
+        large_list:list[AgentState]
+        small_list:list[AgentState]
+        dirs = [Actions.actionToVector(self.getGreedyAction(i)) for i in range(1,self.getGhostNum()+1)]
+        ghostnum = len(ghost_states)
+        # calculate the pattern
+        pattern_x,pattern_y = (0,0)
+        for i in dirs:
+            pattern_x += i.x
+            pattern_y += i.y
+
+        # 4 + 0
+        if(abs(pattern_x) == ghostnum or abs(pattern_y) == ghostnum):
+            print("按行或列分4个\n")
+            large_list = ghost_states
+            small_list = []
+        # 1 + 3
+        elif(abs(pattern_x) - ghostnum >= -2):
+            print("按行分3个\n")
+            large_list = list(filter(lambda key:key.getDirection().x*pattern_x >= 0,ghost_states))
+            small_list = list(filter(lambda key:key.getDirection().x*pattern_x <= 0,ghost_states))
+            pass
+        elif(abs(pattern_y) - ghostnum >= -2):
+            print("按列分3个\n")
+            large_list = list(filter(lambda key:key.getDirection().y*pattern_y >= 0,ghost_states))
+            small_list = list(filter(lambda key:key.getDirection().y*pattern_y <= 0,ghost_states))
+        elif(abs(pattern_x) - ghostnum >=-4):
+            print("按行分2个\n")
+            large_list = list(filter(lambda key:key.getDirection().x*pattern_x >= 0,ghost_states))
+            small_list = list(filter(lambda key:key.getDirection().x*pattern_x <= 0,ghost_states))
+        # 2+2
+        elif(abs(pattern_y) - ghostnum >= -4):
+            print("按列分2个\n")
+            large_list = list(filter(lambda key:key.getDirection().y >= 0,ghost_states))
+            small_list = list(filter(lambda key:key.getDirection().y <= 0,ghost_states))
+        
+        return large_list,small_list 
+
+    def getPatternReward(self) -> float:
+        '''
+        Calculate the reward based on the pattern of the world.
+        There are totally 4 patterns:
+        1. all ghost in one corner 2. 1+3 ghost position 3. 2+2 ghost position 4. ghost are besides the player
+        '''
+
+        def getCircle(ghost_states:list[AgentState])->float:
+            circle = 0.0
+            for i in range(len(ghost_states)):
+                for j in range(i+1,len(ghost_states)): 
+                    circle += Vector2d.manhattanDistance(ghost_states[i].getPosition(),
+                                                         ghost_states[j].getPosition())
+            return circle
+
+        if(self.isLose() or self.isWin()): return 0
+
+        # define the variables we need
+        rewards = 0.0
+        ghost_states:list[AgentState] = self.getGhostStates()
+        large_states,small_states = self.getCluster(ghost_states)
+        player_pos = self.getPlayerPosition()
+        all_live_dis:list[float] = []
+        all_dead_dis = list[float]()
+        all_dis = list[float]()
+        clo_live_dis:float
+        clo_dead_dis:float
+        clo_dis:float 
+        circle_dis:float = getCircle(large_states)
+        ghostnum = self.getGhostNum()
+        
+        for state in large_states:
+            dis = Vector2d.manhattanDistance(state.getPosition(),player_pos)
+            all_dis.append(dis)
+            if(state.dead): all_dead_dis.append(dis)
+            else: all_live_dis.append(dis)
+        clo_live_dis = min(all_live_dis)
+        clo_dead_dis = min(all_dead_dis,default=None)
+
+        if(clo_live_dis <= 1):
+            rewards -= 10
+        # all ghost in one corner
+        if(len(large_states) == ghostnum):
+            rewards += 10
+            rewards -= 20/math.exp(clo_live_dis) 
+            if(clo_dead_dis != None): rewards += 10/math.exp(clo_dead_dis)
+            rewards += 40/circle_dis            
+        # 3 + 1
+        elif(len(large_states) == ghostnum-1):
+            rewards += 5
+            single_state = small_states[0]
+            single_dis =  Vector2d.manhattanDistance(single_state.getPosition(),player_pos)
+            if(not single_state.dead): rewards -= 15/math.exp(single_dis) 
+            
+            rewards -= 10/math.exp(clo_live_dis) 
+            if(clo_dead_dis != None): rewards += 10/math.exp(clo_dead_dis)
+            rewards += 40/circle_dis   
+        # 2+2
+        elif(len(large_states) == ghostnum-2):
+            circle_dis2 = getCircle(small_states)
+            rewards += 20/circle_dis2
+
+            rewards -= 10/math.exp(clo_live_dis) 
+            if(clo_dead_dis != None): rewards += 10/math.exp(clo_dead_dis)
+            rewards += 40/circle_dis 
+        # besides
+        return rewards
 
 
     def isLose(self) -> bool:
@@ -742,6 +849,7 @@ class Game:
                     self.numMoves += 1
                     self.state.changeToNextState(action)
                     self.rules.process(self.state, self)
+                print("The reward of that state is ",self.state.getPatternReward(),"\n")
         except ThreadTerminated:
             self.updateScore(3)
             pass
