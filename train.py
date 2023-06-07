@@ -1,4 +1,4 @@
-from game import runGames, Game
+from game import Game
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
 from multiAgents import TimidAgent, AlphaBetaAgent, ExpectimaxAgent
@@ -40,10 +40,10 @@ def trainPlayer(
     scoreChange: list[int] = [1,125,750,-500],
 ):
     rules = ClassicGameRules()
-    layout = layoutGenerator.generate(map_size=map_size, ghost_num=ghost_num)
     display = NullGraphics(map_size, None)
 
     for _ in track(range(numTrain), description="Training..."):
+        layout = layoutGenerator.generate(map_size=map_size, ghost_num=ghost_num)
         layout.arrangeAgents(layout.player_pos, layout.ghosts_pos)
         # print(layout.agentPositions)
         game: Game = rules.newGame(

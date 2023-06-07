@@ -1,4 +1,4 @@
-from game import runGames
+from run import runGames
 from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     ghost_num = 4
     expertAgent  = MaxScoreAgent()
     playerAgent = FullyConnectedDQNAgent2(map_size)
-    # playerAgent = pickle.load(open("FullyConnectedDQNAgent2.pkl", "rb"))
+    playerAgent = pickle.load(open("FullyConnectedDQNAgent2.pkl", "rb"))
     # playerAgent.writer = SummaryWriter("runs/FullyConnectedDQNAgent2")
     # playerAgent.memory = AutoPriorityReplayBuffer(playerAgent.memory_size, playerAgent.abs_td_error)
     # playerAgent.optimizer = torch.optim.Adam(playerAgent.model.parameters(), lr=0.1)

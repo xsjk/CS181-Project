@@ -1,4 +1,4 @@
-from game import runGames
+from run import runGames
 from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from reinforcementAgents import MCTSAgent, QLearningAgent, SarsaAgent, SarsaLambdaAgent, ApproximateQAgent, MyFeatures
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     map_size = Vector2d(15, 15)
     ghost_num = 4
     playerAgent = ApproximateQAgent(MyFeatures())
-    # playerAgent = pickle.load(open("ApproximateQAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("ApproximateQAgent.pkl", "rb"))
     ghostsAgent = [GreedyGhostAgent(i) for i in range(1, ghost_num+1)]
     try:
         trainPlayer(

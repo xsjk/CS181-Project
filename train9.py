@@ -1,4 +1,4 @@
-from game import runGames
+from run import runGames
 from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     expertAgent  = MaxScoreAgent()
     ghost_num = 4
     playerAgent = GCNDQNAgent(ghost_num)
-    # playerAgent = pickle.load(open("GCNDQNAgent.pkl", "rb"))
+    playerAgent = pickle.load(open("GCNDQNAgent.pkl", "rb"))
     # playerAgent.writer = SummaryWriter("runs/GCNDQNAgent")
     print(playerAgent.abs_td_error)
     # playerAgent.memory = AutoPriorityReplayBuffer(playerAgent.memory_size, playerAgent.abs_td_error)

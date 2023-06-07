@@ -3,7 +3,7 @@ from reinforcementAgents import ApproximateQAgent, MyFeatures
 import pickle
 from display import NullGraphics
 from ghostAgents import GreedyGhostAgent
-from game import runGames
+from run import runGames
 from layout import Layout
 from util import Vector2d
 from layoutGenerator import SpecialLayoutGenerator

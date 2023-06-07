@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from agentRules import Agent
-from game import runGames
+from run import runGames
 from train import trainPlayer
 from ghostAgents import GreedyGhostAgent, GhostAgentSlightlyRandom, SmartGhostsAgent, GhostsAgentSample
 from playerAgents import RandomAgent
