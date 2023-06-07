@@ -7,9 +7,10 @@ from reinforcementAgents import MCTSAgent, ApproximateQAgent
 from searchAgents import MaxScoreAgent
 from display import NullGraphics
 from layout import Layout
-from util import Vector2d
+from util import Vector2d,random
 import pickle
 import argparse
+from layoutGenerator import SpecialLayoutGenerator
 
 import pkgutil
 if pkgutil.find_loader("rich"):
@@ -35,8 +36,8 @@ def parse_args() -> dict:
     parser.add_argument("--ghost-num", action="store", type=int, default=4, 
                         help="The number of ghosts, default is 4.")
     parser.add_argument("--player-pos", action="store", type=int, nargs=2,
-                        default=[7, 7], metavar=("X", "Y"),
-                        help="The position of the player, default is 7 7.")
+                        default=[-1, -1], metavar=("X", "Y"),
+                        help="The position of the player, default is random.")
     parser.add_argument("--ghosts-pos", action="store", type=int, nargs="+", default=[],
                         help="The position of the ghosts, default is empty, which means random.")
     parser.add_argument("--player", action="store", type=str, default="PygameKeyboardAgent", 
@@ -115,10 +116,20 @@ def parse_args() -> dict:
             config["ghosts"] = [GhostAgentSlightlyRandom(i) for i in range(1, config["ghost_num"]+1)]
         case _:
             raise ValueError(f"Unknown ghosts agent {config['ghosts']}")
+
     if config["no_graphic"]:
         config["display"] = NullGraphics
     else:
         config["display"] = PygameGraphics
+    
+    if config['player_pos'] == Vector2d(-1,-1):
+        if len(config['ghosts_pos']) == 0:
+            layoutGenerator = SpecialLayoutGenerator()
+            layout = layoutGenerator.generate(config['map_size'],config['ghost_num'])
+            config["player_pos"] = layout.player_pos
+            config["ghosts_pos"] = layout.ghosts_pos
+        else:
+            config['player_pos'] = Vector2d(random.randint(1, config['map_size'].x), random.randint(1, config['map_size'].y))
     print(config)
     return config
 
@@ -139,4 +150,3 @@ if __name__ == "__main__":
         ghosts=config["ghosts"],
         numGames=config["num_of_games"],
     )
-

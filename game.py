@@ -857,7 +857,7 @@ class Game:
                     self.rules.process(self.state, self)
                 # print("The reward of that state is ",self.state.getPatternReward(),"\n")
         except ThreadTerminated:
-            self.updateScore(3)
+            self.state.updateScore(3)
             pass
 
 def runGames(
@@ -901,10 +901,10 @@ def runGames(
             print(f"Win Rate: {wins.count(True)}/{len(wins)} ({winRate:.2f})")
             print(f"Avg. Moves: {averageMoves:5.1f}")
             
-    return games, {
-        "winRate": winRate,
-        "averageScore": averageScore,
-        "averageMoves": averageMoves
-    }
+            return games, {
+                "winRate": winRate,
+                "averageScore": averageScore,
+                "averageMoves": averageMoves
+            }
 
 
