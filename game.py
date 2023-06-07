@@ -416,7 +416,7 @@ class GameState:
         state = GameState(self)
         GhostRules.applyAction(state, action, index)
         GhostRules.checkOneDeath(state, index)
-        GhostRules.checkWin(state)
+        # GhostRules.checkWin(state)
         return state
 
     def changeToNextState(self, action: Action):

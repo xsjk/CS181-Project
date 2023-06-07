@@ -1,4 +1,7 @@
 *Python* >= 3.10 is required.
+Notice: 
+    1.It may takes some time to initialize, please be patient.
+    2.You may need "pip install -r requirements.txt" to install all packages needed.
 
 Usage:
     python run.py [options]
